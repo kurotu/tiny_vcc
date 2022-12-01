@@ -55,6 +55,8 @@ class VpmPackage {
   final String displayName;
   final String version;
   final String description;
+
+  bool get isPrerelease => version.contains('-');
 }
 
 enum VpmRepositoryType {
@@ -188,5 +190,61 @@ class VccService {
     var encoder = const JsonEncoder.withIndent('  ');
     var jsonStr = encoder.convert(json);
     await file.writeAsString((jsonStr), flush: true);
+  }
+
+  Future<void> addPackage(String path, String name, String version) async {
+    final file = File(p.join(path, 'Packages', 'vpm-manifest.json'));
+    final str = await file.readAsString();
+    final manifestJson = jsonDecode(str);
+    final deps = (manifestJson['dependencies'] as Map<String, dynamic>);
+    deps[name] = {
+      'version': version,
+    };
+    final locked = manifestJson['locked'] as Map<String, dynamic>;
+    locked[name] = {
+      'version': version,
+    };
+    const encoder = JsonEncoder.withIndent('  ');
+    final jsonStr = encoder.convert(manifestJson);
+    await file.writeAsString(jsonStr, flush: true);
+  }
+
+  Future<void> updatePackage(String path, String name, String version) async {
+    final file = File(p.join(path, 'Packages', 'vpm-manifest.json'));
+    final str = await file.readAsString();
+    final manifestJson = jsonDecode(str);
+    final deps = (manifestJson['dependencies'] as Map<String, dynamic>);
+    if (deps.containsKey(name)) {
+      deps[name] = {
+        'version': version,
+      };
+    }
+    final locked = manifestJson['locked'] as Map<String, dynamic>;
+    locked[name]['version'] = version;
+    const encoder = JsonEncoder.withIndent('  ');
+    final jsonStr = encoder.convert(manifestJson);
+    await file.writeAsString(jsonStr, flush: true);
+
+    final dir = Directory(p.join(path, 'Packages', name));
+    if (await dir.exists()) {
+      await dir.delete(recursive: true);
+    }
+  }
+
+  Future<void> removePackage(String path, String name) async {
+    final file = File(p.join(path, 'Packages', 'vpm-manifest.json'));
+    final str = await file.readAsString();
+    final manifestJson = jsonDecode(str);
+    (manifestJson['dependencies'] as Map<String, dynamic>).remove(name);
+    (manifestJson['locked'] as Map<String, dynamic>).remove(name);
+
+    const encoder = JsonEncoder.withIndent('  ');
+    final jsonStr = encoder.convert(manifestJson);
+    await file.writeAsString(jsonStr, flush: true);
+
+    final dir = Directory(p.join(path, 'Packages', name));
+    if (await dir.exists()) {
+      await dir.delete(recursive: true);
+    }
   }
 }

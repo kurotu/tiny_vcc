@@ -1,9 +1,8 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tiny_vcc/models/project_model.dart';
 import 'package:tiny_vcc/services/vcc_service.dart';
+import 'package:tiny_vcc/widgets/package_list_item.dart';
 
 class ProjectRouteArguments {
   ProjectRouteArguments({required this.project});
@@ -38,12 +37,20 @@ class ProjectRoute extends StatelessWidget {
       ),
       body: Consumer<ProjectModel>(
         builder: (context, model, child) => ListView.builder(
-          itemCount: model.lockedDependencies.length,
+          itemCount: model.packages.length,
           itemBuilder: (context, index) {
-            final dep = model.lockedDependencies[index];
-            return ListTile(
-              title: Text("${dep.displayName} (${dep.version})"),
-              subtitle: Text(dep.description),
+            final dep = model.packages[index];
+            return PackageListItem(
+              item: dep,
+              onClickAdd: (name, version) {
+                model.addPackage(name, version);
+              },
+              onClickRemove: (name) {
+                model.removePackage(name);
+              },
+              onClickUpdate: ((name, version) {
+                model.updatePackage(name, version);
+              }),
             );
           },
         ),
