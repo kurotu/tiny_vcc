@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tiny_vcc/main_drawer.dart';
 import 'package:tiny_vcc/models/projects_model.dart';
+import 'package:tiny_vcc/routes/new_project_route.dart';
 import 'package:tiny_vcc/routes/project_route.dart';
 
 class ProjectsRoute extends StatelessWidget {
@@ -41,7 +42,9 @@ class ProjectsRoute extends StatelessWidget {
           ),
           TextButton(
             style: style,
-            onPressed: () {},
+            onPressed: () {
+              Navigator.pushNamed(context, NewProjectRoute.routeName);
+            },
             child: const Text('New'),
           ),
         ],

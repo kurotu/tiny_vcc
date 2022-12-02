@@ -1,8 +1,8 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:tiny_vcc/models/new_project_model.dart';
 import 'package:tiny_vcc/models/projects_model.dart';
+import 'package:tiny_vcc/routes/new_project_route.dart';
 import 'package:tiny_vcc/routes/project_route.dart';
 import 'package:tiny_vcc/routes/projects_route.dart';
 import 'package:tiny_vcc/routes/settings_route.dart';
@@ -46,6 +46,11 @@ class MyApp extends StatelessWidget {
             ChangeNotifierProvider<ProjectsModel>(
               create: (context) => ProjectsModel(vcc),
               child: const ProjectsRoute(),
+            ),
+        NewProjectRoute.routeName: (context) =>
+            ChangeNotifierProvider<NewProjectModel>(
+              create: (context) => NewProjectModel(vcc),
+              child: NewProjectRoute(),
             ),
         SettingsRoute.routeName: ((context) => const SettingsRoute(counter: 1)),
       },

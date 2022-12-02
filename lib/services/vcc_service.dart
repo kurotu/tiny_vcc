@@ -59,6 +59,13 @@ class VpmPackage {
   bool get isPrerelease => version.contains('-');
 }
 
+class VpmTemplate {
+  VpmTemplate(this.name, this.path);
+
+  final String name;
+  final String path;
+}
+
 enum VpmRepositoryType {
   all,
   official,
@@ -84,6 +91,21 @@ class VccService {
     }
   }
 
+  Future<void> createNewProject(
+      VpmTemplate template, String name, String location) async {
+    final result = await Process.run('vpm', [
+      'new',
+      name,
+      template.path,
+      '--path',
+      location,
+    ]);
+    if (result.exitCode != 0) {
+      throw Exception('vpm returned exit code ${result.exitCode}');
+    }
+    return addUserProject(Directory(p.join(location, name)));
+  }
+
   Future<void> deleteUserProject(VccProject project) async {
     var json = await _getSettingsJson();
     json['userProjects'].removeWhere((path) => path == project.path);
@@ -102,6 +124,26 @@ class VccService {
       return MapEntry(version, path);
     });
     return Map.fromEntries(entries);
+  }
+
+  Future<List<VpmTemplate>> getTemplates() async {
+    final result = await Process.run('vpm', ['list', 'templates']);
+    if (result.exitCode != 0) {
+      throw Exception('vpm returned exit code ${result.exitCode}');
+    }
+    final out = result.stdout.toString();
+    final lines = out
+        .split('\n')
+        .map((e) => e.trim())
+        .where((element) => element.isNotEmpty)
+        .where((element) => !element.endsWith('Templates:'));
+    final templates = lines.map((e) {
+      final l = e.replaceFirst(RegExp(r'\[.*\] '), '');
+      final name = RegExp(r'[^:]+').stringMatch(l)!;
+      final path = l.replaceFirst('$name: ', '');
+      return VpmTemplate(name, path);
+    });
+    return templates.toList();
   }
 
   Future<List<VpmPackage>> getVpmPackages(VpmRepositoryType type) async {
