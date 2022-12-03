@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/widgets.dart';
+import 'package:pub_semver/pub_semver.dart';
 import 'package:tiny_vcc/repos/unity_editors_repository.dart';
 import 'package:tiny_vcc/repos/vpm_packages_repository.dart';
 import 'package:tiny_vcc/services/vcc_service.dart';
@@ -23,7 +24,7 @@ class ProjectModel with ChangeNotifier {
   List<VpmDependency> _lockedDependencies = [];
   List<VpmDependency> get lockedDependencies => _lockedDependencies;
 
-  final Map<String, String> _selectedVersion = {};
+  final Map<String, Version> _selectedVersion = {};
 
   List<PackageItem> _packages = [];
   List<PackageItem> get packages => _packages;
@@ -41,14 +42,14 @@ class ProjectModel with ChangeNotifier {
     Process.run(editor!.path, ['-projectPath', project.path]);
   }
 
-  void selectVersion(String name, String version) async {
+  void selectVersion(String name, Version version) async {
     _selectedVersion[name] = version;
     _updateList();
     notifyListeners();
   }
 
-  void addPackage(String name, String version) async {
-    await vcc.addPackage(project.path, name, version);
+  void addPackage(String name, Version version) async {
+    await vcc.addPackage(project.path, name, version.toString());
     getLockedDependencies();
   }
 
@@ -57,7 +58,7 @@ class ProjectModel with ChangeNotifier {
     getLockedDependencies();
   }
 
-  void updatePackage(String name, String version) async {
+  void updatePackage(String name, Version version) async {
     await vcc.updatePackage(project.path, name, version);
     getLockedDependencies();
   }
@@ -112,7 +113,7 @@ class PackageItem {
   final String name;
   final String displayName;
   final String description;
-  final String? installedVersion;
-  final String? selectedVersion;
+  final Version? installedVersion;
+  final Version? selectedVersion;
   final List<VpmPackage> versions;
 }

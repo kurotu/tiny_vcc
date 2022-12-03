@@ -16,7 +16,9 @@ class VpmPackagesRepository {
   }
 
   List<VpmPackage> getVersions(String name) {
-    return _packages!.where((element) => element.name == name).toList();
+    final list = _packages!.where((element) => element.name == name).toList();
+    list.sort(((a, b) => b.version.compareTo(a.version)));
+    return list;
   }
 
   VpmPackage? getLatest(String name) {
@@ -24,7 +26,6 @@ class VpmPackagesRepository {
     if (versions.isEmpty) {
       return null;
     }
-    versions.sort((a, b) => a.version.compareTo(b.version));
-    return versions.last;
+    return versions.first;
   }
 }

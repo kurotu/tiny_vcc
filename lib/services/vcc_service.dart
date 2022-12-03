@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:path/path.dart' as p;
+import 'package:pub_semver/pub_semver.dart';
 import 'package:yaml/yaml.dart';
 
 class VccSetting {
@@ -29,7 +30,7 @@ class VccProject {
     var vpmManifestJson = jsonDecode(str);
     Map<String, dynamic> dep = vpmManifestJson['locked'];
     return dep.entries
-        .map((e) => VpmDependency(e.key, e.value['version']))
+        .map((e) => VpmDependency(e.key, Version.parse(e.value['version'])))
         .toList();
   }
 
@@ -57,17 +58,17 @@ class VpmPackage {
 
   final String name;
   final String displayName;
-  final String version;
+  final Version version;
   final String description;
 
-  bool get isPrerelease => version.contains('-');
+  bool get isPrerelease => version.isPreRelease;
 }
 
 class VpmDependency {
   VpmDependency(this.name, this.version);
 
   final String name;
-  final String version;
+  final Version version;
 }
 
 class VpmTemplate {
@@ -192,7 +193,7 @@ class VccService {
           .map((e) => VpmPackage(
                 name: e['name'],
                 displayName: e['displayName'],
-                version: e['version'],
+                version: Version.parse(e['version']),
                 description: e['description'],
               ));
     }).toList();
@@ -210,7 +211,7 @@ class VccService {
       return VpmPackage(
         name: packageJson['name'],
         displayName: packageJson['displayName'],
-        version: packageJson['version'],
+        version: Version.parse(packageJson['version']),
         description: packageJson['description'],
       );
     }));
@@ -266,7 +267,7 @@ class VccService {
     await file.writeAsString(jsonStr, flush: true);
   }
 
-  Future<void> updatePackage(String path, String name, String version) async {
+  Future<void> updatePackage(String path, String name, Version version) async {
     final file = File(p.join(path, 'Packages', 'vpm-manifest.json'));
     final str = await file.readAsString();
     final manifestJson = jsonDecode(str);

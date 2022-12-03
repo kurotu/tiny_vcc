@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pub_semver/pub_semver.dart';
 import 'package:tiny_vcc/models/project_model.dart';
 
 class PackageListItem extends StatelessWidget {
@@ -12,7 +13,7 @@ class PackageListItem extends StatelessWidget {
   });
 
   final PackageItem item;
-  final void Function(String name, String version) onSelect;
+  final void Function(String name, Version version) onSelect;
   final void Function(String name) onClickAdd;
   final void Function(String name) onClickUpdate;
   final void Function(String name) onClickRemove;
@@ -72,10 +73,10 @@ class _ActionRow extends StatelessWidget {
   });
 
   final bool canRemove;
-  final String? selectedVersion;
-  final String? installedVersion;
-  final List<String> availableVersions;
-  final void Function(String version)? onSelectVersion;
+  final Version? selectedVersion;
+  final Version? installedVersion;
+  final List<Version> availableVersions;
+  final void Function(Version version)? onSelectVersion;
   final void Function()? onClickAdd;
   final void Function()? onClickUpdate;
   final void Function()? onClickRemove;
@@ -105,10 +106,10 @@ class _ActionRow extends StatelessWidget {
     children.add(DropdownButton(
       value: selectedVersion,
       items: availableVersions
-          .map((v) => DropdownMenuItem(value: v, child: Text(v)))
+          .map((v) => DropdownMenuItem(value: v, child: Text(v.toString())))
           .toList(),
       onChanged: (v) {
-        onSelectVersion!(v as String);
+        onSelectVersion!(v!);
       },
     ));
 
@@ -117,7 +118,7 @@ class _ActionRow extends StatelessWidget {
         children.add(const Padding(
           padding: EdgeInsets.symmetric(horizontal: 4),
         ));
-        final compare = installedVersion!.compareTo(selectedVersion!);
+        final compare = selectedVersion!.compareTo(installedVersion!);
         if (compare > 0) {
           children.add(ElevatedButton(
               onPressed: onClickUpdate, child: const Text('Update')));
