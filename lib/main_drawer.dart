@@ -14,14 +14,22 @@ class MainDrawer extends StatelessWidget {
             title: const Text("Projects"),
             onTap: () {
               Navigator.pop(context);
-              Navigator.pushReplacementNamed(context, ProjectsRoute.routeName);
+              if (ModalRoute.of(context)?.settings.name !=
+                  ProjectsRoute.routeName) {
+                Navigator.pushReplacementNamed(
+                    context, ProjectsRoute.routeName);
+              }
             },
           ),
           ListTile(
             title: const Text("Settings"),
             onTap: () {
               Navigator.pop(context);
-              Navigator.pushReplacementNamed(context, SettingsRoute.routeName);
+              if (ModalRoute.of(context)?.settings.name !=
+                  SettingsRoute.routeName) {
+                Navigator.pushReplacementNamed(
+                    context, SettingsRoute.routeName);
+              }
             },
           ),
         ],

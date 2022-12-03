@@ -22,6 +22,9 @@ class ProjectsRoute extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final model = Provider.of<ProjectsModel>(context, listen: false);
+    model.getProjects();
+
     final ButtonStyle style = TextButton.styleFrom(
       foregroundColor: Theme.of(context).colorScheme.onPrimary,
     );
@@ -31,14 +34,12 @@ class ProjectsRoute extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Projects'),
         actions: [
-          Consumer<ProjectsModel>(
-            builder: ((context, model, child) => TextButton(
-                  style: style,
-                  onPressed: () {
-                    _addProject(model);
-                  },
-                  child: const Text('Add'),
-                )),
+          TextButton(
+            style: style,
+            onPressed: () {
+              _addProject(model);
+            },
+            child: const Text('Add'),
           ),
           TextButton(
             style: style,
@@ -50,29 +51,27 @@ class ProjectsRoute extends StatelessWidget {
         ],
       ),
       body: Consumer<ProjectsModel>(
-        builder: (context, model, child) {
-          return ListView.builder(
-            itemCount: model.projects.length,
-            itemBuilder: (context, index) => ListTile(
-              title: Text(model.projects[index].name),
-              onTap: () {
-                var project = model.projects[index];
-                Navigator.pushNamed(
-                  context,
-                  ProjectRoute.routeName,
-                  arguments: ProjectRouteArguments(project: project),
-                );
+        builder: (context, model, child) => ListView.builder(
+          itemCount: model.projects.length,
+          itemBuilder: (context, index) => ListTile(
+            title: Text(model.projects[index].name),
+            onTap: () {
+              var project = model.projects[index];
+              Navigator.pushNamed(
+                context,
+                ProjectRoute.routeName,
+                arguments: ProjectRouteArguments(project: project),
+              );
+            },
+            subtitle: Text(model.projects[index].path),
+            trailing: IconButton(
+              icon: const Icon(Icons.delete),
+              onPressed: () {
+                model.deleteProject(model.projects[index]);
               },
-              subtitle: Text(model.projects[index].path),
-              trailing: IconButton(
-                icon: const Icon(Icons.delete),
-                onPressed: () {
-                  model.deleteProject(model.projects[index]);
-                },
-              ),
             ),
-          );
-        },
+          ),
+        ),
       ),
     );
   }

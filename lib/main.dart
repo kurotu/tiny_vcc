@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tiny_vcc/models/new_project_model.dart';
 import 'package:tiny_vcc/models/projects_model.dart';
+import 'package:tiny_vcc/repos/vcc_projects_repository.dart';
 import 'package:tiny_vcc/routes/new_project_route.dart';
 import 'package:tiny_vcc/routes/project_route.dart';
 import 'package:tiny_vcc/routes/projects_route.dart';
@@ -18,9 +19,10 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key, required this.vcc});
+  MyApp({super.key, required this.vcc}) : vccData = VccProjectsRepository(vcc);
 
   final VccService vcc;
+  final VccProjectsRepository vccData;
 
   // This widget is the root of your application.
   @override
@@ -44,7 +46,7 @@ class MyApp extends StatelessWidget {
       routes: {
         ProjectsRoute.routeName: (context) =>
             ChangeNotifierProvider<ProjectsModel>(
-              create: (context) => ProjectsModel(vcc),
+              create: (context) => ProjectsModel(vccData),
               child: const ProjectsRoute(),
             ),
         NewProjectRoute.routeName: (context) =>
