@@ -1,34 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:tiny_vcc/models/project_model.dart';
 
-class PackageListItem extends StatefulWidget {
+class PackageListItem extends StatelessWidget {
   const PackageListItem({
     super.key,
     required this.item,
+    required this.onSelect,
     required this.onClickAdd,
     required this.onClickUpdate,
     required this.onClickRemove,
   });
 
   final PackageItem item;
-  final void Function(String name, String version) onClickAdd;
-  final void Function(String name, String version) onClickUpdate;
+  final void Function(String name, String version) onSelect;
+  final void Function(String name) onClickAdd;
+  final void Function(String name) onClickUpdate;
   final void Function(String name) onClickRemove;
-
-  @override
-  State<PackageListItem> createState() => _PackageListItem();
-}
-
-class _PackageListItem extends State<PackageListItem> {
-  late String? _selectedVersion;
-
-  @override
-  void initState() {
-    super.initState();
-    setState(() {
-      _selectedVersion = widget.item.installedVersion;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,32 +25,32 @@ class _PackageListItem extends State<PackageListItem> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            widget.item.installedVersion != null
-                ? "${widget.item.displayName} (${widget.item.installedVersion})"
-                : widget.item.displayName,
+            item.installedVersion != null
+                ? "${item.displayName} (${item.installedVersion})"
+                : item.displayName,
             style: const TextStyle(fontSize: 16),
           ),
           Text(
-            widget.item.description,
+            item.description,
             style: const TextStyle(color: Colors.black54),
           ),
           _ActionRow(
-            selectedVersion: _selectedVersion,
-            installedVersion: widget.item.installedVersion,
-            availableVersions: widget.item.versions,
+            canRemove: item.name != 'com.vrchat.base' &&
+                item.name != 'com.vrchat.core.vpm-resolver',
+            selectedVersion: item.selectedVersion,
+            installedVersion: item.installedVersion,
+            availableVersions: item.versions.map((e) => e.version).toList(),
             onSelectVersion: (version) {
-              setState(() {
-                _selectedVersion = version;
-              });
+              onSelect(item.name, version);
             },
             onClickRemove: () {
-              widget.onClickRemove(widget.item.name);
+              onClickRemove(item.name);
             },
             onClickAdd: () {
-              widget.onClickAdd(widget.item.name, _selectedVersion!);
+              onClickAdd(item.name);
             },
             onClickUpdate: () {
-              widget.onClickUpdate(widget.item.name, _selectedVersion!);
+              onClickUpdate(item.name);
             },
           ),
         ],
@@ -74,6 +61,7 @@ class _PackageListItem extends State<PackageListItem> {
 
 class _ActionRow extends StatelessWidget {
   const _ActionRow({
+    required this.canRemove,
     required this.selectedVersion,
     this.installedVersion,
     required this.availableVersions,
@@ -83,6 +71,7 @@ class _ActionRow extends StatelessWidget {
     this.onClickRemove,
   });
 
+  final bool canRemove;
   final String? selectedVersion;
   final String? installedVersion;
   final List<String> availableVersions;
@@ -104,8 +93,10 @@ class _ActionRow extends StatelessWidget {
       children
           .add(OutlinedButton(onPressed: onClickAdd, child: const Text('Add')));
     } else {
-      children.add(OutlinedButton(
-          onPressed: onClickRemove, child: const Text('Remove')));
+      if (canRemove) {
+        children.add(OutlinedButton(
+            onPressed: onClickRemove, child: const Text('Remove')));
+      }
     }
 
     children.add(const Padding(
@@ -121,12 +112,20 @@ class _ActionRow extends StatelessWidget {
       },
     ));
 
-    if (installedVersion != selectedVersion) {
-      children.add(const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 4),
-      ));
-      children.add(ElevatedButton(
-          onPressed: onClickUpdate, child: const Text('Update')));
+    if (installedVersion != null && selectedVersion != null) {
+      if (installedVersion != selectedVersion) {
+        children.add(const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 4),
+        ));
+        final compare = installedVersion!.compareTo(selectedVersion!);
+        if (compare > 0) {
+          children.add(ElevatedButton(
+              onPressed: onClickUpdate, child: const Text('Update')));
+        } else {
+          children.add(ElevatedButton(
+              onPressed: onClickUpdate, child: const Text('Downgrade')));
+        }
+      }
     }
     return children;
   }

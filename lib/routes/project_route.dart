@@ -42,14 +42,17 @@ class ProjectRoute extends StatelessWidget {
             final dep = model.packages[index];
             return PackageListItem(
               item: dep,
-              onClickAdd: (name, version) {
-                model.addPackage(name, version);
+              onSelect: (name, version) {
+                model.selectVersion(name, version);
+              },
+              onClickAdd: (name) {
+                model.addPackage(name, dep.selectedVersion!);
               },
               onClickRemove: (name) {
                 model.removePackage(name);
               },
-              onClickUpdate: ((name, version) {
-                model.updatePackage(name, version);
+              onClickUpdate: ((name) {
+                model.updatePackage(name, dep.selectedVersion!);
               }),
             );
           },

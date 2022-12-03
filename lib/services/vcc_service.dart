@@ -8,10 +8,12 @@ class VccSetting {
   VccSetting({
     required this.userProjects,
     required this.userPackageFolders,
+    required this.userRepos,
   });
 
   final List<String> userProjects;
   final List<String> userPackageFolders;
+  final List<String> userRepos;
 }
 
 class VccProject {
@@ -21,12 +23,14 @@ class VccProject {
 
   String get name => p.basename(path);
 
-  Future<Map<String, String>> getLockedDependencies() async {
+  Future<List<VpmDependency>> getLockedDependencies() async {
     var vpmManifest = File(p.join(path, 'Packages', 'vpm-manifest.json'));
     var str = await vpmManifest.readAsString();
     var vpmManifestJson = jsonDecode(str);
     Map<String, dynamic> dep = vpmManifestJson['locked'];
-    return dep.map((key, value) => MapEntry(key, value['version']));
+    return dep.entries
+        .map((e) => VpmDependency(e.key, e.value['version']))
+        .toList();
   }
 
   Future<String> getUnityEditorVersion() async {
@@ -59,18 +63,18 @@ class VpmPackage {
   bool get isPrerelease => version.contains('-');
 }
 
+class VpmDependency {
+  VpmDependency(this.name, this.version);
+
+  final String name;
+  final String version;
+}
+
 class VpmTemplate {
   VpmTemplate(this.name, this.path);
 
   final String name;
   final String path;
-}
-
-enum VpmRepositoryType {
-  all,
-  official,
-  curated,
-  user,
 }
 
 class VccService {
@@ -79,6 +83,9 @@ class VccService {
     var setting = VccSetting(
       userProjects: (json['userProjects'] as List<dynamic>).cast(),
       userPackageFolders: (json['userPackageFolders'] as List<dynamic>).cast(),
+      userRepos: (json['userRepos'] as List<dynamic>)
+          .map((e) => e['localPath'].toString())
+          .toList(),
     );
     return setting;
   }
@@ -146,29 +153,37 @@ class VccService {
     return templates.toList();
   }
 
-  Future<List<VpmPackage>> getVpmPackages(VpmRepositoryType type) async {
-    if (type == VpmRepositoryType.all) {
-      final all = await Future.wait([
-        getVpmPackages(VpmRepositoryType.official),
-        getVpmPackages(VpmRepositoryType.curated),
-        getLocalVpmPackages(),
-      ]);
-      return all.expand((element) => element).toList();
-    }
+  Future<List<VpmPackage>> getVpmPackages() async {
+    final all = await Future.wait([
+      getOfficialPackages(),
+      getCuratedPackages(),
+      getUserPackages(),
+      getLocalVpmPackages(),
+    ]);
+    return all.expand((element) => element).toList();
+  }
 
-    if (type == VpmRepositoryType.user) {
-      return getLocalVpmPackages();
-    }
-
+  Future<List<VpmPackage>> getOfficialPackages() async {
     final dir = _getSettingsDirectory();
-    var filename = '';
-    if (type == VpmRepositoryType.official) {
-      filename = 'vrc-official.json';
-    } else if (type == VpmRepositoryType.curated) {
-      filename = 'vrc-curated.json';
-    }
-    final file = File(p.join(dir.path, 'Repos', filename));
-    final str = await file.readAsString();
+    final file = File(p.join(dir.path, 'Repos', 'vrc-official.json'));
+    return _getVpmPackages(file);
+  }
+
+  Future<List<VpmPackage>> getCuratedPackages() async {
+    final dir = _getSettingsDirectory();
+    final file = File(p.join(dir.path, 'Repos', 'vrc-curated.json'));
+    return _getVpmPackages(file);
+  }
+
+  Future<List<VpmPackage>> getUserPackages() async {
+    final setting = await getSettings();
+    final lists = await Future.wait(
+        setting.userRepos.map((e) => _getVpmPackages(File(e))));
+    return lists.expand((element) => element).toList();
+  }
+
+  Future<List<VpmPackage>> _getVpmPackages(File repoFile) async {
+    final str = await repoFile.readAsString();
     final json = jsonDecode(str);
     final packages =
         (json['cache'] as Map<String, dynamic>).entries.expand((e) {

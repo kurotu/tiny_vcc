@@ -2,65 +2,36 @@ import 'dart:io';
 
 import 'package:flutter/widgets.dart';
 import 'package:tiny_vcc/repos/unity_editors_repository.dart';
+import 'package:tiny_vcc/repos/vpm_packages_repository.dart';
 import 'package:tiny_vcc/services/vcc_service.dart';
 
 class ProjectModel with ChangeNotifier {
-  ProjectModel(this.vcc, unityRepo, this.project) : _unityRepo = unityRepo;
+  ProjectModel(
+    this.vcc,
+    UnityEditorsRepository unityRepo,
+    VpmPackagesRepository packageRepo,
+    this.project,
+  )   : _unityRepo = unityRepo,
+        _packageRepo = packageRepo;
 
   final VccProject project;
   final VccService vcc;
   final UnityEditorsRepository _unityRepo;
+  final VpmPackagesRepository _packageRepo;
 
-  List<VpmPackage> _packages = [];
-  List<VpmPackage> _lockedDependencies = [];
-  List<VpmPackage> get lockedDependencies => _lockedDependencies;
+//  List<VpmPackage> _packages = [];
+  List<VpmDependency> _lockedDependencies = [];
+  List<VpmDependency> get lockedDependencies => _lockedDependencies;
 
-  List<PackageItem> get packages {
-    final List<PackageItem> list = [];
-    final locked = _lockedDependencies.map((e) => PackageItem(
-          name: e.name,
-          displayName: e.displayName,
-          description: e.description,
-          installedVersion: e.version,
-          versions: getVersions(e.name),
-        ));
-    list.addAll(locked);
-    final not = _packages
-        .where(
-            (p) => _lockedDependencies.where((e) => e.name == p.name).isEmpty)
-        .map((e) => e.name)
-        .toSet();
-    final a = not.toList();
-    list.addAll(not.map((name) {
-      final p = _packages.firstWhere((element) => element.name == name);
-      return PackageItem(
-        name: name,
-        displayName: p.displayName,
-        description: p.description,
-        installedVersion: null,
-        versions: getVersions(name),
-      );
-    }));
-    return list;
-  }
+  final Map<String, String> _selectedVersion = {};
 
-  List<String> getVersions(String name) {
-    final list = _packages
-        .where((element) => element.name == name)
-        .map((e) => e.version)
-        .toList();
-    return list.reversed.toList();
-  }
+  List<PackageItem> _packages = [];
+  List<PackageItem> get packages => _packages;
 
   void getLockedDependencies() async {
-    var deps = await project.getLockedDependencies();
-    _packages = await vcc.getVpmPackages(VpmRepositoryType.all);
-//    _packages = _packages.where((element) => !element.isPrerelease).toList();
-
-    var locked = _packages
-        .where((p) => deps.containsKey(p.name) && deps[p.name] == p.version)
-        .toList();
+    final locked = await project.getLockedDependencies();
     _lockedDependencies = locked;
+    _updateList();
     notifyListeners();
   }
 
@@ -68,6 +39,12 @@ class ProjectModel with ChangeNotifier {
     var editorVersion = await project.getUnityEditorVersion();
     final editor = await _unityRepo.getEditor(editorVersion);
     Process.run(editor!.path, ['-projectPath', project.path]);
+  }
+
+  void selectVersion(String name, String version) async {
+    _selectedVersion[name] = version;
+    _updateList();
+    notifyListeners();
   }
 
   void addPackage(String name, String version) async {
@@ -84,19 +61,56 @@ class ProjectModel with ChangeNotifier {
     await vcc.updatePackage(project.path, name, version);
     getLockedDependencies();
   }
+
+  void _updateList() {
+    final List<PackageItem> list = [];
+    final locked = _lockedDependencies.map((e) {
+      final latest = _packageRepo.getLatest(e.name);
+      return PackageItem(
+        name: e.name,
+        displayName: latest!.displayName,
+        description: latest.description,
+        installedVersion: e.version,
+        selectedVersion: _selectedVersion[e.name] ?? e.version,
+        versions: _packageRepo.getVersions(e.name),
+      );
+    });
+    list.addAll(locked);
+    final not = _packageRepo.packages
+        ?.where(
+            (p) => _lockedDependencies.where((e) => e.name == p.name).isEmpty)
+        .map((e) => e.name)
+        .toSet();
+    if (not != null) {
+      list.addAll(not.map((name) {
+        final p = _packageRepo.getLatest(name);
+        return PackageItem(
+          name: name,
+          displayName: p!.displayName,
+          description: p.description,
+          selectedVersion: _selectedVersion[p.name] ?? p.version,
+          versions: _packageRepo.getVersions(name),
+        );
+      }));
+    }
+    _packages = list;
+  }
 }
 
 class PackageItem {
-  PackageItem(
-      {required this.name,
-      required this.displayName,
-      required this.description,
-      this.installedVersion,
-      required this.versions});
+  PackageItem({
+    required this.name,
+    required this.displayName,
+    required this.description,
+    this.installedVersion,
+    this.selectedVersion,
+    required this.versions,
+  });
 
   final String name;
   final String displayName;
   final String description;
   final String? installedVersion;
-  final List<String> versions;
+  final String? selectedVersion;
+  final List<VpmPackage> versions;
 }
