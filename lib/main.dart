@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tiny_vcc/models/new_project_model.dart';
 import 'package:tiny_vcc/models/projects_model.dart';
+import 'package:tiny_vcc/repos/unity_editors_repository.dart';
 import 'package:tiny_vcc/repos/vcc_projects_repository.dart';
 import 'package:tiny_vcc/routes/new_project_route.dart';
 import 'package:tiny_vcc/routes/project_route.dart';
@@ -19,14 +20,19 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  MyApp({super.key, required this.vcc}) : vccData = VccProjectsRepository(vcc);
+  MyApp({super.key, required this.vcc})
+      : _vccData = VccProjectsRepository(vcc),
+        _unityRepo = UnityEditorsRepository(vcc);
 
   final VccService vcc;
-  final VccProjectsRepository vccData;
+  final VccProjectsRepository _vccData;
+  final UnityEditorsRepository _unityRepo;
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    _unityRepo.fetchEditors();
+
     setWindowTitle('Tiny VCC');
     return MaterialApp(
       title: 'Tiny VCC',
@@ -46,7 +52,7 @@ class MyApp extends StatelessWidget {
       routes: {
         ProjectsRoute.routeName: (context) =>
             ChangeNotifierProvider<ProjectsModel>(
-              create: (context) => ProjectsModel(vccData),
+              create: (context) => ProjectsModel(_vccData),
               child: const ProjectsRoute(),
             ),
         NewProjectRoute.routeName: (context) =>
@@ -61,7 +67,8 @@ class MyApp extends StatelessWidget {
           final args = settings.arguments as ProjectRouteArguments;
           return MaterialPageRoute(
             builder: ((context) => ChangeNotifierProvider<ProjectModel>(
-                  create: (context) => ProjectModel(vcc, args.project),
+                  create: (context) =>
+                      ProjectModel(vcc, _unityRepo, args.project),
                   child: const ProjectRoute(),
                 )),
           );

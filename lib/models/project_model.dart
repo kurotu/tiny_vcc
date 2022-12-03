@@ -1,13 +1,15 @@
 import 'dart:io';
 
 import 'package:flutter/widgets.dart';
+import 'package:tiny_vcc/repos/unity_editors_repository.dart';
 import 'package:tiny_vcc/services/vcc_service.dart';
 
 class ProjectModel with ChangeNotifier {
-  ProjectModel(this.vcc, this.project);
+  ProjectModel(this.vcc, unityRepo, this.project) : _unityRepo = unityRepo;
 
   final VccProject project;
   final VccService vcc;
+  final UnityEditorsRepository _unityRepo;
 
   List<VpmPackage> _packages = [];
   List<VpmPackage> _lockedDependencies = [];
@@ -64,9 +66,8 @@ class ProjectModel with ChangeNotifier {
 
   void openProject() async {
     var editorVersion = await project.getUnityEditorVersion();
-    var editors = await vcc.getUnityEditors();
-    var path = editors[editorVersion]!;
-    Process.run(path, ['-projectPath', project.path]);
+    final editor = await _unityRepo.getEditor(editorVersion);
+    Process.run(editor!.path, ['-projectPath', project.path]);
   }
 
   void addPackage(String name, String version) async {
