@@ -21,6 +21,9 @@ class VpmPackagesRepository {
 
   VpmPackage? getLatest(String name) {
     final versions = getVersions(name);
+    if (versions.isEmpty) {
+      return null;
+    }
     versions.sort((a, b) => a.version.compareTo(b.version));
     return versions.last;
   }

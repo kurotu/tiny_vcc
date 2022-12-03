@@ -64,7 +64,9 @@ class ProjectModel with ChangeNotifier {
 
   void _updateList() {
     final List<PackageItem> list = [];
-    final locked = _lockedDependencies.map((e) {
+    final locked = _lockedDependencies
+        .where((element) => _packageRepo.getLatest(element.name) != null)
+        .map((e) {
       final latest = _packageRepo.getLatest(e.name);
       return PackageItem(
         name: e.name,
