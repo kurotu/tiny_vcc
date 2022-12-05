@@ -74,7 +74,7 @@ class ProjectModel with ChangeNotifier {
         displayName: latest!.displayName,
         description: latest.description,
         installedVersion: e.version,
-        selectedVersion: _selectedVersion[e.name] ?? e.version,
+        selectedVersion: _selectedVersion[e.name] ?? latest.version,
         versions: _packageRepo.getVersions(e.name),
       );
     });

@@ -93,16 +93,17 @@ class _ActionRow extends StatelessWidget {
     if (installedVersion == null) {
       children
           .add(OutlinedButton(onPressed: onClickAdd, child: const Text('Add')));
-    } else {
-      if (canRemove) {
-        children.add(OutlinedButton(
-            onPressed: onClickRemove, child: const Text('Remove')));
-      }
+      children.add(const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 4),
+      ));
+    } else if (canRemove) {
+      children.add(OutlinedButton(
+          onPressed: onClickRemove, child: const Text('Remove')));
+      children.add(const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 4),
+      ));
     }
 
-    children.add(const Padding(
-      padding: EdgeInsets.symmetric(horizontal: 4),
-    ));
     children.add(DropdownButton(
       value: selectedVersion,
       items: availableVersions
