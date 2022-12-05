@@ -20,6 +20,11 @@ class NewProjectRoute extends StatelessWidget {
   Widget build(BuildContext context) {
     final model = Provider.of<NewProjectModel>(context, listen: false);
 
+    final TextEditingController projectNameController =
+        TextEditingController(text: model.projectName);
+    final TextEditingController locationController =
+        TextEditingController(text: model.location);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('New Project'),
@@ -57,7 +62,10 @@ class NewProjectRoute extends StatelessWidget {
                   }
                   return null;
                 },
-                controller: model.projectNameController,
+                controller: projectNameController,
+                onChanged: (value) {
+                  model.projectName = value;
+                },
               ),
               TextFormField(
                 decoration: InputDecoration(
@@ -66,7 +74,8 @@ class NewProjectRoute extends StatelessWidget {
                     onPressed: () async {
                       final path = await _selectLocation();
                       if (path != null) {
-                        model.locationController.text = path;
+                        model.location = path;
+                        locationController.text = path;
                       }
                     },
                     icon: const Icon(Icons.folder),
@@ -78,7 +87,7 @@ class NewProjectRoute extends StatelessWidget {
                   }
                   return null;
                 },
-                controller: model.locationController,
+                controller: locationController,
               ),
               const Padding(padding: EdgeInsets.symmetric(vertical: 8)),
               ElevatedButton(

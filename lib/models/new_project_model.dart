@@ -15,13 +15,19 @@ class NewProjectModel extends ChangeNotifier {
   VpmTemplate? _template;
   VpmTemplate? get template => _template;
 
-  final TextEditingController _projectNameController = TextEditingController();
-  TextEditingController get projectNameController => _projectNameController;
-  String get projectName => _projectNameController.text;
+  String _projectName = '';
+  String get projectName => _projectName;
+  set projectName(String name) {
+    _projectName = name;
+    notifyListeners();
+  }
 
-  final TextEditingController _locationController = TextEditingController();
-  TextEditingController get locationController => _locationController;
-  String get location => _locationController.text;
+  String _location = '';
+  String get location => _location;
+  set location(String location) {
+    _location = location;
+    notifyListeners();
+  }
 
   String get projectPath => p.join(location, projectName);
 
