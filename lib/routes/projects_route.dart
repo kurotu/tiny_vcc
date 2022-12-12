@@ -6,11 +6,18 @@ import 'package:tiny_vcc/models/projects_model.dart';
 import 'package:tiny_vcc/routes/new_project_route.dart';
 import 'package:tiny_vcc/routes/project_route.dart';
 
-class ProjectsRoute extends StatelessWidget {
+import '../main.dart';
+
+class ProjectsRoute extends StatefulWidget {
   const ProjectsRoute({super.key});
 
   static const String routeName = '/projects';
 
+  @override
+  State<ProjectsRoute> createState() => _ProjectsRoute();
+}
+
+class _ProjectsRoute extends State<ProjectsRoute> with RouteAware {
   void _addProject(ProjectsModel model) async {
     var path =
         await FilePicker.platform.getDirectoryPath(lockParentWindow: true);
@@ -20,10 +27,36 @@ class ProjectsRoute extends StatelessWidget {
     model.addProject(path);
   }
 
+  void _refreshProjects() {
+    final model = Provider.of<ProjectsModel>(context, listen: false);
+    model.getProjects();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPush() {
+    _refreshProjects();
+  }
+
+  @override
+  void didPopNext() {
+    _refreshProjects();
+  }
+
   @override
   Widget build(BuildContext context) {
     final model = Provider.of<ProjectsModel>(context, listen: false);
-    model.getProjects();
 
     final ButtonStyle style = TextButton.styleFrom(
       foregroundColor: Theme.of(context).colorScheme.onPrimary,

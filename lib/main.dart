@@ -15,6 +15,9 @@ import 'package:window_size/window_size.dart';
 
 import 'models/project_model.dart';
 
+final RouteObserver<ModalRoute<void>> routeObserver =
+    RouteObserver<ModalRoute<void>>();
+
 void main() {
   runApp(MyApp(
     vcc: VccService(),
@@ -87,6 +90,7 @@ class MyApp extends StatelessWidget {
         }
         return null;
       },
+      navigatorObservers: [routeObserver],
     );
   }
 }
