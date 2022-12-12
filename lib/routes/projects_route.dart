@@ -51,7 +51,20 @@ class ProjectsRoute extends StatelessWidget {
         ],
       ),
       body: Consumer<ProjectsModel>(
-        builder: (context, model, child) => ListView.builder(
+        builder: (context, model, child) =>
+            Column(children: buildColumn(model)),
+      ),
+    );
+  }
+
+  List<Widget> buildColumn(ProjectsModel model) {
+    final List<Widget> list = [];
+    if (!model.hasVpmCli) {
+      list.add(const Text('VPM CLI needed'));
+    }
+    list.add(
+      Expanded(
+        child: ListView.builder(
           itemCount: model.projects.length,
           itemBuilder: (context, index) => ListTile(
             title: Text(model.projects[index].name),
@@ -74,5 +87,6 @@ class ProjectsRoute extends StatelessWidget {
         ),
       ),
     );
+    return list;
   }
 }

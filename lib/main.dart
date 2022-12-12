@@ -4,6 +4,7 @@ import 'package:tiny_vcc/models/new_project_model.dart';
 import 'package:tiny_vcc/models/projects_model.dart';
 import 'package:tiny_vcc/repos/unity_editors_repository.dart';
 import 'package:tiny_vcc/repos/vcc_projects_repository.dart';
+import 'package:tiny_vcc/repos/vcc_setting_repository.dart';
 import 'package:tiny_vcc/repos/vpm_packages_repository.dart';
 import 'package:tiny_vcc/routes/new_project_route.dart';
 import 'package:tiny_vcc/routes/project_route.dart';
@@ -24,18 +25,21 @@ class MyApp extends StatelessWidget {
   MyApp({super.key, required this.vcc})
       : _projectsRepo = VccProjectsRepository(vcc),
         _packagesRepository = VpmPackagesRepository(vcc),
-        _unityRepo = UnityEditorsRepository(vcc);
+        _unityRepo = UnityEditorsRepository(vcc),
+        _settingRepo = VccSettingRepository(vcc);
 
   final VccService vcc;
   final VccProjectsRepository _projectsRepo;
   final VpmPackagesRepository _packagesRepository;
   final UnityEditorsRepository _unityRepo;
+  final VccSettingRepository _settingRepo;
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     _unityRepo.fetchEditors();
     _packagesRepository.fetchPackages();
+    _settingRepo.checkVpmCli();
 
     setWindowTitle('Tiny VCC');
     return MaterialApp(
@@ -56,7 +60,7 @@ class MyApp extends StatelessWidget {
       routes: {
         ProjectsRoute.routeName: (context) =>
             ChangeNotifierProvider<ProjectsModel>(
-              create: (context) => ProjectsModel(_projectsRepo),
+              create: (context) => ProjectsModel(_projectsRepo, _settingRepo),
               child: const ProjectsRoute(),
             ),
         NewProjectRoute.routeName: (context) =>

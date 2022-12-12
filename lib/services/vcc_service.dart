@@ -79,6 +79,14 @@ class VpmTemplate {
 }
 
 class VccService {
+  Future<Version> getVersion() async {
+    final result = await Process.run('vpm', ['--version']);
+    if (result.exitCode != 0) {
+      throw 'vpm-cli returned ${result.exitCode}';
+    }
+    return Version.parse(result.stdout.toString().trim());
+  }
+
   Future<VccSetting> getSettings() async {
     var json = await _getSettingsJson();
     var setting = VccSetting(
