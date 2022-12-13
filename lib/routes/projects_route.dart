@@ -31,14 +31,16 @@ class _ProjectsRoute extends State<ProjectsRoute> with RouteAware {
     final model = Provider.of<ProjectsModel>(context, listen: false);
     model.fetchVpmVersion().then((version) {
       if (version != null) {
-        ScaffoldMessenger.of(context).clearMaterialBanners();
         model.getProjects();
       } else {
-        ScaffoldMessenger.of(context).showMaterialBanner(MaterialBanner(
+        scaffoldKey.currentState?.showMaterialBanner(MaterialBanner(
           content: const Text('VPM CLI is missing'),
           actions: [
             TextButton(
               onPressed: () async {
+                scaffoldKey.currentState?.clearMaterialBanners();
+                scaffoldKey.currentState?.showSnackBar(
+                    const SnackBar(content: Text('Installing vrchat.vpm.cli')));
                 await model.installVpmCli();
                 _refreshProjects();
               },

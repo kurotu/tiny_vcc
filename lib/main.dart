@@ -1,5 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:github/github.dart';
 import 'package:provider/provider.dart';
+import 'package:pub_semver/pub_semver.dart';
 import 'package:tiny_vcc/models/new_project_model.dart';
 import 'package:tiny_vcc/models/projects_model.dart';
 import 'package:tiny_vcc/repos/unity_editors_repository.dart';
@@ -10,15 +14,51 @@ import 'package:tiny_vcc/routes/new_project_route.dart';
 import 'package:tiny_vcc/routes/project_route.dart';
 import 'package:tiny_vcc/routes/projects_route.dart';
 import 'package:tiny_vcc/routes/settings_route.dart';
+import 'package:tiny_vcc/services/updater_service.dart';
 import 'package:tiny_vcc/services/vcc_service.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:window_size/window_size.dart';
 
 import 'models/project_model.dart';
 
 final RouteObserver<ModalRoute<void>> routeObserver =
     RouteObserver<ModalRoute<void>>();
+final scaffoldKey = GlobalKey<ScaffoldMessengerState>();
+
+Future<void> _checkForUpdate() async {
+  final current = Version(0, 0, 0);
+  final latest = await UpdaterService(RepositorySlug('kurotu', 'VRCQuestTools'))
+      .getLatestRelease();
+  final latestVersion =
+      Version.parse(latest.tagName!.replaceFirst(RegExp('^v'), ''));
+  if (latestVersion > current) {
+    scaffoldKey.currentState?.showMaterialBanner(MaterialBanner(
+      content: Text('New version $latestVersion is available.'),
+      actions: [
+        TextButton(
+          onPressed: () {
+            launchUrl(Uri.parse(latest.htmlUrl!));
+            scaffoldKey.currentState?.clearMaterialBanners();
+          },
+          child: const Text('Download'),
+        ),
+        TextButton(
+          onPressed: () {
+            scaffoldKey.currentState?.clearMaterialBanners();
+          },
+          child: const Text('Dismiss'),
+        ),
+      ],
+    ));
+  }
+}
 
 void main() {
+  Timer.periodic(const Duration(days: 1), ((timer) {
+    _checkForUpdate();
+  }));
+  _checkForUpdate();
+
   runApp(MyApp(
     vcc: VccService(),
   ));
@@ -59,6 +99,7 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
+      scaffoldMessengerKey: scaffoldKey,
       initialRoute: ProjectsRoute.routeName,
       routes: {
         ProjectsRoute.routeName: (context) =>
