@@ -20,7 +20,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: windows
-          path: build
+          path: build/windows/runner/Release
 
   build-macos:
     runs-on: macos-latest
@@ -34,7 +34,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: macos
-          path: build
+          path: build/macos/Build/Products/Release/*.app
 
   build-linux:
     runs-on: ubuntu-latest
@@ -51,4 +51,4 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: linux
-          path: build
+          path: build/linux/x64/release/bundle
