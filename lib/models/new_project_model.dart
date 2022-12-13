@@ -2,9 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:tiny_vcc/services/vcc_service.dart';
 
 class NewProjectModel extends ChangeNotifier {
-  NewProjectModel(VccService vcc) : _vcc = vcc {
-    getProjectTemplates();
-  }
+  NewProjectModel(VccService vcc) : _vcc = vcc;
 
   final VccService _vcc;
 

@@ -110,7 +110,7 @@ class MyApp extends StatelessWidget {
         NewProjectRoute.routeName: (context) =>
             ChangeNotifierProvider<NewProjectModel>(
               create: (context) => NewProjectModel(vcc),
-              child: NewProjectRoute(),
+              child: const NewProjectRoute(),
             ),
         SettingsRoute.routeName: ((context) => const SettingsRoute(counter: 1)),
       },

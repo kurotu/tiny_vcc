@@ -4,12 +4,19 @@ import 'package:provider/provider.dart';
 import 'package:tiny_vcc/models/new_project_model.dart';
 import 'package:tiny_vcc/routes/project_route.dart';
 
-class NewProjectRoute extends StatelessWidget {
+import '../main.dart';
+
+class NewProjectRoute extends StatefulWidget {
   static const routeName = '/new_project';
 
-  final _formKey = GlobalKey<FormState>();
+  const NewProjectRoute({super.key});
 
-  NewProjectRoute({super.key});
+  @override
+  State<NewProjectRoute> createState() => _NewProjectRoute();
+}
+
+class _NewProjectRoute extends State<NewProjectRoute> with RouteAware {
+  final _formKey = GlobalKey<FormState>();
 
   Future<String?> _selectLocation() {
     return FilePicker.platform.getDirectoryPath(lockParentWindow: true);
@@ -17,6 +24,23 @@ class NewProjectRoute extends StatelessWidget {
 
   NewProjectModel _model(BuildContext context) {
     return Provider.of<NewProjectModel>(context, listen: false);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPush() {
+    _model(context).getProjectTemplates();
   }
 
   @override
