@@ -42,7 +42,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     _unityRepo.fetchEditors();
     _packagesRepository.fetchPackages();
-    _settingRepo.checkVpmCli();
+    _settingRepo.fetchCliVersion();
 
     setWindowTitle('Tiny VCC');
     return MaterialApp(

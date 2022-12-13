@@ -29,7 +29,25 @@ class _ProjectsRoute extends State<ProjectsRoute> with RouteAware {
 
   void _refreshProjects() {
     final model = Provider.of<ProjectsModel>(context, listen: false);
-    model.getProjects();
+    model.fetchVpmVersion().then((version) {
+      if (version != null) {
+        ScaffoldMessenger.of(context).clearMaterialBanners();
+        model.getProjects();
+      } else {
+        ScaffoldMessenger.of(context).showMaterialBanner(MaterialBanner(
+          content: const Text('VPM CLI is missing'),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                await model.installVpmCli();
+                _refreshProjects();
+              },
+              child: const Text('Install'),
+            ),
+          ],
+        ));
+      }
+    });
   }
 
   @override
@@ -54,10 +72,12 @@ class _ProjectsRoute extends State<ProjectsRoute> with RouteAware {
     _refreshProjects();
   }
 
+  ProjectsModel _model(BuildContext context) {
+    return Provider.of<ProjectsModel>(context, listen: false);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final model = Provider.of<ProjectsModel>(context, listen: false);
-
     final ButtonStyle style = TextButton.styleFrom(
       foregroundColor: Theme.of(context).colorScheme.onPrimary,
     );
@@ -70,7 +90,7 @@ class _ProjectsRoute extends State<ProjectsRoute> with RouteAware {
           TextButton(
             style: style,
             onPressed: () {
-              _addProject(model);
+              _addProject(_model(context));
             },
             child: const Text('Add'),
           ),
@@ -92,9 +112,6 @@ class _ProjectsRoute extends State<ProjectsRoute> with RouteAware {
 
   List<Widget> buildColumn(ProjectsModel model) {
     final List<Widget> list = [];
-    if (!model.hasVpmCli) {
-      list.add(const Text('VPM CLI needed'));
-    }
     list.add(
       Expanded(
         child: ListView.builder(

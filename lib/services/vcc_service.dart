@@ -79,10 +79,11 @@ class VpmTemplate {
 }
 
 class VccService {
-  Future<Version> getVersion() async {
+  Future<Version?> getCliVersion() async {
     final result = await Process.run('vpm', ['--version']);
     if (result.exitCode != 0) {
-      throw 'vpm-cli returned ${result.exitCode}';
+      print('vpm-cli returned ${result.exitCode}');
+      return null;
     }
     return Version.parse(result.stdout.toString().trim());
   }

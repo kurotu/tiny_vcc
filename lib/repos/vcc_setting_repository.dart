@@ -9,7 +9,8 @@ class VccSettingRepository {
   Version? _vpmVersion;
   Version? get vpmVersion => _vpmVersion;
 
-  Future<void> checkVpmCli() async {
-    _vpmVersion = await _vcc.getVersion();
+  Future<Version> fetchCliVersion() async {
+    _vpmVersion = await _vcc.getCliVersion();
+    return _vpmVersion!;
   }
 }
