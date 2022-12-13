@@ -1,5 +1,4 @@
 import 'package:flutter/widgets.dart';
-import 'package:path/path.dart' as p;
 import 'package:tiny_vcc/services/vcc_service.dart';
 
 class NewProjectModel extends ChangeNotifier {
@@ -29,7 +28,8 @@ class NewProjectModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  String get projectPath => p.join(location, projectName);
+  bool _isCreatingProject = false;
+  bool get isCreatingProject => _isCreatingProject;
 
   Future<void> getProjectTemplates() async {
     final templates = await _vcc.getTemplates();
@@ -42,7 +42,20 @@ class NewProjectModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> createProject() {
-    return _vcc.createNewProject(template!, projectName, location);
+  Future<VccProject> createProject() async {
+    _isCreatingProject = true;
+    notifyListeners();
+    try {
+      final project =
+          await _vcc.createNewProject(template!, projectName, location);
+      _isCreatingProject = false;
+      notifyListeners();
+      return project;
+    } catch (err) {
+      _isCreatingProject = false;
+      notifyListeners();
+      print(err);
+      rethrow;
+    }
   }
 }

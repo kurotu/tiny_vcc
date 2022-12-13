@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tiny_vcc/models/new_project_model.dart';
 import 'package:tiny_vcc/routes/project_route.dart';
-import 'package:tiny_vcc/services/vcc_service.dart';
 
 class NewProjectRoute extends StatelessWidget {
   static const routeName = '/new_project';
@@ -16,14 +15,16 @@ class NewProjectRoute extends StatelessWidget {
     return FilePicker.platform.getDirectoryPath(lockParentWindow: true);
   }
 
+  NewProjectModel _model(BuildContext context) {
+    return Provider.of<NewProjectModel>(context, listen: false);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final model = Provider.of<NewProjectModel>(context, listen: false);
-
     final TextEditingController projectNameController =
-        TextEditingController(text: model.projectName);
+        TextEditingController(text: _model(context).projectName);
     final TextEditingController locationController =
-        TextEditingController(text: model.location);
+        TextEditingController(text: _model(context).location);
 
     return Scaffold(
       appBar: AppBar(
@@ -64,19 +65,21 @@ class NewProjectRoute extends StatelessWidget {
                 },
                 controller: projectNameController,
                 onChanged: (value) {
-                  model.projectName = value;
+                  _model(context).projectName = value;
                 },
               ),
               TextFormField(
                 decoration: InputDecoration(
                   labelText: 'Location',
                   suffixIcon: IconButton(
-                    onPressed: () async {
-                      final path = await _selectLocation();
-                      if (path != null) {
-                        model.location = path;
-                        locationController.text = path;
-                      }
+                    onPressed: () {
+                      final model = _model(context);
+                      _selectLocation().then((path) {
+                        if (path != null) {
+                          model.location = path;
+                          locationController.text = path;
+                        }
+                      });
                     },
                     icon: const Icon(Icons.folder),
                   ),
@@ -90,23 +93,31 @@ class NewProjectRoute extends StatelessWidget {
                 controller: locationController,
               ),
               const Padding(padding: EdgeInsets.symmetric(vertical: 8)),
-              ElevatedButton(
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    model.createProject().then((value) {
-                      Navigator.pushReplacementNamed(
-                        context,
-                        ProjectRoute.routeName,
-                        arguments: ProjectRouteArguments(
-                            project: VccProject(model.projectPath)),
-                      );
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text(
-                              'Creating ${model.template?.name} project, ${model.projectName} at ${model.location}')));
-                    });
-                  }
-                },
-                child: const Text('Create'),
+              Consumer<NewProjectModel>(
+                builder: (context, model, child) => ElevatedButton(
+                  onPressed: model.isCreatingProject
+                      ? null
+                      : () {
+                          if (_formKey.currentState!.validate()) {
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content: Text(
+                                  'Creating ${model.template?.name} project, "${model.projectName}" at ${model.location}'),
+                            ));
+                            model.createProject().then((project) {
+                              Navigator.pushReplacementNamed(
+                                context,
+                                ProjectRoute.routeName,
+                                arguments:
+                                    ProjectRouteArguments(project: project),
+                              );
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                  content: Text(
+                                      '${model.template?.name} project, "${project.name}" has been created at ${project.path}')));
+                            });
+                          }
+                        },
+                  child: const Text('Create'),
+                ),
               ),
             ],
           ),
