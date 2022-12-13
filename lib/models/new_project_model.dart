@@ -33,7 +33,8 @@ class NewProjectModel extends ChangeNotifier {
 
   Future<void> getProjectTemplates() async {
     final templates = await _vcc.getTemplates();
-    _projectTemplates = templates;
+    _projectTemplates =
+        templates.where((element) => element.name != 'Base').toList();
     notifyListeners();
   }
 
