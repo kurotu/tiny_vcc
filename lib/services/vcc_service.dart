@@ -107,7 +107,7 @@ class VccService {
     }
   }
 
-  Future<void> createNewProject(
+  Future<VccProject> createNewProject(
       VpmTemplate template, String name, String location) async {
     final result = await Process.run('vpm', [
       'new',
@@ -119,7 +119,9 @@ class VccService {
     if (result.exitCode != 0) {
       throw Exception('vpm returned exit code ${result.exitCode}');
     }
-    return addUserProject(Directory(p.join(location, name)));
+    final path = p.join(location, name);
+    await addUserProject(Directory(path));
+    return VccProject(path);
   }
 
   Future<void> deleteUserProject(VccProject project) async {
