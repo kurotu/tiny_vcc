@@ -5,6 +5,7 @@ import 'package:tiny_vcc/main_drawer.dart';
 import 'package:tiny_vcc/models/projects_model.dart';
 import 'package:tiny_vcc/routes/new_project_route.dart';
 import 'package:tiny_vcc/routes/project_route.dart';
+import 'package:tiny_vcc/services/vcc_service.dart';
 
 import '../main.dart';
 
@@ -21,10 +22,36 @@ class _ProjectsRoute extends State<ProjectsRoute> with RouteAware {
   void _addProject(ProjectsModel model) async {
     var path =
         await FilePicker.platform.getDirectoryPath(lockParentWindow: true);
-    if (path == null) {
-      return;
+    try {
+      await model.addProject(path);
+    } on VccProjectType catch (type) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Invalid Project'),
+          content: Text(() {
+            switch (type) {
+              case VccProjectType.invalid:
+              case VccProjectType.unknown:
+                return '"$path" is not a valid Unity project.';
+              case VccProjectType.legacySdk2:
+                return '"$path" is a VRCSDK2 project.';
+              case VccProjectType.avatarVpm:
+              case VccProjectType.worldVpm:
+              case VccProjectType.legacySdk3Avatar:
+              case VccProjectType.legacySdk3World:
+                throw Error();
+            }
+          }()),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, 'OK'),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
     }
-    model.addProject(path);
   }
 
   void _refreshProjects() {

@@ -33,6 +33,10 @@ class VccProjectsRepository {
     await fetchVccProjects();
   }
 
+  Future<VccProjectType> checkProjectType(VccProject project) {
+    return _vcc.checkUserProject(project);
+  }
+
   void _sortProjects() {
     _projects?.sort(((a, b) => a.name.compareTo(b.name)));
   }

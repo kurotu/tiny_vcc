@@ -44,8 +44,13 @@ class VccProject {
 }
 
 enum VccProjectType {
-  avatar,
-  world,
+  avatarVpm,
+  worldVpm,
+  legacySdk3Avatar,
+  legacySdk3World,
+  legacySdk2,
+  invalid,
+  unknown,
 }
 
 class VpmPackage {
@@ -129,6 +134,36 @@ class VccService {
     var json = await _getSettingsJson();
     json['userProjects'].removeWhere((path) => path == project.path);
     await _writeSettingsJson(json);
+  }
+
+  Future<VccProjectType> checkUserProject(VccProject project) async {
+    final result = await Process.run('vpm', ['check', 'project', project.path]);
+    if (result.exitCode != 0) {
+      throw 'vpm returned exit code ${result.exitCode}';
+    }
+    final str = result.stdout.toString();
+    if (str.contains('AvatarVPM')) {
+      return VccProjectType.avatarVpm;
+    }
+    if (str.contains('WorldVPM')) {
+      return VccProjectType.worldVpm;
+    }
+    if (str.contains('LegacySDK3Avatar')) {
+      return VccProjectType.legacySdk3Avatar;
+    }
+    if (str.contains('LegacySDK3World')) {
+      return VccProjectType.legacySdk3World;
+    }
+    if (str.contains('LegacySDK2')) {
+      return VccProjectType.legacySdk2;
+    }
+    if (str.contains('Not a valid unity project')) {
+      return VccProjectType.invalid;
+    }
+    if (str.contains('Unknown')) {
+      return VccProjectType.unknown;
+    }
+    throw 'Unhandled output: ${str.trim()}';
   }
 
   Future<Map<String, String>> getUnityEditors() async {
