@@ -8,6 +8,7 @@ import 'package:tiny_vcc/routes/project_route.dart';
 import 'package:tiny_vcc/services/vcc_service.dart';
 
 import '../main.dart';
+import 'legacy_project_route.dart';
 
 class ProjectsRoute extends StatefulWidget {
   const ProjectsRoute({super.key});
@@ -77,6 +78,36 @@ class _ProjectsRoute extends State<ProjectsRoute> with RouteAware {
         ));
       }
     });
+  }
+
+  Future<void> _didSelectProject(VccProject project) async {
+    final type = await _model(context).checkProjectType(project);
+    if (!mounted) {
+      return;
+    }
+    switch (type) {
+      case VccProjectType.avatarVpm:
+      case VccProjectType.worldVpm:
+        Navigator.pushNamed(
+          context,
+          ProjectRoute.routeName,
+          arguments: ProjectRouteArguments(project: project),
+        );
+        break;
+      case VccProjectType.legacySdk3Avatar:
+      case VccProjectType.legacySdk3World:
+        Navigator.pushNamed(
+          context,
+          LegacyProjectRoute.routeName,
+          arguments: LegacyProjectRouteArguments(project: project),
+        );
+        break;
+      case VccProjectType.legacySdk2:
+        throw Error();
+      case VccProjectType.invalid:
+      case VccProjectType.unknown:
+        throw Error();
+    }
   }
 
   @override
@@ -149,11 +180,7 @@ class _ProjectsRoute extends State<ProjectsRoute> with RouteAware {
             title: Text(model.projects[index].name),
             onTap: () {
               var project = model.projects[index];
-              Navigator.pushNamed(
-                context,
-                ProjectRoute.routeName,
-                arguments: ProjectRouteArguments(project: project),
-              );
+              _didSelectProject(project);
             },
             subtitle: Text(model.projects[index].path),
             trailing: IconButton(

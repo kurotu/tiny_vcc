@@ -4,12 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:github/github.dart';
 import 'package:provider/provider.dart';
 import 'package:pub_semver/pub_semver.dart';
+import 'package:tiny_vcc/models/legacy_project_model.dart';
 import 'package:tiny_vcc/models/new_project_model.dart';
 import 'package:tiny_vcc/models/projects_model.dart';
 import 'package:tiny_vcc/repos/unity_editors_repository.dart';
 import 'package:tiny_vcc/repos/vcc_projects_repository.dart';
 import 'package:tiny_vcc/repos/vcc_setting_repository.dart';
 import 'package:tiny_vcc/repos/vpm_packages_repository.dart';
+import 'package:tiny_vcc/routes/legacy_project_route.dart';
 import 'package:tiny_vcc/routes/new_project_route.dart';
 import 'package:tiny_vcc/routes/project_route.dart';
 import 'package:tiny_vcc/routes/projects_route.dart';
@@ -126,6 +128,14 @@ class MyApp extends StatelessWidget {
                     args.project,
                   ),
                   child: const ProjectRoute(),
+                )),
+          );
+        } else if (settings.name == LegacyProjectRoute.routeName) {
+          final args = settings.arguments as LegacyProjectRouteArguments;
+          return MaterialPageRoute(
+            builder: ((context) => ChangeNotifierProvider<LegacyProjectModel>(
+                  create: ((context) => LegacyProjectModel(args.project)),
+                  child: const LegacyProjectRoute(),
                 )),
           );
         }
