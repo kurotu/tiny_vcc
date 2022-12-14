@@ -37,6 +37,14 @@ class VccProjectsRepository {
     return _vcc.checkUserProject(project);
   }
 
+  Future<VccProject> migrateCopy(VccProject project) {
+    return _vcc.migrateProject(project, false);
+  }
+
+  Future<VccProject> migrateInPlace(VccProject project) {
+    return _vcc.migrateProject(project, true);
+  }
+
   void _sortProjects() {
     _projects?.sort(((a, b) => a.name.compareTo(b.name)));
   }

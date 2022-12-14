@@ -134,7 +134,8 @@ class MyApp extends StatelessWidget {
           final args = settings.arguments as LegacyProjectRouteArguments;
           return MaterialPageRoute(
             builder: ((context) => ChangeNotifierProvider<LegacyProjectModel>(
-                  create: ((context) => LegacyProjectModel(args.project)),
+                  create: ((context) =>
+                      LegacyProjectModel(_projectsRepo, args.project)),
                   child: const LegacyProjectRoute(),
                 )),
           );

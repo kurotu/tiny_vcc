@@ -136,6 +136,27 @@ class VccService {
     await _writeSettingsJson(json);
   }
 
+  Future<VccProject> migrateProject(VccProject project, bool inPlace) async {
+    final args = ['migrate', 'project', project.path];
+    if (inPlace) {
+      args.add('--inplace');
+    }
+    final result = await Process.run('vpm', args);
+    if (result.exitCode != 0) {
+      throw Exception('vpm returned exit code ${result.exitCode}');
+    }
+    if (inPlace) {
+      return project;
+    }
+    final lines = result.stdout.toString().split('\n').map((e) => e.trim());
+    final reg = RegExp('Copying ${RegExp.escape(project.path)} to (.*)');
+    final theLine = lines.firstWhere((l) => reg.hasMatch(l));
+    final match = reg.allMatches(theLine);
+    final path = match.toList()[0][1]!;
+    await addUserProject(Directory(path));
+    return VccProject(path);
+  }
+
   Future<VccProjectType> checkUserProject(VccProject project) async {
     final result = await Process.run('vpm', ['check', 'project', project.path]);
     if (result.exitCode != 0) {
