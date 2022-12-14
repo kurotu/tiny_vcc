@@ -1,17 +1,21 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:archive/archive_io.dart';
+import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import 'package:pub_semver/pub_semver.dart';
 import 'package:yaml/yaml.dart';
 
 class VccSetting {
   VccSetting({
+    required this.projectBackupPath,
     required this.userProjects,
     required this.userPackageFolders,
     required this.userRepos,
   });
 
+  final String projectBackupPath;
   final List<String> userProjects;
   final List<String> userPackageFolders;
   final List<String> userRepos;
@@ -96,6 +100,7 @@ class VccService {
   Future<VccSetting> getSettings() async {
     var json = await _getSettingsJson();
     var setting = VccSetting(
+      projectBackupPath: json['projectBackupPath'].toString(),
       userProjects: (json['userProjects'] as List<dynamic>).cast(),
       userPackageFolders: (json['userPackageFolders'] as List<dynamic>).cast(),
       userRepos: (json['userRepos'] as List<dynamic>)
@@ -155,6 +160,30 @@ class VccService {
     final path = match.toList()[0][1]!;
     await addUserProject(Directory(path));
     return VccProject(path);
+  }
+
+  Future<File> backupProject(VccProject project) async {
+    final settings = await getSettings();
+    final DateFormat outputFormat = DateFormat('yyyy-MM-ddTHH.mm.ss');
+    final zipPath = p.join(settings.projectBackupPath,
+        '${project.name}-backup-${outputFormat.format(DateTime.now())}.zip');
+
+    final encoder = ZipFileEncoder();
+    encoder.create(zipPath);
+
+    final entities = Directory(project.path).listSync();
+    for (final e in entities) {
+      if (e is Directory) {
+        if (e.path.endsWith('Library') || e.path.endsWith('Logs')) {
+          continue;
+        }
+        await encoder.addDirectory(e);
+      } else if (e is File) {
+        await encoder.addFile(e);
+      }
+    }
+    encoder.close();
+    return File(encoder.zipPath);
   }
 
   Future<VccProjectType> checkUserProject(VccProject project) async {

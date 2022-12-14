@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tiny_vcc/routes/project_route.dart';
 import 'package:tiny_vcc/services/vcc_service.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../models/legacy_project_model.dart';
 
@@ -74,7 +75,31 @@ class LegacyProjectRoute extends StatelessWidget {
     );
   }
 
-  void _didClickMakeBackup() {}
+  void _didClickMakeBackup(BuildContext context) async {
+    final file = await _model(context).backup();
+    showDialog(
+      context: context,
+      builder: ((context) => AlertDialog(
+            title: const Text('Made Backup'),
+            content: Text(file.path),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text('OK'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  launchUrl(Uri.file(file.parent.path));
+                },
+                child: const Text('Show Me'),
+              ),
+            ],
+          )),
+    );
+  }
 
   void _showMigrationProgressDialog(BuildContext context) {
     showDialog(
@@ -105,7 +130,9 @@ class LegacyProjectRoute extends StatelessWidget {
                 },
                 child: const Text('Migrate')),
             OutlinedButton(
-                onPressed: _didClickMakeBackup,
+                onPressed: () {
+                  _didClickMakeBackup(context);
+                },
                 child: const Text('Make Backup')),
           ],
         ),

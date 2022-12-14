@@ -45,6 +45,10 @@ class VccProjectsRepository {
     return _vcc.migrateProject(project, true);
   }
 
+  Future<File> backup(VccProject project) {
+    return _vcc.backupProject(project);
+  }
+
   void _sortProjects() {
     _projects?.sort(((a, b) => a.name.compareTo(b.name)));
   }
