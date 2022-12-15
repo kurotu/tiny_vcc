@@ -75,6 +75,11 @@ class LegacyProjectRoute extends StatelessWidget {
     );
   }
 
+  void _didClickOpenFolder(BuildContext context) {
+    final uri = Uri.file(_model(context).project.path);
+    launchUrl(uri);
+  }
+
   void _didClickMakeBackup(BuildContext context) async {
     final file = await _model(context).backup();
     final showFile = await showDialog(
@@ -134,6 +139,15 @@ class LegacyProjectRoute extends StatelessWidget {
                           _didClickMigrate(context);
                         },
                   child: const Text('Migrate'))),
+            ),
+            Consumer<LegacyProjectModel>(
+              builder: ((context, value, child) => OutlinedButton(
+                  onPressed: value.isDoingTask
+                      ? null
+                      : () {
+                          _didClickOpenFolder(context);
+                        },
+                  child: const Text('Open Folder'))),
             ),
             Consumer<LegacyProjectModel>(
               builder: ((context, value, child) => OutlinedButton(
