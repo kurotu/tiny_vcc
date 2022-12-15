@@ -93,6 +93,7 @@ class _NewProjectRoute extends State<NewProjectRoute> with RouteAware {
                 },
               ),
               TextFormField(
+                readOnly: true,
                 decoration: InputDecoration(
                   labelText: 'Location',
                   suffixIcon: IconButton(
