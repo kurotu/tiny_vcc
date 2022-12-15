@@ -29,8 +29,16 @@ final scaffoldKey = GlobalKey<ScaffoldMessengerState>();
 
 Future<void> _checkForUpdate() async {
   final current = Version(0, 0, 0);
-  final latest = await UpdaterService(RepositorySlug('kurotu', 'VRCQuestTools'))
-      .getLatestRelease();
+  final Release latest;
+  try {
+    latest = await UpdaterService(RepositorySlug('kurotu', 'tiny-vcc'))
+        .getLatestRelease();
+  } catch (error) {
+    scaffoldKey.currentState?.showSnackBar(SnackBar(
+      content: Text('Failed to check for update: $error'),
+    ));
+    return;
+  }
   final latestVersion =
       Version.parse(latest.tagName!.replaceFirst(RegExp('^v'), ''));
   if (latestVersion > current) {
