@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:tiny_vcc/services/vcc_service.dart';
@@ -45,7 +46,7 @@ class VccProjectsRepository {
     return _vcc.migrateProject(project, true);
   }
 
-  Future<File> backup(VccProject project) {
+  Future<File> backup(VccProject project) async {
     return _vcc.backupProject(project);
   }
 

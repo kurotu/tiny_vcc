@@ -77,7 +77,7 @@ class LegacyProjectRoute extends StatelessWidget {
 
   void _didClickMakeBackup(BuildContext context) async {
     final file = await _model(context).backup();
-    showDialog(
+    final showFile = await showDialog(
       context: context,
       builder: ((context) => AlertDialog(
             title: const Text('Made Backup'),
@@ -91,14 +91,16 @@ class LegacyProjectRoute extends StatelessWidget {
               ),
               TextButton(
                 onPressed: () {
-                  Navigator.pop(context);
-                  launchUrl(Uri.file(file.parent.path));
+                  Navigator.pop(context, true);
                 },
                 child: const Text('Show Me'),
               ),
             ],
           )),
     );
+    if (showFile != null && showFile) {
+      launchUrl(Uri.file(file.parent.path));
+    }
   }
 
   void _showMigrationProgressDialog(BuildContext context) {
@@ -124,16 +126,24 @@ class LegacyProjectRoute extends StatelessWidget {
           spacing: 8,
           runSpacing: 8,
           children: [
-            OutlinedButton(
-                onPressed: () {
-                  _didClickMigrate(context);
-                },
-                child: const Text('Migrate')),
-            OutlinedButton(
-                onPressed: () {
-                  _didClickMakeBackup(context);
-                },
-                child: const Text('Make Backup')),
+            Consumer<LegacyProjectModel>(
+              builder: ((context, value, child) => OutlinedButton(
+                  onPressed: value.isDoingTask
+                      ? null
+                      : () {
+                          _didClickMigrate(context);
+                        },
+                  child: const Text('Migrate'))),
+            ),
+            Consumer<LegacyProjectModel>(
+              builder: ((context, value, child) => OutlinedButton(
+                  onPressed: value.isDoingTask
+                      ? null
+                      : () {
+                          _didClickMakeBackup(context);
+                        },
+                  child: const Text('Make Backup'))),
+            ),
           ],
         ),
       ),
