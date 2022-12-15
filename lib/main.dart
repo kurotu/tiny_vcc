@@ -124,6 +124,7 @@ class MyApp extends StatelessWidget {
                   create: (context) => ProjectModel(
                     vcc,
                     _unityRepo,
+                    _projectsRepo,
                     _packagesRepository,
                     args.project,
                   ),
