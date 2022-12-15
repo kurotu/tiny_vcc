@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -81,6 +83,12 @@ class _ProjectsRoute extends State<ProjectsRoute> with RouteAware {
   }
 
   Future<void> _didSelectProject(VccProject project) async {
+    if (!await Directory(project.path).exists()) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('${project.path} does not exist.'),
+      ));
+      return;
+    }
     final type = await _model(context).checkProjectType(project);
     if (!mounted) {
       return;
@@ -103,10 +111,16 @@ class _ProjectsRoute extends State<ProjectsRoute> with RouteAware {
         );
         break;
       case VccProjectType.legacySdk2:
-        throw Error();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('${project.path} is VRCSDK2 project.'),
+        ));
+        break;
       case VccProjectType.invalid:
       case VccProjectType.unknown:
-        throw Error();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('${project.path} is invalid project.'),
+        ));
+        break;
     }
   }
 
