@@ -1,8 +1,8 @@
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tiny_vcc/models/new_project_model.dart';
 import 'package:tiny_vcc/routes/project_route.dart';
+import 'package:tiny_vcc/utils.dart';
 
 import '../main.dart';
 
@@ -19,7 +19,7 @@ class _NewProjectRoute extends State<NewProjectRoute> with RouteAware {
   final _formKey = GlobalKey<FormState>();
 
   Future<String?> _selectLocation() {
-    return FilePicker.platform.getDirectoryPath(lockParentWindow: true);
+    return showDirectoryPickerWindow(lockParentWindow: true);
   }
 
   NewProjectModel _model(BuildContext context) {

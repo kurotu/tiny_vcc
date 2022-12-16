@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tiny_vcc/main_drawer.dart';
@@ -8,6 +7,7 @@ import 'package:tiny_vcc/models/projects_model.dart';
 import 'package:tiny_vcc/routes/new_project_route.dart';
 import 'package:tiny_vcc/routes/project_route.dart';
 import 'package:tiny_vcc/services/vcc_service.dart';
+import 'package:tiny_vcc/utils.dart';
 
 import '../main.dart';
 import 'legacy_project_route.dart';
@@ -23,8 +23,7 @@ class ProjectsRoute extends StatefulWidget {
 
 class _ProjectsRoute extends State<ProjectsRoute> with RouteAware {
   void _addProject(ProjectsModel model) async {
-    var path =
-        await FilePicker.platform.getDirectoryPath(lockParentWindow: true);
+    final path = await showDirectoryPickerWindow(lockParentWindow: true);
     try {
       await model.addProject(path);
     } on VccProjectType catch (type) {
