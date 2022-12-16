@@ -90,8 +90,15 @@ class VpmTemplate {
 }
 
 class VccService {
+  String get _vpmPath {
+    final home = Platform.isWindows
+        ? Platform.environment['USERPROFILE']!
+        : Platform.environment['HOME']!;
+    return p.join(home, '.dotnet', 'tools', 'vpm');
+  }
+
   Future<Version?> getCliVersion() async {
-    final result = await Process.run('vpm', ['--version']);
+    final result = await Process.run(_vpmPath, ['--version']);
     if (result.exitCode != 0) {
       print('vpm-cli returned ${result.exitCode}');
       return null;
@@ -123,7 +130,7 @@ class VccService {
 
   Future<VccProject> createNewProject(
       VpmTemplate template, String name, String location) async {
-    final result = await Process.run('vpm', [
+    final result = await Process.run(_vpmPath, [
       'new',
       name,
       template.path,
@@ -149,7 +156,7 @@ class VccService {
     if (inPlace) {
       args.add('--inplace');
     }
-    final result = await Process.run('vpm', args);
+    final result = await Process.run(_vpmPath, args);
     if (result.exitCode != 0) {
       throw Exception('vpm returned exit code ${result.exitCode}');
     }
@@ -190,7 +197,8 @@ class VccService {
   }
 
   Future<VccProjectType> checkUserProject(VccProject project) async {
-    final result = await Process.run('vpm', ['check', 'project', project.path]);
+    final result =
+        await Process.run(_vpmPath, ['check', 'project', project.path]);
     if (result.exitCode != 0) {
       throw 'vpm returned exit code ${result.exitCode}';
     }
@@ -220,7 +228,7 @@ class VccService {
   }
 
   Future<void> checkHub() async {
-    final result = await Process.run('vpm', ['check', 'hub']);
+    final result = await Process.run(_vpmPath, ['check', 'hub']);
     if (result.exitCode != 0) {
       throw Exception('Unity Hub not found');
     }
@@ -230,7 +238,7 @@ class VccService {
   // `vpm list unity` can't list unity editors on macOS.
   // https://github.com/vrchat-community/creator-companion/issues/46
   Future<Map<String, String>> _getUnityEditors() async {
-    var result = await Process.run('vpm', ['list', 'unity']);
+    var result = await Process.run(_vpmPath, ['list', 'unity']);
     if (result.exitCode != 0) {
       throw Exception('vpm returned exit code ${result.exitCode}');
     }
@@ -245,7 +253,7 @@ class VccService {
 */
 
   Future<List<VpmTemplate>> getTemplates() async {
-    final result = await Process.run('vpm', ['list', 'templates']);
+    final result = await Process.run(_vpmPath, ['list', 'templates']);
     if (result.exitCode != 0) {
       throw Exception('vpm returned exit code ${result.exitCode}');
     }
