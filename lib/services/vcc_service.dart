@@ -9,12 +9,14 @@ import 'package:yaml/yaml.dart';
 
 class VccSetting {
   VccSetting({
+    required this.pathToUnityHub,
     required this.projectBackupPath,
     required this.userProjects,
     required this.userPackageFolders,
     required this.userRepos,
   });
 
+  final String pathToUnityHub;
   final String projectBackupPath;
   final List<String> userProjects;
   final List<String> userPackageFolders;
@@ -100,6 +102,7 @@ class VccService {
   Future<VccSetting> getSettings() async {
     var json = await _getSettingsJson();
     var setting = VccSetting(
+      pathToUnityHub: json['pathToUnityHub'].toString(),
       projectBackupPath: json['projectBackupPath'].toString(),
       userProjects: (json['userProjects'] as List<dynamic>).cast(),
       userPackageFolders: (json['userPackageFolders'] as List<dynamic>).cast(),
@@ -216,7 +219,17 @@ class VccService {
     throw 'Unhandled output: ${str.trim()}';
   }
 
-  Future<Map<String, String>> getUnityEditors() async {
+  Future<void> checkHub() async {
+    final result = await Process.run('vpm', ['check', 'hub']);
+    if (result.exitCode != 0) {
+      throw Exception('Unity Hub not found');
+    }
+  }
+
+/*
+  // `vpm list unity` can't list unity editors on macOS.
+  // https://github.com/vrchat-community/creator-companion/issues/46
+  Future<Map<String, String>> _getUnityEditors() async {
     var result = await Process.run('vpm', ['list', 'unity']);
     if (result.exitCode != 0) {
       throw Exception('vpm returned exit code ${result.exitCode}');
@@ -229,6 +242,7 @@ class VccService {
     });
     return Map.fromEntries(entries);
   }
+*/
 
   Future<List<VpmTemplate>> getTemplates() async {
     final result = await Process.run('vpm', ['list', 'templates']);
