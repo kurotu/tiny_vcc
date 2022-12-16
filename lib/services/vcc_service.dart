@@ -325,7 +325,14 @@ class VccService {
       return Directory(
           p.join(roaming.parent.path, 'Local', 'VRChatCreatorCompanion'));
     }
-    throw Error();
+    if (Platform.isMacOS) {
+      final home = Platform.environment['HOME'];
+      if (home == null) {
+        throw Error();
+      }
+      return Directory(p.join(home, '.local/share/VRChatCreatorCompanion'));
+    }
+    throw UnimplementedError();
   }
 
   File _getSettingsFile() {
