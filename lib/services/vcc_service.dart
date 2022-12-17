@@ -72,12 +72,14 @@ class VpmPackage {
     required this.displayName,
     required this.version,
     required this.description,
+    required this.repoType,
   });
 
   final String name;
   final String displayName;
   final Version version;
   final String description;
+  final RepositoryType repoType;
 
   bool get isPrerelease => version.isPreRelease;
 }
@@ -87,6 +89,13 @@ class VpmDependency {
 
   final String name;
   final Version version;
+}
+
+enum RepositoryType {
+  official,
+  curated,
+  user,
+  local,
 }
 
 class VpmTemplate {
@@ -326,23 +335,24 @@ class VccService {
   Future<List<VpmPackage>> getOfficialPackages() async {
     final dir = _getSettingsDirectory();
     final file = File(p.join(dir.path, 'Repos', 'vrc-official.json'));
-    return _getVpmPackages(file);
+    return _getVpmPackages(file, RepositoryType.official);
   }
 
   Future<List<VpmPackage>> getCuratedPackages() async {
     final dir = _getSettingsDirectory();
     final file = File(p.join(dir.path, 'Repos', 'vrc-curated.json'));
-    return _getVpmPackages(file);
+    return _getVpmPackages(file, RepositoryType.curated);
   }
 
   Future<List<VpmPackage>> getUserPackages() async {
     final setting = await getSettings();
-    final lists = await Future.wait(
-        setting.userRepos.map((e) => _getVpmPackages(File(e))));
+    final lists = await Future.wait(setting.userRepos
+        .map((e) => _getVpmPackages(File(e), RepositoryType.user)));
     return lists.expand((element) => element).toList();
   }
 
-  Future<List<VpmPackage>> _getVpmPackages(File repoFile) async {
+  Future<List<VpmPackage>> _getVpmPackages(
+      File repoFile, RepositoryType repoType) async {
     final str = await repoFile.readAsString();
     final json = jsonDecode(str);
     final packages =
@@ -354,6 +364,7 @@ class VccService {
                 displayName: e['displayName'],
                 version: Version.parse(e['version']),
                 description: e['description'],
+                repoType: repoType,
               ));
     }).toList();
     return packages;
@@ -372,6 +383,7 @@ class VccService {
         displayName: packageJson['displayName'],
         version: Version.parse(packageJson['version']),
         description: packageJson['description'],
+        repoType: RepositoryType.local,
       );
     }));
     return packages;

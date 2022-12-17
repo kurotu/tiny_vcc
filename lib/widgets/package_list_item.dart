@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:pub_semver/pub_semver.dart';
 import 'package:tiny_vcc/models/project_model.dart';
 
+import '../services/vcc_service.dart';
+
 class PackageListItem extends StatelessWidget {
   const PackageListItem({
     super.key,
@@ -25,12 +27,7 @@ class PackageListItem extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            item.installedVersion != null
-                ? "${item.displayName} (${item.installedVersion})"
-                : item.displayName,
-            style: const TextStyle(fontSize: 16),
-          ),
+          _buildTitle(context),
           Text(
             item.description,
             style: const TextStyle(color: Colors.black54),
@@ -56,6 +53,38 @@ class PackageListItem extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildTitle(BuildContext context) {
+    final children = <Widget>[
+      Text(
+        item.installedVersion != null
+            ? "${item.displayName} (${item.installedVersion})"
+            : item.displayName,
+        style: const TextStyle(fontSize: 16),
+      ),
+      (() {
+        switch (item.repoType) {
+          case RepositoryType.official:
+            return const Chip(label: Text('official'));
+          case RepositoryType.curated:
+            return const Chip(label: Text('curated'));
+          case RepositoryType.user:
+            return const Chip(label: Text('user'));
+          case RepositoryType.local:
+            return const Chip(label: Text('local'));
+        }
+      })(),
+    ];
+    if (item.installedVersion != null) {
+      children.add(const Chip(label: Text('installed')));
+    }
+    return Wrap(
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: 8,
+      runSpacing: 4,
+      children: children,
     );
   }
 }

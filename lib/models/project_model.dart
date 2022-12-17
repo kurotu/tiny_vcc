@@ -92,6 +92,7 @@ class ProjectModel with ChangeNotifier {
         installedVersion: e.version,
         selectedVersion: _selectedVersion[e.name] ?? latest.version,
         versions: _packageRepo.getVersions(e.name),
+        repoType: latest.repoType,
       );
     });
     list.addAll(locked);
@@ -109,6 +110,7 @@ class ProjectModel with ChangeNotifier {
           description: p.description,
           selectedVersion: _selectedVersion[p.name] ?? p.version,
           versions: _packageRepo.getVersions(name),
+          repoType: p.repoType,
         );
       }));
     }
@@ -124,6 +126,7 @@ class PackageItem {
     this.installedVersion,
     this.selectedVersion,
     required this.versions,
+    required this.repoType,
   });
 
   final String name;
@@ -132,4 +135,5 @@ class PackageItem {
   final Version? installedVersion;
   final Version? selectedVersion;
   final List<VpmPackage> versions;
+  final RepositoryType repoType;
 }
