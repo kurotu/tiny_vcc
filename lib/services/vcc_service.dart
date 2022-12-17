@@ -108,11 +108,10 @@ class VccService {
 
   UnityHubService _hub;
 
-  Future<Version?> getCliVersion() async {
+  Future<Version> getCliVersion() async {
     final result = await Process.run(_vpmPath, ['--version']);
     if (result.exitCode != 0) {
-      print('vpm-cli returned ${result.exitCode}');
-      return null;
+      throw Exception('vpm --version returned ${result.exitCode}');
     }
     return Version.parse(result.stdout.toString().trim());
   }
@@ -242,7 +241,22 @@ class VccService {
 
   Future<bool> checkHub() async {
     final result = await Process.run(_vpmPath, ['check', 'hub']);
-    return result.exitCode == 0;
+    if (result.exitCode != 0) {
+      return false;
+    }
+    // we can't rely on exit code 0.
+    // https://github.com/vrchat-community/creator-companion/issues/52
+    final str = result.stdout.toString();
+    if (str.contains('not find')) {
+      return false;
+    }
+    if (str.contains('Found unity version  at')) {
+      return false;
+    }
+    if (!await File((await getSettings()).pathToUnityHub).exists()) {
+      return false;
+    }
+    return true;
   }
 
   Future<Map<String, String>> getUnityEditors() async {
@@ -252,6 +266,9 @@ class VccService {
     final setting = await getSettings();
     _hub.setUnityHubExe(setting.pathToUnityHub);
     final editors = await _hub.listInstalledEditors();
+    final json = await _getSettingsJson();
+    json['unityEditors'] = editors.values.toList();
+    await _writeSettingsJson(json);
     return editors;
 
     /*

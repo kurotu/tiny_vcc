@@ -22,16 +22,41 @@ class ProjectsModel with ChangeNotifier {
   final VccSettingRepository _vccSetting;
   final RequirementsRepository _requirements;
 
+  bool _isReadyToUse = true;
+  bool get isReadyToUse => _isReadyToUse;
+
   List<VccProject> _projects = [];
   List<VccProject> get projects => _projects;
 
+  bool _disposed = false;
+
+  @override
+  void dispose() {
+    super.dispose();
+    _disposed = true;
+  }
+
+  void setReadyToUse(bool ready) {
+    _isReadyToUse = ready;
+    if (!_disposed) {
+      notifyListeners();
+    }
+  }
+
   Future<RequirementType?> checkMissingRequirement() async {
-    return _requirements.fetchMissingRequirement();
+    final missing = await _requirements.fetchMissingRequirement();
+    _isReadyToUse = missing == null;
+    if (!_disposed) {
+      notifyListeners();
+    }
+    return missing;
   }
 
   Future<void> getProjects() async {
     _projects = await _vccData.fetchVccProjects();
-    notifyListeners();
+    if (!_disposed) {
+      notifyListeners();
+    }
   }
 
   Future<void> addProject(String? path) async {

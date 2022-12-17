@@ -30,8 +30,10 @@ class RequirementsRepository {
       return RequirementType.dotnet6;
     }
 
-    final vpmVersion = await _vcc.getCliVersion();
-    if (vpmVersion == null) {
+    try {
+      final vpmVersion = await _vcc.getCliVersion();
+      // todo: version check
+    } catch (error) {
       return RequirementType.vpm;
     }
 

@@ -64,10 +64,14 @@ class _ProjectsRoute extends State<ProjectsRoute> with RouteAware {
     }
     final model = context.read<ProjectsModel>();
     try {
-      model.getProjects();
-      model.getPackages();
+      await model.getProjects();
+      await model.getPackages();
+      model.setReadyToUse(true);
     } catch (error) {
       print(error);
+    }
+    if (!mounted) {
+      return;
     }
     final missing = await model.checkMissingRequirement();
     switch (missing) {
@@ -129,7 +133,8 @@ class _ProjectsRoute extends State<ProjectsRoute> with RouteAware {
           actions: [
             TextButton(
               onPressed: () async {
-                launchUrl(Uri.parse('https://unity.com/download'));
+                launchUrl(
+                    Uri.parse('https://unity.com/download#how-get-started'));
               },
               child: const Text('Download'),
             ),
@@ -246,26 +251,35 @@ class _ProjectsRoute extends State<ProjectsRoute> with RouteAware {
       appBar: AppBar(
         title: const Text('Projects'),
         actions: [
-          TextButton(
-            style: style,
-            onPressed: () {
-              _addProject(_model(context));
-            },
-            child: const Text('Add'),
-          ),
-          TextButton(
-            style: style,
-            onPressed: () {
-              Navigator.pushNamed(context, NewProjectRoute.routeName);
-            },
-            child: const Text('New'),
-          ),
+          Consumer<ProjectsModel>(
+              builder: ((context, model, child) => TextButton(
+                    style: style,
+                    onPressed: model.isReadyToUse
+                        ? () {
+                            _addProject(_model(context));
+                          }
+                        : null,
+                    child: const Text('Add'),
+                  ))),
+          Consumer<ProjectsModel>(
+              builder: ((context, model, child) => TextButton(
+                    style: style,
+                    onPressed: model.isReadyToUse
+                        ? () {
+                            Navigator.pushNamed(
+                                context, NewProjectRoute.routeName);
+                          }
+                        : null,
+                    child: const Text('New'),
+                  ))),
         ],
       ),
       body: Consumer<ProjectsModel>(
-        builder: (context, model, child) =>
-            Column(children: buildColumn(model)),
-      ),
+          builder: ((context, model, child) => model.isReadyToUse
+              ? Column(children: buildColumn(model))
+              : const Center(
+                  child: Text('Tiny VCC is not ready to use.'),
+                ))),
     );
   }
 
