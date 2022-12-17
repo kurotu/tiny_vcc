@@ -12,16 +12,20 @@ import 'package:yaml/yaml.dart';
 
 class VccSetting {
   VccSetting({
+    required this.pathToUnityExe,
     required this.pathToUnityHub,
     required this.projectBackupPath,
     required this.userProjects,
+    required this.unityEditors,
     required this.userPackageFolders,
     required this.userRepos,
   });
 
+  final String pathToUnityExe;
   final String pathToUnityHub;
   final String projectBackupPath;
   final List<String> userProjects;
+  final List<String> unityEditors;
   final List<String> userPackageFolders;
   final List<String> userRepos;
 }
@@ -116,9 +120,11 @@ class VccService {
   Future<VccSetting> getSettings() async {
     var json = await _getSettingsJson();
     var setting = VccSetting(
+      pathToUnityExe: json['pathToUnityExe'].toString(),
       pathToUnityHub: json['pathToUnityHub'].toString(),
       projectBackupPath: json['projectBackupPath'].toString(),
       userProjects: (json['userProjects'] as List<dynamic>).cast(),
+      unityEditors: (json['unityEditors'] as List<dynamic>).cast(),
       userPackageFolders: (json['userPackageFolders'] as List<dynamic>).cast(),
       userRepos: (json['userRepos'] as List<dynamic>)
           .map((e) => e['localPath'].toString())
@@ -454,5 +460,23 @@ class VccService {
     if (result.exitCode != 0) {
       throw Exception('vpm list repos returned ${result.exitCode}');
     }
+  }
+
+  Future<void> setPathToUnityExe(String path) async {
+    final json = await _getSettingsJson();
+    json['pathToUnityExe'] = path;
+    await _writeSettingsJson(json);
+  }
+
+  Future<void> setProjectBackupPath(String path) async {
+    final json = await _getSettingsJson();
+    json['projectBackupPath'] = path;
+    await _writeSettingsJson(json);
+  }
+
+  Future<void> addUnityEditor(String path) async {
+    final json = await _getSettingsJson();
+    json['unityEditors'].add(path);
+    await _writeSettingsJson(json);
   }
 }

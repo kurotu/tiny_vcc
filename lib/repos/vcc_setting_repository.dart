@@ -16,4 +16,20 @@ class VccSettingRepository {
     _vpmVersion = await _vcc.getCliVersion();
     return _vpmVersion!;
   }
+
+  Future<VccSetting> fetchSetting() async {
+    return _vcc.getSettings();
+  }
+
+  Future<void> setPreferedEditor(String path) async {
+    return _vcc.setPathToUnityExe(path);
+  }
+
+  Future<void> setBackupFolder(String path) async {
+    return _vcc.setProjectBackupPath(path);
+  }
+
+  Future<void> addUnityEditor(String path) async {
+    return _vcc.addUnityEditor(path);
+  }
 }

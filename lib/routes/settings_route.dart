@@ -1,46 +1,108 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:tiny_vcc/main_drawer.dart';
+import 'package:tiny_vcc/models/settings_model.dart';
+import 'package:tiny_vcc/utils.dart';
 
-class SettingsRoute extends StatelessWidget {
-  const SettingsRoute({super.key, required this.counter});
+import '../main.dart';
+
+class SettingsRoute extends StatefulWidget {
+  const SettingsRoute({super.key});
 
   static const String routeName = '/settings';
 
-  final int counter;
+  @override
+  State<SettingsRoute> createState() => _SettingsRoute();
+}
+
+class _SettingsRoute extends State<SettingsRoute> with RouteAware {
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
+  }
+
+  @override
+  void didPush() {
+    context.read<SettingsModel>().fetchSetting();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final TextEditingController locationController =
+        TextEditingController(text: context.read<SettingsModel>().backupFolder);
+    Provider.of<SettingsModel>(context).addListener(() {
+      locationController.text = context.read<SettingsModel>().backupFolder;
+    });
     return Scaffold(
       drawer: const MainDrawer(),
       appBar: AppBar(title: const Text('Settings')),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$counter',
-              style: Theme.of(context).textTheme.headline4,
-            ),
-          ],
+      body: Container(
+        padding: const EdgeInsets.all(15),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Consumer<SettingsModel>(
+                builder: ((context, model, child) => DropdownButtonFormField(
+                      decoration: InputDecoration(
+                          labelText: 'Unity Editors',
+                          suffixIcon: IconButton(
+                              onPressed: () async {
+                                final path = await showFilePickerWindow(
+                                    lockParentWindow: true);
+                                if (path == null) {
+                                  return;
+                                }
+                                if (mounted) {
+                                  context
+                                      .read<SettingsModel>()
+                                      .setPreferedEditor(path);
+                                }
+                              },
+                              icon: const Icon(Icons.folder))),
+                      value: model.preferedEditor,
+                      items: model.unityEditors
+                          .map(
+                              (e) => DropdownMenuItem(value: e, child: Text(e)))
+                          .toList(),
+                      onChanged: (value) {
+                        if (value != null) {
+                          model.setPreferedEditor(value);
+                        }
+                      },
+                    )),
+              ),
+              const Padding(padding: EdgeInsets.symmetric(vertical: 8)),
+              Consumer<SettingsModel>(
+                builder: ((context, model, child) => TextFormField(
+                      readOnly: true,
+                      decoration: InputDecoration(
+                        labelText: 'Backups',
+                        suffixIcon: IconButton(
+                          onPressed: () async {
+                            final path = await showDirectoryPickerWindow(
+                                lockParentWindow: true);
+                            if (path == null) {
+                              return;
+                            }
+                            if (mounted) {
+                              context
+                                  .read<SettingsModel>()
+                                  .setBackupFolder(path);
+                            }
+                          },
+                          icon: const Icon(Icons.folder),
+                        ),
+                      ),
+                      controller: locationController,
+                    )),
+              ),
+            ],
+          ),
         ),
       ),
     );

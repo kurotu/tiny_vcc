@@ -7,6 +7,7 @@ import 'package:pub_semver/pub_semver.dart';
 import 'package:tiny_vcc/models/legacy_project_model.dart';
 import 'package:tiny_vcc/models/new_project_model.dart';
 import 'package:tiny_vcc/models/projects_model.dart';
+import 'package:tiny_vcc/models/settings_model.dart';
 import 'package:tiny_vcc/repos/requirements_repository.dart';
 import 'package:tiny_vcc/repos/unity_editors_repository.dart';
 import 'package:tiny_vcc/repos/vcc_projects_repository.dart';
@@ -120,8 +121,11 @@ class MyApp extends StatelessWidget {
                   create: (context) => NewProjectModel(context),
                   child: const NewProjectRoute(),
                 ),
-            SettingsRoute.routeName: ((context) =>
-                const SettingsRoute(counter: 1)),
+            SettingsRoute.routeName: (context) =>
+                ChangeNotifierProvider<SettingsModel>(
+                  create: (context) => SettingsModel(context),
+                  child: const SettingsRoute(),
+                ),
           },
           onGenerateRoute: (settings) {
             if (settings.name == ProjectRoute.routeName) {
