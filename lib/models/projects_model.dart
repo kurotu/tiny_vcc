@@ -70,11 +70,7 @@ class ProjectsModel with ChangeNotifier {
   }
 
   Future<void> installVpmCli() async {
-    final result = await Process.run(
-        'dotnet', ['tool', 'install', '--global', 'vrchat.vpm.cli']);
-    if (result.exitCode != 0 && result.exitCode != 1) {
-      throw 'dotnet failed to install vpm cli';
-    }
+    await _requirements.installVpmCli();
   }
 
   Future<void> getPackages() async {

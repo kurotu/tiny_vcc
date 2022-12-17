@@ -1,7 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:tiny_vcc/services/dotnet_service.dart';
-import 'package:tiny_vcc/services/unity_hub_service.dart';
 import 'package:tiny_vcc/services/vcc_service.dart';
 
 enum RequirementType {
@@ -47,5 +46,11 @@ class RequirementsRepository {
     }
 
     return null;
+  }
+
+  Future<void> installVpmCli() async {
+    await _dotnet.installGlobalTool('vrchat.vpm.cli');
+    await _vcc.installTemplates();
+    await _vcc.listRepos();
   }
 }

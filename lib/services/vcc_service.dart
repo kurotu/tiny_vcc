@@ -263,6 +263,13 @@ class VccService {
     */
   }
 
+  Future<void> installTemplates() async {
+    final result = await Process.run(_vpmPath, ['install', 'templates']);
+    if (result.exitCode != 0) {
+      throw Exception('vpm install templates returned ${result.exitCode}');
+    }
+  }
+
   Future<List<VpmTemplate>> getTemplates() async {
     final result = await Process.run(_vpmPath, ['list', 'templates']);
     if (result.exitCode != 0) {
@@ -439,6 +446,13 @@ class VccService {
     final dir = Directory(p.join(path, 'Packages', name));
     if (await dir.exists()) {
       await dir.delete(recursive: true);
+    }
+  }
+
+  Future<void> listRepos() async {
+    final result = await Process.run(_vpmPath, ['list', 'repos']);
+    if (result.exitCode != 0) {
+      throw Exception('vpm list repos returned ${result.exitCode}');
     }
   }
 }
