@@ -51,6 +51,7 @@ dependencies:
   url_launcher: ^6.1.7
   archive: ^3.3.5
   intl: ^0.18.0
+  sn_progress_dialog: ^1.0.9
 
 dev_dependencies:
   flutter_test:

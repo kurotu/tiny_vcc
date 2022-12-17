@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tiny_vcc/routes/project_route.dart';
 import 'package:tiny_vcc/services/vcc_service.dart';
+import 'package:tiny_vcc/utils.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../models/legacy_project_model.dart';
@@ -57,7 +58,9 @@ class LegacyProjectRoute extends StatelessWidget {
     if (action == null) {
       return;
     }
-    _showMigrationProgressDialog(context);
+
+    showProgressDialog(context, 'Migrating ${_model(context).project.name}');
+
     VccProject project;
     switch (action) {
       case _MigrateAction.migrateCopy:
@@ -81,7 +84,10 @@ class LegacyProjectRoute extends StatelessWidget {
   }
 
   void _didClickMakeBackup(BuildContext context) async {
+    showProgressDialog(context, 'Backing up ${_model(context).project.name}');
     final file = await _model(context).backup();
+    Navigator.pop(context);
+
     final showFile = await showDialog(
       context: context,
       builder: ((context) => AlertDialog(
@@ -106,16 +112,6 @@ class LegacyProjectRoute extends StatelessWidget {
     if (showFile != null && showFile) {
       launchUrl(Uri.file(file.parent.path));
     }
-  }
-
-  void _showMigrationProgressDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: ((context) => const AlertDialog(
-            title: Text('Migrating Project'),
-          )),
-    );
   }
 
   @override
