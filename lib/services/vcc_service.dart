@@ -496,4 +496,18 @@ class VccService {
     json['unityEditors'].add(path);
     await _writeSettingsJson(json);
   }
+
+  Future<void> addUserPackageFolder(String path) async {
+    final json = await _getSettingsJson();
+    if (!json['userPackageFolders'].contains(path)) {
+      json['userPackageFolders'].add(path);
+      await _writeSettingsJson(json);
+    }
+  }
+
+  Future<void> deleteUserPackageFolder(String path) async {
+    final json = await _getSettingsJson();
+    json['userPackageFolders'].remove(path);
+    await _writeSettingsJson(json);
+  }
 }

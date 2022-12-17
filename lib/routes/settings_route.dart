@@ -29,6 +29,21 @@ class _SettingsRoute extends State<SettingsRoute> with RouteAware {
     context.read<SettingsModel>().fetchSetting();
   }
 
+  void _didClickAddUserPackage() async {
+    final packagePath = await showDirectoryPickerWindow(lockParentWindow: true);
+    if (packagePath == null) {
+      return;
+    }
+    if (!mounted) {
+      return;
+    }
+    try {
+      context.read<SettingsModel>().addUserPackage(packagePath);
+    } catch (error) {
+      showAlertDialog(context, title: 'Error', message: '$error');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final TextEditingController locationController =
@@ -100,6 +115,35 @@ class _SettingsRoute extends State<SettingsRoute> with RouteAware {
                       ),
                       controller: locationController,
                     )),
+              ),
+              const Padding(padding: EdgeInsets.symmetric(vertical: 8)),
+              Row(
+                children: [
+                  const Text('User Packages'),
+                  const Padding(padding: EdgeInsets.symmetric(horizontal: 4)),
+                  OutlinedButton(
+                      onPressed: () {
+                        _didClickAddUserPackage();
+                      },
+                      child: const Text('Add')),
+                ],
+              ),
+              Expanded(
+                child: Consumer<SettingsModel>(
+                  builder: (context, model, child) => ListView.builder(
+                    itemBuilder: ((context, index) => ListTile(
+                          title: Text(model.userPackages[index]),
+                          trailing: IconButton(
+                            onPressed: () {
+                              model
+                                  .deleteUserPackage(model.userPackages[index]);
+                            },
+                            icon: const Icon(Icons.delete),
+                          ),
+                        )),
+                    itemCount: model.userPackages.length,
+                  ),
+                ),
               ),
             ],
           ),

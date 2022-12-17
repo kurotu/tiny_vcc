@@ -32,4 +32,17 @@ class VccSettingRepository {
   Future<void> addUnityEditor(String path) async {
     return _vcc.addUnityEditor(path);
   }
+
+  Future<List<String>> getUserPackageFolders() async {
+    final setting = await _vcc.getSettings();
+    return setting.userPackageFolders;
+  }
+
+  Future<void> addUserPackageFolder(String path) async {
+    return _vcc.addUserPackageFolder(path);
+  }
+
+  Future<void> deleteUserPackageFolder(String path) async {
+    return _vcc.deleteUserPackageFolder(path);
+  }
 }

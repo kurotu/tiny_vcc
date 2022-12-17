@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:tiny_vcc/repos/vcc_setting_repository.dart';
+import 'package:path/path.dart' as p;
 
 class SettingsModel extends ChangeNotifier {
   SettingsModel(BuildContext context) : _setting = context.read();
@@ -16,7 +19,8 @@ class SettingsModel extends ChangeNotifier {
   String _backupFolder = "";
   String get backupFolder => _backupFolder;
 
-  List<String> get userPackages => [];
+  List<String> _userPackages = [];
+  List<String> get userPackages => _userPackages;
 
   bool _disposed = false;
 
@@ -24,6 +28,13 @@ class SettingsModel extends ChangeNotifier {
   void dispose() {
     super.dispose();
     _disposed = true;
+  }
+
+  @override
+  void notifyListeners() {
+    if (!_disposed) {
+      super.notifyListeners();
+    }
   }
 
   Future<void> fetchSetting() async {
@@ -34,9 +45,8 @@ class SettingsModel extends ChangeNotifier {
       _preferedEditor = null;
     }
     _backupFolder = setting.projectBackupPath;
-    if (!_disposed) {
-      notifyListeners();
-    }
+    _userPackages = setting.userPackageFolders;
+    notifyListeners();
   }
 
   void setPreferedEditor(String path) {
@@ -46,16 +56,31 @@ class SettingsModel extends ChangeNotifier {
     }
     _preferedEditor = path;
     _setting.setPreferedEditor(path);
-    if (!_disposed) {
-      notifyListeners();
-    }
+    notifyListeners();
   }
 
   void setBackupFolder(String path) {
     _backupFolder = path;
     _setting.setBackupFolder(path);
-    if (!_disposed) {
-      notifyListeners();
+    notifyListeners();
+  }
+
+  void addUserPackage(String packagePath) {
+    if (!File(p.join(packagePath, 'package.json')).existsSync()) {
+      throw Exception(
+          '$packagePath is not a package. package.json is missing.');
     }
+    if (_userPackages.contains(packagePath)) {
+      return;
+    }
+    _userPackages.add(packagePath);
+    _setting.addUserPackageFolder(packagePath);
+    notifyListeners();
+  }
+
+  void deleteUserPackage(String packagePath) {
+    _userPackages.remove(packagePath);
+    _setting.deleteUserPackageFolder(packagePath);
+    notifyListeners();
   }
 }

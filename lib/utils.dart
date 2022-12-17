@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:sn_progress_dialog/sn_progress_dialog.dart';
 
 Future<String?> showDirectoryPickerWindow(
@@ -26,6 +25,25 @@ String? _cleanupPath(String? path) {
     path = path?.replaceFirst(RegExp('^/Volumes/Macintosh HD/'), '/');
   }
   return path;
+}
+
+Future<T?> showAlertDialog<T>(BuildContext context,
+    {String? title, String? message}) {
+  return showDialog<T>(
+    context: context,
+    builder: ((context) => AlertDialog(
+          title: title != null ? Text(title) : null,
+          content: message != null ? Text(message) : null,
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        )),
+  );
 }
 
 ProgressDialog showProgressDialog(BuildContext context, String message) {
