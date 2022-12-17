@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:github/github.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:pub_semver/pub_semver.dart';
 import 'package:tiny_vcc/models/legacy_project_model.dart';
@@ -93,6 +94,10 @@ class MyApp extends StatelessWidget {
           Provider(create: (context) => VpmPackagesRepository(context)),
           Provider(create: (context) => UnityEditorsRepository(context)),
           Provider(create: (context) => VccSettingRepository(context)),
+          FutureProvider(
+            create: ((context) => PackageInfo.fromPlatform()),
+            initialData: null,
+          ),
         ],
         child: MaterialApp(
           title: 'Tiny VCC',

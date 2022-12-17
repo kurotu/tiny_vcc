@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:provider/provider.dart';
 import 'package:tiny_vcc/routes/projects_route.dart';
 import 'package:tiny_vcc/routes/settings_route.dart';
 
@@ -7,6 +10,8 @@ class MainDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final info = context.watch<PackageInfo?>();
+
     return Drawer(
       child: ListView(
         children: <Widget>[
@@ -30,6 +35,22 @@ class MainDrawer extends StatelessWidget {
                 Navigator.pushReplacementNamed(
                     context, SettingsRoute.routeName);
               }
+            },
+          ),
+          FutureProvider(
+            create: (context) => rootBundle.loadString('LICENSE'),
+            initialData: null,
+            builder: (context, child) {
+              final license = context.watch<String?>();
+              return AboutListTile(
+                applicationVersion: info?.version,
+                applicationIcon: Image.asset(
+                  'assets/images/app_icon-1024x1024.png',
+                  width: 64,
+                  height: 64,
+                ),
+                applicationLegalese: license,
+              );
             },
           ),
         ],
