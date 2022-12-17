@@ -8,18 +8,26 @@ import 'package:tiny_vcc/repos/vcc_setting_repository.dart';
 import 'package:tiny_vcc/repos/vpm_packages_repository.dart';
 import 'package:tiny_vcc/services/vcc_service.dart';
 
+import '../repos/requirements_repository.dart';
+
 class ProjectsModel with ChangeNotifier {
   ProjectsModel(BuildContext context)
       : _vccData = Provider.of(context, listen: false),
         _packages = Provider.of(context, listen: false),
-        _vccSetting = Provider.of(context, listen: false);
+        _vccSetting = Provider.of(context, listen: false),
+        _requirements = Provider.of(context, listen: false);
 
   final VccProjectsRepository _vccData;
   final VpmPackagesRepository _packages;
   final VccSettingRepository _vccSetting;
+  final RequirementsRepository _requirements;
 
   List<VccProject> _projects = [];
   List<VccProject> get projects => _projects;
+
+  Future<RequirementType?> checkMissingRequirement() async {
+    return _requirements.fetchMissingRequirement();
+  }
 
   Future<void> getProjects() async {
     _projects = await _vccData.fetchVccProjects();

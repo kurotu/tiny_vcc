@@ -7,6 +7,7 @@ import 'package:pub_semver/pub_semver.dart';
 import 'package:tiny_vcc/models/legacy_project_model.dart';
 import 'package:tiny_vcc/models/new_project_model.dart';
 import 'package:tiny_vcc/models/projects_model.dart';
+import 'package:tiny_vcc/repos/requirements_repository.dart';
 import 'package:tiny_vcc/repos/unity_editors_repository.dart';
 import 'package:tiny_vcc/repos/vcc_projects_repository.dart';
 import 'package:tiny_vcc/repos/vcc_setting_repository.dart';
@@ -16,12 +17,14 @@ import 'package:tiny_vcc/routes/new_project_route.dart';
 import 'package:tiny_vcc/routes/project_route.dart';
 import 'package:tiny_vcc/routes/projects_route.dart';
 import 'package:tiny_vcc/routes/settings_route.dart';
+import 'package:tiny_vcc/services/unity_hub_service.dart';
 import 'package:tiny_vcc/services/updater_service.dart';
 import 'package:tiny_vcc/services/vcc_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:window_size/window_size.dart';
 
 import 'models/project_model.dart';
+import 'services/dotnet_service.dart';
 
 final RouteObserver<ModalRoute<void>> routeObserver =
     RouteObserver<ModalRoute<void>>();
@@ -69,15 +72,11 @@ void main() {
   }));
   _checkForUpdate();
 
-  runApp(MyApp(
-    vcc: VccService(),
-  ));
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  MyApp({super.key, required this.vcc});
-
-  final VccService vcc;
+  const MyApp({super.key});
 
   // This widget is the root of your application.
   @override
@@ -85,7 +84,10 @@ class MyApp extends StatelessWidget {
     setWindowTitle('Tiny VCC');
     return MultiProvider(
         providers: [
-          Provider(create: (context) => VccService()),
+          Provider(create: (context) => UnityHubService()),
+          Provider(create: (context) => DotNetService()),
+          Provider(create: (context) => VccService(context)),
+          Provider(create: (context) => RequirementsRepository(context)),
           Provider(create: (context) => VccProjectsRepository(context)),
           Provider(create: (context) => VpmPackagesRepository(context)),
           Provider(create: (context) => UnityEditorsRepository(context)),

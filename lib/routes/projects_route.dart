@@ -8,8 +8,10 @@ import 'package:tiny_vcc/routes/new_project_route.dart';
 import 'package:tiny_vcc/routes/project_route.dart';
 import 'package:tiny_vcc/services/vcc_service.dart';
 import 'package:tiny_vcc/utils.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../main.dart';
+import '../repos/requirements_repository.dart';
 import 'legacy_project_route.dart';
 
 class ProjectsRoute extends StatefulWidget {
@@ -56,15 +58,48 @@ class _ProjectsRoute extends State<ProjectsRoute> with RouteAware {
     }
   }
 
-  void _refreshProjects() {
-    final model = Provider.of<ProjectsModel>(context, listen: false);
-    model.fetchVpmVersion().then((version) {
-      if (version != null) {
-        model.getProjects();
-        model.getPackages();
-      } else {
+  Future<void> _refreshProjects() async {
+    if (!mounted) {
+      return;
+    }
+    final model = context.read<ProjectsModel>();
+    try {
+      model.getProjects();
+      model.getPackages();
+    } catch (error) {
+      print(error);
+    }
+    final missing = await model.checkMissingRequirement();
+    switch (missing) {
+      case null:
+        break;
+      case RequirementType.dotnet6:
+        scaffoldKey.currentState?.showMaterialBanner(
+          MaterialBanner(
+            content: const Text(
+                '.NET 6 SDK is required to execute VPM CLI. Download and install.'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  launchUrl(Uri.parse(
+                      'https://dotnet.microsoft.com/download/dotnet/6.0'));
+                },
+                child: const Text('Download'),
+              ),
+              TextButton(
+                onPressed: () {
+                  scaffoldKey.currentState?.clearMaterialBanners();
+                  _refreshProjects();
+                },
+                child: const Text('Check again'),
+              ),
+            ],
+          ),
+        );
+        break;
+      case RequirementType.vpm:
         scaffoldKey.currentState?.showMaterialBanner(MaterialBanner(
-          content: const Text('VPM CLI is missing'),
+          content: const Text('VPM CLI is required.'),
           actions: [
             TextButton(
               onPressed: () async {
@@ -72,14 +107,64 @@ class _ProjectsRoute extends State<ProjectsRoute> with RouteAware {
                 scaffoldKey.currentState?.showSnackBar(
                     const SnackBar(content: Text('Installing vrchat.vpm.cli')));
                 await model.installVpmCli();
+                scaffoldKey.currentState?.showSnackBar(
+                    const SnackBar(content: Text('Installed vrchat.vpm.cli')));
                 _refreshProjects();
               },
               child: const Text('Install'),
             ),
+            TextButton(
+              onPressed: () {
+                scaffoldKey.currentState?.clearMaterialBanners();
+                _refreshProjects();
+              },
+              child: const Text('Check again'),
+            ),
           ],
         ));
-      }
-    });
+        break;
+      case RequirementType.hub:
+        scaffoldKey.currentState?.showMaterialBanner(MaterialBanner(
+          content: const Text('Unity Hub is required.'),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                launchUrl(Uri.parse('https://unity.com/download'));
+              },
+              child: const Text('Download'),
+            ),
+            TextButton(
+              onPressed: () {
+                scaffoldKey.currentState?.clearMaterialBanners();
+                _refreshProjects();
+              },
+              child: const Text('Check again'),
+            ),
+          ],
+        ));
+        break;
+      case RequirementType.unity:
+        scaffoldKey.currentState?.showMaterialBanner(MaterialBanner(
+          content: const Text('Unity is required. Install with Unity Hub.'),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                launchUrl(Uri.parse(
+                    'https://docs.vrchat.com/docs/current-unity-version'));
+              },
+              child: const Text('See current version'),
+            ),
+            TextButton(
+              onPressed: () {
+                scaffoldKey.currentState?.clearMaterialBanners();
+                _refreshProjects();
+              },
+              child: const Text('Check again'),
+            ),
+          ],
+        ));
+        break;
+    }
   }
 
   Future<void> _didSelectProject(VccProject project) async {

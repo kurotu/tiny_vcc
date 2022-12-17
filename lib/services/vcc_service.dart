@@ -2,9 +2,12 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:archive/archive_io.dart';
+import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
+import 'package:provider/provider.dart';
 import 'package:pub_semver/pub_semver.dart';
+import 'package:tiny_vcc/services/unity_hub_service.dart';
 import 'package:yaml/yaml.dart';
 
 class VccSetting {
@@ -90,12 +93,16 @@ class VpmTemplate {
 }
 
 class VccService {
+  VccService(BuildContext context) : _hub = Provider.of(context, listen: false);
+
   String get _vpmPath {
     final home = Platform.isWindows
         ? Platform.environment['USERPROFILE']!
         : Platform.environment['HOME']!;
     return p.join(home, '.dotnet', 'tools', 'vpm');
   }
+
+  UnityHubService _hub;
 
   Future<Version?> getCliVersion() async {
     final result = await Process.run(_vpmPath, ['--version']);
@@ -227,17 +234,21 @@ class VccService {
     throw 'Unhandled output: ${str.trim()}';
   }
 
-  Future<void> checkHub() async {
+  Future<bool> checkHub() async {
     final result = await Process.run(_vpmPath, ['check', 'hub']);
-    if (result.exitCode != 0) {
-      throw Exception('Unity Hub not found');
-    }
+    return result.exitCode == 0;
   }
 
-/*
-  // `vpm list unity` can't list unity editors on macOS.
-  // https://github.com/vrchat-community/creator-companion/issues/46
-  Future<Map<String, String>> _getUnityEditors() async {
+  Future<Map<String, String>> getUnityEditors() async {
+    // `vpm list unity` can't list unity editors on macOS.
+    // https://github.com/vrchat-community/creator-companion/issues/46
+    await checkHub();
+    final setting = await getSettings();
+    _hub.setUnityHubExe(setting.pathToUnityHub);
+    final editors = await _hub.listInstalledEditors();
+    return editors;
+
+    /*
     var result = await Process.run(_vpmPath, ['list', 'unity']);
     if (result.exitCode != 0) {
       throw Exception('vpm returned exit code ${result.exitCode}');
@@ -249,8 +260,8 @@ class VccService {
       return MapEntry(version, path);
     });
     return Map.fromEntries(entries);
+    */
   }
-*/
 
   Future<List<VpmTemplate>> getTemplates() async {
     final result = await Process.run(_vpmPath, ['list', 'templates']);

@@ -21,13 +21,7 @@ class UnityEditorsRepository {
 
   Future<List<UnityEditor>> fetchEditors() async {
     if (_editors == null) {
-      // final editors = await _vcc.getUnityEditors();
-      await _vcc.checkHub();
-      final setting = await _vcc.getSettings();
-      final hub = UnityHubService();
-      hub.setUnityHubExe(setting.pathToUnityHub);
-      final editors = await hub.listInstalledEditors();
-
+      final editors = await _vcc.getUnityEditors();
       _editors =
           editors.entries.map((e) => UnityEditor(e.key, e.value)).toList();
     }
