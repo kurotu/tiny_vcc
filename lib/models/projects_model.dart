@@ -1,17 +1,21 @@
 import 'dart:io';
 
 import 'package:flutter/widgets.dart';
+import 'package:provider/provider.dart';
 import 'package:pub_semver/pub_semver.dart';
 import 'package:tiny_vcc/repos/vcc_projects_repository.dart';
 import 'package:tiny_vcc/repos/vcc_setting_repository.dart';
+import 'package:tiny_vcc/repos/vpm_packages_repository.dart';
 import 'package:tiny_vcc/services/vcc_service.dart';
 
 class ProjectsModel with ChangeNotifier {
-  ProjectsModel(VccProjectsRepository vccRepo, VccSettingRepository settingRepo)
-      : _vccData = vccRepo,
-        _vccSetting = settingRepo;
+  ProjectsModel(BuildContext context)
+      : _vccData = Provider.of(context, listen: false),
+        _packages = Provider.of(context, listen: false),
+        _vccSetting = Provider.of(context, listen: false);
 
   final VccProjectsRepository _vccData;
+  final VpmPackagesRepository _packages;
   final VccSettingRepository _vccSetting;
 
   List<VccProject> _projects = [];
@@ -63,5 +67,9 @@ class ProjectsModel with ChangeNotifier {
     if (result.exitCode != 0 && result.exitCode != 1) {
       throw 'dotnet failed to install vpm cli';
     }
+  }
+
+  Future<void> getPackages() async {
+    await _packages.fetchPackages();
   }
 }

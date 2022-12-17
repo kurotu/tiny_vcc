@@ -75,83 +75,78 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  MyApp({super.key, required this.vcc})
-      : _projectsRepo = VccProjectsRepository(vcc),
-        _packagesRepository = VpmPackagesRepository(vcc),
-        _unityRepo = UnityEditorsRepository(vcc),
-        _settingRepo = VccSettingRepository(vcc);
+  MyApp({super.key, required this.vcc});
 
   final VccService vcc;
-  final VccProjectsRepository _projectsRepo;
-  final VpmPackagesRepository _packagesRepository;
-  final UnityEditorsRepository _unityRepo;
-  final VccSettingRepository _settingRepo;
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    _unityRepo.fetchEditors();
-    _packagesRepository.fetchPackages();
-    _settingRepo.fetchCliVersion();
-
     setWindowTitle('Tiny VCC');
-    return MaterialApp(
-      title: 'Tiny VCC',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
-        primarySwatch: Colors.blue,
-      ),
-      scaffoldMessengerKey: scaffoldKey,
-      initialRoute: ProjectsRoute.routeName,
-      routes: {
-        ProjectsRoute.routeName: (context) =>
-            ChangeNotifierProvider<ProjectsModel>(
-              create: (context) => ProjectsModel(_projectsRepo, _settingRepo),
-              child: const ProjectsRoute(),
-            ),
-        NewProjectRoute.routeName: (context) =>
-            ChangeNotifierProvider<NewProjectModel>(
-              create: (context) => NewProjectModel(vcc),
-              child: const NewProjectRoute(),
-            ),
-        SettingsRoute.routeName: ((context) => const SettingsRoute(counter: 1)),
-      },
-      onGenerateRoute: (settings) {
-        if (settings.name == ProjectRoute.routeName) {
-          final args = settings.arguments as ProjectRouteArguments;
-          return MaterialPageRoute(
-            builder: ((context) => ChangeNotifierProvider<ProjectModel>(
-                  create: (context) => ProjectModel(
-                    vcc,
-                    _unityRepo,
-                    _projectsRepo,
-                    _packagesRepository,
-                    args.project,
-                  ),
-                  child: const ProjectRoute(),
-                )),
-          );
-        } else if (settings.name == LegacyProjectRoute.routeName) {
-          final args = settings.arguments as LegacyProjectRouteArguments;
-          return MaterialPageRoute(
-            builder: ((context) => ChangeNotifierProvider<LegacyProjectModel>(
-                  create: ((context) =>
-                      LegacyProjectModel(_projectsRepo, args.project)),
-                  child: const LegacyProjectRoute(),
-                )),
-          );
-        }
-        return null;
-      },
-      navigatorObservers: [routeObserver],
-    );
+    return MultiProvider(
+        providers: [
+          Provider(create: (context) => VccService()),
+          Provider(create: (context) => VccProjectsRepository(context)),
+          Provider(create: (context) => VpmPackagesRepository(context)),
+          Provider(create: (context) => UnityEditorsRepository(context)),
+          Provider(create: (context) => VccSettingRepository(context)),
+        ],
+        child: MaterialApp(
+          title: 'Tiny VCC',
+          theme: ThemeData(
+            // This is the theme of your application.
+            //
+            // Try running your application with "flutter run". You'll see the
+            // application has a blue toolbar. Then, without quitting the app, try
+            // changing the primarySwatch below to Colors.green and then invoke
+            // "hot reload" (press "r" in the console where you ran "flutter run",
+            // or simply save your changes to "hot reload" in a Flutter IDE).
+            // Notice that the counter didn't reset back to zero; the application
+            // is not restarted.
+            primarySwatch: Colors.blue,
+          ),
+          scaffoldMessengerKey: scaffoldKey,
+          initialRoute: ProjectsRoute.routeName,
+          routes: {
+            ProjectsRoute.routeName: (context) =>
+                ChangeNotifierProvider<ProjectsModel>(
+                  create: (context) => ProjectsModel(context),
+                  child: const ProjectsRoute(),
+                ),
+            NewProjectRoute.routeName: (context) =>
+                ChangeNotifierProvider<NewProjectModel>(
+                  create: (context) => NewProjectModel(context),
+                  child: const NewProjectRoute(),
+                ),
+            SettingsRoute.routeName: ((context) =>
+                const SettingsRoute(counter: 1)),
+          },
+          onGenerateRoute: (settings) {
+            if (settings.name == ProjectRoute.routeName) {
+              final args = settings.arguments as ProjectRouteArguments;
+              return MaterialPageRoute(
+                builder: ((context) => ChangeNotifierProvider<ProjectModel>(
+                      create: (context) => ProjectModel(
+                        context,
+                        args.project,
+                      ),
+                      child: const ProjectRoute(),
+                    )),
+              );
+            } else if (settings.name == LegacyProjectRoute.routeName) {
+              final args = settings.arguments as LegacyProjectRouteArguments;
+              return MaterialPageRoute(
+                builder: ((context) =>
+                    ChangeNotifierProvider<LegacyProjectModel>(
+                      create: ((context) =>
+                          LegacyProjectModel(context, args.project)),
+                      child: const LegacyProjectRoute(),
+                    )),
+              );
+            }
+            return null;
+          },
+          navigatorObservers: [routeObserver],
+        ));
   }
 }

@@ -1,3 +1,5 @@
+import 'package:flutter/cupertino.dart';
+import 'package:provider/provider.dart';
 import 'package:tiny_vcc/services/vcc_service.dart';
 
 import '../services/unity_hub_service.dart';
@@ -10,7 +12,8 @@ class UnityEditor {
 }
 
 class UnityEditorsRepository {
-  UnityEditorsRepository(VccService vcc) : _vcc = vcc;
+  UnityEditorsRepository(BuildContext context)
+      : _vcc = Provider.of(context, listen: false);
 
   final VccService _vcc;
 

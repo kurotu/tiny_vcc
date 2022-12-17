@@ -1,10 +1,13 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/widgets.dart';
+import 'package:provider/provider.dart';
 import 'package:tiny_vcc/services/vcc_service.dart';
 
 class VccProjectsRepository {
-  VccProjectsRepository(VccService vcc) : _vcc = vcc;
+  VccProjectsRepository(BuildContext context)
+      : _vcc = Provider.of(context, listen: false);
 
   final VccService _vcc;
 

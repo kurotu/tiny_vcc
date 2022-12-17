@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
+import 'package:provider/provider.dart';
 import 'package:pub_semver/pub_semver.dart';
 import 'package:tiny_vcc/repos/unity_editors_repository.dart';
 import 'package:tiny_vcc/repos/vcc_projects_repository.dart';
@@ -10,14 +11,12 @@ import 'package:tiny_vcc/services/vcc_service.dart';
 
 class ProjectModel with ChangeNotifier {
   ProjectModel(
-    this.vcc,
-    UnityEditorsRepository unityRepo,
-    VccProjectsRepository projectsRepo,
-    VpmPackagesRepository packageRepo,
+    BuildContext context,
     this.project,
-  )   : _unityRepo = unityRepo,
-        _projectsRepo = projectsRepo,
-        _packageRepo = packageRepo;
+  )   : vcc = Provider.of(context, listen: false),
+        _unityRepo = Provider.of(context, listen: false),
+        _projectsRepo = Provider.of(context, listen: false),
+        _packageRepo = Provider.of(context, listen: false);
 
   final VccProject project;
   final VccService vcc;

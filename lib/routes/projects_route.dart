@@ -61,6 +61,7 @@ class _ProjectsRoute extends State<ProjectsRoute> with RouteAware {
     model.fetchVpmVersion().then((version) {
       if (version != null) {
         model.getProjects();
+        model.getPackages();
       } else {
         scaffoldKey.currentState?.showMaterialBanner(MaterialBanner(
           content: const Text('VPM CLI is missing'),
