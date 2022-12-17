@@ -23,6 +23,8 @@ class ProjectRoute extends StatefulWidget {
 }
 
 class _ProjectRoute extends State<ProjectRoute> with RouteAware {
+  ScaffoldFeatureController? _unityBannerController;
+
   void _refreshLockedDependencies() {
     final model = Provider.of<ProjectModel>(context, listen: false);
     model.getLockedDependencies();
@@ -80,6 +82,25 @@ class _ProjectRoute extends State<ProjectRoute> with RouteAware {
     if (showFile != null && showFile) {
       launchUrl(Uri.file(file.parent.path));
     }
+  }
+
+  void _showMessageToCloseUnity() {
+    if (_unityBannerController != null) {
+      return;
+    }
+    _unityBannerController =
+        scaffoldKey.currentState?.showMaterialBanner(MaterialBanner(
+      content: const Text(
+          'Packages have been changed. Close and reopen Unity project to apply changes.'),
+      actions: [
+        TextButton(
+            onPressed: () {
+              _unityBannerController?.close();
+              _unityBannerController = null;
+            },
+            child: const Text('Dismiss')),
+      ],
+    ));
   }
 
   @override
@@ -147,12 +168,15 @@ class _ProjectRoute extends State<ProjectRoute> with RouteAware {
           },
           onClickAdd: (name) {
             model.addPackage(name, dep.selectedVersion!);
+            _showMessageToCloseUnity();
           },
           onClickRemove: (name) {
             model.removePackage(name);
+            _showMessageToCloseUnity();
           },
           onClickUpdate: ((name) {
             model.updatePackage(name, dep.selectedVersion!);
+            _showMessageToCloseUnity();
           }),
         );
       },

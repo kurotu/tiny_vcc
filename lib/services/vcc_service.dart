@@ -440,11 +440,11 @@ class VccService {
     final deps = (manifestJson['dependencies'] as Map<String, dynamic>);
     if (deps.containsKey(name)) {
       deps[name] = {
-        'version': version,
+        'version': version.toString(),
       };
     }
     final locked = manifestJson['locked'] as Map<String, dynamic>;
-    locked[name]['version'] = version;
+    locked[name]['version'] = version.toString();
     const encoder = JsonEncoder.withIndent('  ');
     final jsonStr = encoder.convert(manifestJson);
     await file.writeAsString(jsonStr, flush: true);
