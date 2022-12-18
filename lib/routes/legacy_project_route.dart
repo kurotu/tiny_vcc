@@ -117,46 +117,54 @@ class LegacyProjectRoute extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Consumer<LegacyProjectModel>(
-            builder: (context, model, child) => Text(model.project.name)),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            Consumer<LegacyProjectModel>(
-              builder: ((context, value, child) => OutlinedButton(
-                  onPressed: value.isDoingTask
-                      ? null
-                      : () {
-                          _didClickMigrate(context);
-                        },
-                  child: const Text('Migrate'))),
-            ),
-            Consumer<LegacyProjectModel>(
-              builder: ((context, value, child) => OutlinedButton(
-                  onPressed: value.isDoingTask
-                      ? null
-                      : () {
-                          _didClickOpenFolder(context);
-                        },
-                  child: const Text('Open Folder'))),
-            ),
-            Consumer<LegacyProjectModel>(
-              builder: ((context, value, child) => OutlinedButton(
-                  onPressed: value.isDoingTask
-                      ? null
-                      : () {
-                          _didClickMakeBackup(context);
-                        },
-                  child: const Text('Make Backup'))),
-            ),
-          ],
+        appBar: AppBar(
+          title: Consumer<LegacyProjectModel>(
+              builder: (context, model, child) => Text(model.project.name)),
         ),
-      ),
-    );
+        body: Container(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Consumer<LegacyProjectModel>(
+                  builder: ((context, model, child) =>
+                      Text(model.project.path))),
+              const Padding(padding: EdgeInsets.symmetric(vertical: 8)),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  Consumer<LegacyProjectModel>(
+                    builder: ((context, value, child) => OutlinedButton(
+                        onPressed: value.isDoingTask
+                            ? null
+                            : () {
+                                _didClickMigrate(context);
+                              },
+                        child: const Text('Migrate'))),
+                  ),
+                  Consumer<LegacyProjectModel>(
+                    builder: ((context, value, child) => OutlinedButton(
+                        onPressed: value.isDoingTask
+                            ? null
+                            : () {
+                                _didClickOpenFolder(context);
+                              },
+                        child: const Text('Open Folder'))),
+                  ),
+                  Consumer<LegacyProjectModel>(
+                    builder: ((context, value, child) => OutlinedButton(
+                        onPressed: value.isDoingTask
+                            ? null
+                            : () {
+                                _didClickMakeBackup(context);
+                              },
+                        child: const Text('Make Backup'))),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ));
   }
 }
