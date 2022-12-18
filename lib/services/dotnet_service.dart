@@ -1,15 +1,47 @@
 import 'dart:io';
 
 class DotNetService {
+  DotNetService() {
+    _dotnetCommand = findDotNet() ?? 'dotnet';
+  }
+
+  String _dotnetCommand = 'dotnet';
+
+  String? findDotNet() {
+    if (Platform.isWindows) {
+      if (Process.runSync('where', ['dotnet']).exitCode == 0) {
+        return 'dotnet';
+      }
+      return null;
+    }
+    if (Platform.isMacOS) {
+      if (Process.runSync('which', ['dotnet']).exitCode == 0) {
+        return 'dotnet';
+      }
+      const defaultDotNet = '/usr/local/share/dotnet/dotnet';
+      if (File(defaultDotNet).existsSync()) {
+        return defaultDotNet;
+      }
+      const brewDotNet6 = '/usr/local/opt/dotnet@6/bin/dotnet';
+      if (File(brewDotNet6).existsSync()) {
+        return brewDotNet6;
+      }
+      return null;
+    }
+    if (Process.runSync('which', ['dotnet']).exitCode == 0) {
+      return 'dotnet';
+    }
+    return null;
+  }
+
   Future<bool> isInstalled() async {
-    final result = Platform.isWindows
-        ? await Process.run('where', ['dotnet'])
-        : await Process.run('which', ['dotnet']);
-    return result.exitCode == 0;
+    final dotnet = findDotNet();
+    _dotnetCommand = dotnet ?? 'dotnet';
+    return dotnet != null;
   }
 
   Future<Map<String, String>> listSdks() async {
-    final result = await Process.run('dotnet', ['--list-sdks']);
+    final result = await Process.run(_dotnetCommand, ['--list-sdks']);
     if (result.exitCode != 0) {
       throw Exception('dotnet --list-sdks returned ${result.exitCode}');
     }
@@ -25,8 +57,8 @@ class DotNetService {
   }
 
   Future<void> installGlobalTool(String packageId) async {
-    final result =
-        await Process.run('dotnet', ['tool', 'install', '--global', packageId]);
+    final result = await Process.run(
+        _dotnetCommand, ['tool', 'install', '--global', packageId]);
     if (result.exitCode != 0) {
       throw Exception(
           'dotnet tool install --global $packageId returned ${result.exitCode}');
@@ -34,8 +66,8 @@ class DotNetService {
   }
 
   Future<void> updateGlobalTool(String packageId) async {
-    final result =
-        await Process.run('dotnet', ['tool', 'update', '--global', packageId]);
+    final result = await Process.run(
+        _dotnetCommand, ['tool', 'update', '--global', packageId]);
     if (result.exitCode != 0) {
       throw Exception(
           'dotnet tool update --global $packageId returned ${result.exitCode}');
