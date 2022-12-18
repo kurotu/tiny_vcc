@@ -113,6 +113,3 @@ flutter_icons:
   windows:
     generate: true
     icon_size: 256
-  macos:
-    generate: true
-    image_path: "assets/images/app_icon_mac-1024x1024.png"
