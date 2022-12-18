@@ -190,12 +190,50 @@ class VccService {
     if (inPlace) {
       return project;
     }
-    final lines = result.stdout.toString().split('\n').map((e) => e.trim());
+    final migrated = _detectMigratedProject(project, result.stdout);
+    await addUserProject(Directory(migrated.path));
+    return migrated;
+  }
+
+  Future<VccProject> migrateProjectWithStream(
+    VccProject project,
+    bool inPlace, {
+    required void Function(String event) onStdout,
+    required void Function(String event) onStderr,
+  }) async {
+    final args = ['migrate', 'project', project.path];
+    if (inPlace) {
+      args.add('--inplace');
+    }
+    final process = await Process.start(_vpmPath, args);
+
+    final stdout = process.stdout.transform(utf8.decoder).asBroadcastStream();
+    stdout.listen(onStdout);
+    final stdoutBuffer = StringBuffer();
+    stdout.listen((text) {
+      stdoutBuffer.write(text);
+    });
+    final stderr = process.stderr.transform(utf8.decoder).asBroadcastStream();
+    stderr.listen(onStderr);
+
+    final exitCode = await process.exitCode;
+    if (exitCode != 0) {
+      throw Exception('vpm migrate project returned exit code $exitCode');
+    }
+    if (inPlace) {
+      return project;
+    }
+    final migrated = _detectMigratedProject(project, stdoutBuffer.toString());
+    await addUserProject(Directory(migrated.path));
+    return migrated;
+  }
+
+  VccProject _detectMigratedProject(VccProject project, String vpmOut) {
+    final lines = vpmOut.split('\n').map((e) => e.trim());
     final reg = RegExp('Copying ${RegExp.escape(project.path)} to (.*)');
     final theLine = lines.firstWhere((l) => reg.hasMatch(l));
     final match = reg.allMatches(theLine);
     final path = match.toList()[0][1]!;
-    await addUserProject(Directory(path));
     return VccProject(path);
   }
 

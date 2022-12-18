@@ -28,6 +28,35 @@ class LegacyProjectRoute extends StatelessWidget {
   }
 
   Future<void> _didClickMigrate(BuildContext context) async {
+    final action = await _showMigrationConfirmDialog(context);
+    if (action == null) {
+      return;
+    }
+
+    _showMigrationProgressDialog(context);
+
+    VccProject project;
+    switch (action) {
+      case _MigrateAction.migrateCopy:
+        project = await _model(context).migrateCopy();
+        break;
+      case _MigrateAction.migrateInPlace:
+        project = await _model(context).migrateInPlace();
+        break;
+    }
+
+    await Future.delayed(const Duration(seconds: 1));
+    Navigator.pop(context);
+
+    Navigator.pushReplacementNamed(
+      context,
+      ProjectRoute.routeName,
+      arguments: ProjectRouteArguments(project: project),
+    );
+  }
+
+  Future<_MigrateAction?> _showMigrationConfirmDialog(
+      BuildContext context) async {
     final _MigrateAction? action = await showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -55,26 +84,41 @@ class LegacyProjectRoute extends StatelessWidget {
         ],
       ),
     );
-    if (action == null) {
-      return;
-    }
+    return action;
+  }
 
-    showProgressDialog(context, 'Migrating ${_model(context).project.name}');
-
-    VccProject project;
-    switch (action) {
-      case _MigrateAction.migrateCopy:
-        project = await _model(context).migrateCopy();
-        break;
-      case _MigrateAction.migrateInPlace:
-        project = await _model(context).migrateInPlace();
-        break;
-    }
-    Navigator.pop(context);
-    Navigator.pushReplacementNamed(
-      context,
-      ProjectRoute.routeName,
-      arguments: ProjectRouteArguments(project: project),
+  Future<void> _showMigrationProgressDialog(BuildContext context) async {
+    final model = context.read<LegacyProjectModel>();
+    return showDialog(
+      context: context,
+      builder: (context) => ChangeNotifierProvider.value(
+        value: model,
+        builder: ((context, child) => AlertDialog(
+              title: Consumer<LegacyProjectModel>(
+                builder: (context, model, child) =>
+                    Text('Migrating ${model.project.name}'),
+              ),
+              content: SizedBox(
+                width: MediaQuery.of(context).size.width,
+                child: SizedBox.expand(
+                  child: Container(
+                    decoration: const BoxDecoration(color: Colors.black87),
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(8),
+                      reverse: true,
+                      child: Consumer<LegacyProjectModel>(
+                        builder: (context, model, child) => Text(
+                          model.vpmOutput,
+                          style: const TextStyle(color: Colors.white70),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            )),
+      ),
+      barrierDismissible: false,
     );
   }
 

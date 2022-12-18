@@ -56,4 +56,18 @@ class VccProjectsRepository {
   void _sortProjects() {
     _projects?.sort(((a, b) => a.name.compareTo(b.name)));
   }
+
+  Future<VccProject> migrateProjectWithStream(
+    VccProject project,
+    bool inPlace, {
+    required Null Function(dynamic text) onStdout,
+    required Null Function(dynamic text) onStderr,
+  }) async {
+    return _vcc.migrateProjectWithStream(
+      project,
+      inPlace,
+      onStdout: onStdout,
+      onStderr: onStderr,
+    );
+  }
 }
