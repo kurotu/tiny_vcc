@@ -22,11 +22,11 @@ class VccSettingRepository {
   }
 
   Future<void> setPreferedEditor(String path) async {
-    return _vcc.setPathToUnityExe(path);
+    return _vcc.setSettings(pathToUnityExe: path);
   }
 
   Future<void> setBackupFolder(String path) async {
-    return _vcc.setProjectBackupPath(path);
+    return _vcc.setSettings(projectBackupPath: path);
   }
 
   Future<void> addUnityEditor(String path) async {

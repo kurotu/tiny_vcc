@@ -17,6 +17,7 @@ class VccSetting {
     required this.projectBackupPath,
     required this.userProjects,
     required this.unityEditors,
+    required this.defaultProjectPath,
     required this.userPackageFolders,
     required this.showPrereleasePackages,
     required this.userRepos,
@@ -27,6 +28,7 @@ class VccSetting {
   final String projectBackupPath;
   final List<String> userProjects;
   final List<String> unityEditors;
+  final String defaultProjectPath;
   final List<String> userPackageFolders;
   final bool showPrereleasePackages;
   final List<String> userRepos;
@@ -135,6 +137,7 @@ class VccService {
       projectBackupPath: json['projectBackupPath'].toString(),
       userProjects: (json['userProjects'] as List<dynamic>).cast(),
       unityEditors: (json['unityEditors'] as List<dynamic>).cast(),
+      defaultProjectPath: json['defaultProjectPath'].toString(),
       userPackageFolders: (json['userPackageFolders'] as List<dynamic>).cast(),
       showPrereleasePackages: json['showPrereleasePackages'],
       userRepos: (json['userRepos'] as List<dynamic>)
@@ -145,10 +148,10 @@ class VccService {
   }
 
   Future<void> addUserProject(Directory directory) async {
-    var json = await _getSettingsJson();
-    if (!json['userProjects'].contains(directory.path)) {
-      json['userProjects'].add(directory.path);
-      await _writeSettingsJson(json);
+    final setting = await getSettings();
+    if (!setting.userProjects.contains(directory.path)) {
+      setting.userProjects.add(directory.path);
+      await setSettings(userProjects: setting.userProjects);
     }
   }
 
@@ -170,9 +173,9 @@ class VccService {
   }
 
   Future<void> deleteUserProject(VccProject project) async {
-    var json = await _getSettingsJson();
-    json['userProjects'].removeWhere((path) => path == project.path);
-    await _writeSettingsJson(json);
+    final setting = await getSettings();
+    setting.userProjects.remove(project.path);
+    await setSettings(userProjects: setting.userProjects);
   }
 
   Future<VccProject> migrateProject(VccProject project, bool inPlace) async {
@@ -278,9 +281,7 @@ class VccService {
     final setting = await getSettings();
     _hub.setUnityHubExe(setting.pathToUnityHub);
     final editors = await _hub.listInstalledEditors();
-    final json = await _getSettingsJson();
-    json['unityEditors'] = editors.values.toList();
-    await _writeSettingsJson(json);
+    await setSettings(unityEditors: editors.values.toList());
     return editors;
 
     /*
@@ -494,35 +495,53 @@ class VccService {
     }
   }
 
-  Future<void> setPathToUnityExe(String path) async {
+  Future<void> setSettings({
+    String? pathToUnityExe,
+    List<String>? userProjects,
+    List<String>? unityEditors,
+    String? defaultProjectPath,
+    List<String>? userPackageFolders,
+    String? projectBackupPath,
+  }) async {
     final json = await _getSettingsJson();
-    json['pathToUnityExe'] = path;
-    await _writeSettingsJson(json);
-  }
-
-  Future<void> setProjectBackupPath(String path) async {
-    final json = await _getSettingsJson();
-    json['projectBackupPath'] = path;
+    if (pathToUnityExe != null) {
+      json['pathToUnityExe'] = pathToUnityExe;
+    }
+    if (userProjects != null) {
+      json['userProjects'] = userProjects;
+    }
+    if (unityEditors != null) {
+      json['unityEditors'] = unityEditors;
+    }
+    if (defaultProjectPath != null) {
+      json['defaultProjectPath'] = defaultProjectPath;
+    }
+    if (userPackageFolders != null) {
+      json['userPackageFolders'] = userPackageFolders;
+    }
+    if (projectBackupPath != null) {
+      json['projectBackupPath'] = projectBackupPath;
+    }
     await _writeSettingsJson(json);
   }
 
   Future<void> addUnityEditor(String path) async {
-    final json = await _getSettingsJson();
-    json['unityEditors'].add(path);
-    await _writeSettingsJson(json);
+    final setting = await getSettings();
+    setting.unityEditors.add(path);
+    await setSettings(unityEditors: setting.unityEditors);
   }
 
   Future<void> addUserPackageFolder(String path) async {
-    final json = await _getSettingsJson();
-    if (!json['userPackageFolders'].contains(path)) {
-      json['userPackageFolders'].add(path);
-      await _writeSettingsJson(json);
+    final setting = await getSettings();
+    if (!setting.userPackageFolders.contains(path)) {
+      setting.userPackageFolders.add(path);
+      await setSettings(userPackageFolders: setting.userPackageFolders);
     }
   }
 
   Future<void> deleteUserPackageFolder(String path) async {
-    final json = await _getSettingsJson();
-    json['userPackageFolders'].remove(path);
-    await _writeSettingsJson(json);
+    final setting = await getSettings();
+    setting.userPackageFolders.remove(path);
+    await setSettings(userPackageFolders: setting.userPackageFolders);
   }
 }
