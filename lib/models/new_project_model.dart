@@ -25,11 +25,19 @@ class NewProjectModel extends ChangeNotifier {
   String get location => _location;
   set location(String location) {
     _location = location;
+    _vcc.setSettings(defaultProjectPath: location);
     notifyListeners();
   }
 
   bool _isCreatingProject = false;
   bool get isCreatingProject => _isCreatingProject;
+
+  Future<void> fetchInitialData() async {
+    await getProjectTemplates();
+    final setting = await _vcc.getSettings();
+    _location = setting.defaultProjectPath;
+    notifyListeners();
+  }
 
   Future<void> getProjectTemplates() async {
     final templates = await _vcc.getTemplates();

@@ -40,7 +40,7 @@ class _NewProjectRoute extends State<NewProjectRoute> with RouteAware {
 
   @override
   void didPush() {
-    _model(context).getProjectTemplates();
+    _model(context).fetchInitialData();
   }
 
   @override
@@ -49,6 +49,9 @@ class _NewProjectRoute extends State<NewProjectRoute> with RouteAware {
         TextEditingController(text: _model(context).projectName);
     final TextEditingController locationController =
         TextEditingController(text: _model(context).location);
+    Provider.of<NewProjectModel>(context).addListener(() {
+      locationController.text = context.read<NewProjectModel>().location;
+    });
 
     return Scaffold(
       appBar: AppBar(
