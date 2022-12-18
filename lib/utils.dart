@@ -4,10 +4,14 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:sn_progress_dialog/sn_progress_dialog.dart';
 
-Future<String?> showDirectoryPickerWindow(
-    {required bool lockParentWindow}) async {
-  final path = await FilePicker.platform
-      .getDirectoryPath(lockParentWindow: lockParentWindow);
+Future<String?> showDirectoryPickerWindow({
+  required bool lockParentWindow,
+  String? initialDirectory,
+}) async {
+  final path = await FilePicker.platform.getDirectoryPath(
+    lockParentWindow: lockParentWindow,
+    initialDirectory: initialDirectory,
+  );
   return _cleanupPath(path);
 }
 

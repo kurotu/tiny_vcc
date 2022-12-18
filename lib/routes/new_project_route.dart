@@ -19,7 +19,10 @@ class _NewProjectRoute extends State<NewProjectRoute> with RouteAware {
   final _formKey = GlobalKey<FormState>();
 
   Future<String?> _selectLocation() {
-    return showDirectoryPickerWindow(lockParentWindow: true);
+    return showDirectoryPickerWindow(
+      lockParentWindow: true,
+      initialDirectory: context.read<NewProjectModel>().location,
+    );
   }
 
   NewProjectModel _model(BuildContext context) {

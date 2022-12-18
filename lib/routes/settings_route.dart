@@ -100,7 +100,9 @@ class _SettingsRoute extends State<SettingsRoute> with RouteAware {
                         suffixIcon: IconButton(
                           onPressed: () async {
                             final path = await showDirectoryPickerWindow(
-                                lockParentWindow: true);
+                              lockParentWindow: true,
+                              initialDirectory: model.backupFolder,
+                            );
                             if (path == null) {
                               return;
                             }
