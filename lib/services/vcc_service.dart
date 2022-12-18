@@ -18,6 +18,7 @@ class VccSetting {
     required this.userProjects,
     required this.unityEditors,
     required this.userPackageFolders,
+    required this.showPrereleasePackages,
     required this.userRepos,
   });
 
@@ -27,6 +28,7 @@ class VccSetting {
   final List<String> userProjects;
   final List<String> unityEditors;
   final List<String> userPackageFolders;
+  final bool showPrereleasePackages;
   final List<String> userRepos;
 }
 
@@ -134,6 +136,7 @@ class VccService {
       userProjects: (json['userProjects'] as List<dynamic>).cast(),
       unityEditors: (json['unityEditors'] as List<dynamic>).cast(),
       userPackageFolders: (json['userPackageFolders'] as List<dynamic>).cast(),
+      showPrereleasePackages: json['showPrereleasePackages'],
       userRepos: (json['userRepos'] as List<dynamic>)
           .map((e) => e['localPath'].toString())
           .toList(),

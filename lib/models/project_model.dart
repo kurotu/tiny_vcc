@@ -39,7 +39,7 @@ class ProjectModel with ChangeNotifier {
   void getLockedDependencies() async {
     final locked = await project.getLockedDependencies();
     _lockedDependencies = locked;
-    _updateList();
+    await _updateList();
     notifyListeners();
   }
 
@@ -60,7 +60,7 @@ class ProjectModel with ChangeNotifier {
 
   void selectVersion(String name, Version version) async {
     _selectedVersion[name] = version;
-    _updateList();
+    await _updateList();
     notifyListeners();
   }
 
@@ -79,19 +79,23 @@ class ProjectModel with ChangeNotifier {
     getLockedDependencies();
   }
 
-  void _updateList() {
+  Future<void> _updateList() async {
+    final showPrerelease = (await vcc.getSettings()).showPrereleasePackages;
     final List<PackageItem> list = [];
     final locked = _lockedDependencies
-        .where((element) => _packageRepo.getLatest(element.name) != null)
+        .where((element) =>
+            _packageRepo.getLatest(
+                element.name, element.version, showPrerelease) !=
+            null)
         .map((e) {
-      final latest = _packageRepo.getLatest(e.name);
+      final latest = _packageRepo.getLatest(e.name, e.version, showPrerelease);
       return PackageItem(
         name: e.name,
         displayName: latest!.displayName,
         description: latest.description,
         installedVersion: e.version,
         selectedVersion: _selectedVersion[e.name] ?? latest.version,
-        versions: _packageRepo.getVersions(e.name),
+        versions: _packageRepo.getVersions(e.name, e.version, showPrerelease),
         repoType: latest.repoType,
       );
     });
@@ -103,13 +107,13 @@ class ProjectModel with ChangeNotifier {
         .toSet();
     if (not != null) {
       list.addAll(not.map((name) {
-        final p = _packageRepo.getLatest(name);
+        final p = _packageRepo.getLatest(name, null, showPrerelease);
         return PackageItem(
           name: name,
           displayName: p!.displayName,
           description: p.description,
           selectedVersion: _selectedVersion[p.name] ?? p.version,
-          versions: _packageRepo.getVersions(name),
+          versions: _packageRepo.getVersions(name, null, showPrerelease),
           repoType: p.repoType,
         );
       }));
