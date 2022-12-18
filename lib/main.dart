@@ -31,6 +31,7 @@ import 'services/dotnet_service.dart';
 final RouteObserver<ModalRoute<void>> routeObserver =
     RouteObserver<ModalRoute<void>>();
 final scaffoldKey = GlobalKey<ScaffoldMessengerState>();
+final requiredVpmVersion = Version(0, 1, 13);
 
 Future<void> _checkForUpdate() async {
   final current = Version(0, 0, 0);

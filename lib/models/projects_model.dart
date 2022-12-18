@@ -98,6 +98,10 @@ class ProjectsModel with ChangeNotifier {
     await _requirements.installVpmCli();
   }
 
+  Future<void> updateVpmCli() async {
+    await _requirements.updateVpmCli();
+  }
+
   Future<void> getPackages() async {
     await _packages.fetchPackages();
   }

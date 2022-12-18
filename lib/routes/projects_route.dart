@@ -127,6 +127,32 @@ class _ProjectsRoute extends State<ProjectsRoute> with RouteAware {
           ],
         ));
         break;
+      case RequirementType.vpmVersion:
+        scaffoldKey.currentState?.showMaterialBanner(MaterialBanner(
+          content: Text('VPM CLI $requiredVpmVersion is required.'),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                scaffoldKey.currentState?.clearMaterialBanners();
+                scaffoldKey.currentState?.showSnackBar(
+                    const SnackBar(content: Text('Updating vrchat.vpm.cli')));
+                await model.updateVpmCli();
+                scaffoldKey.currentState?.showSnackBar(
+                    const SnackBar(content: Text('Updated vrchat.vpm.cli')));
+                _refreshProjects();
+              },
+              child: const Text('Update'),
+            ),
+            TextButton(
+              onPressed: () {
+                scaffoldKey.currentState?.clearMaterialBanners();
+                _refreshProjects();
+              },
+              child: const Text('Check again'),
+            ),
+          ],
+        ));
+        break;
       case RequirementType.hub:
         scaffoldKey.currentState?.showMaterialBanner(MaterialBanner(
           content: const Text('Unity Hub is required.'),

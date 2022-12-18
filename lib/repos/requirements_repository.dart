@@ -1,11 +1,13 @@
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
+import 'package:tiny_vcc/main.dart';
 import 'package:tiny_vcc/services/dotnet_service.dart';
 import 'package:tiny_vcc/services/vcc_service.dart';
 
 enum RequirementType {
   dotnet6,
   vpm,
+  vpmVersion,
   hub,
   unity,
 }
@@ -32,7 +34,9 @@ class RequirementsRepository {
 
     try {
       final vpmVersion = await _vcc.getCliVersion();
-      // todo: version check
+      if (vpmVersion < requiredVpmVersion) {
+        return RequirementType.vpmVersion;
+      }
     } catch (error) {
       return RequirementType.vpm;
     }
@@ -52,6 +56,12 @@ class RequirementsRepository {
 
   Future<void> installVpmCli() async {
     await _dotnet.installGlobalTool('vrchat.vpm.cli');
+    await _vcc.installTemplates();
+    await _vcc.listRepos();
+  }
+
+  Future<void> updateVpmCli() async {
+    await _dotnet.updateGlobalTool('vrchat.vpm.cli');
     await _vcc.installTemplates();
     await _vcc.listRepos();
   }
