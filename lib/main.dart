@@ -84,7 +84,7 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    setWindowTitle('Tiny VCC');
+//    setWindowTitle('Tiny VCC');
     return MultiProvider(
         providers: [
           Provider(create: (context) => UnityHubService()),

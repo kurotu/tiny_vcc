@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "tiny_vcc" "\0"
+            VALUE "CompanyName", "kurotu" "\0"
+            VALUE "FileDescription", "Tiny VCC" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "tiny_vcc" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2022 com.example. All rights reserved." "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2022 kurotu. All rights reserved." "\0"
             VALUE "OriginalFilename", "tiny_vcc.exe" "\0"
-            VALUE "ProductName", "tiny_vcc" "\0"
+            VALUE "ProductName", "Tiny VCC" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
