@@ -32,7 +32,7 @@ jobs:
       - run: flutter config --enable-macos-desktop
       - run: flutter build macos
       - run: brew install create-dmg
-      - run: ./scripts/create-dmg.sh
+      - run: ./scripts/create-dmg.sh "build/macos/Build/Products/Release/Tiny VCC.app" TinyVCC.dmg
       # - uses: actions/upload-artifact@v3
       #   with:
       #     name: macos

@@ -1,8 +1,9 @@
 #!/bin/bash
 set -eu
 
-APP='tiny_vcc.app'
-DMG='tiny-vcc.dmg'
+APP_DIR="${1}"
+APP="$(basename ${APP_DIR})"
+DMG="${2}"
 
 rm -f "${DMG}"
 
@@ -14,4 +15,4 @@ create-dmg \
   --hide-extension "${APP}" \
   --app-drop-link 600 185 \
   "${DMG}" \
-  "build/macos/Build/Products/Release/${APP}"
+  "${APP_DIR}"
