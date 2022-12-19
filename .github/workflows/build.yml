@@ -31,6 +31,8 @@ jobs:
           flutter-version: '3.3.9'
       - run: flutter config --enable-macos-desktop
       - run: flutter build macos
+      - run: brew install create-dmg
+      - run: ./scripts/create-dmg.sh
       # - uses: actions/upload-artifact@v3
       #   with:
       #     name: macos
