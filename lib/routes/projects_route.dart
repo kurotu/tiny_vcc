@@ -66,7 +66,6 @@ class _ProjectsRoute extends State<ProjectsRoute> with RouteAware {
     try {
       await model.getProjects();
       await model.getPackages();
-      model.setReadyToUse(true);
     } catch (error) {
       print(error);
     }
@@ -76,6 +75,7 @@ class _ProjectsRoute extends State<ProjectsRoute> with RouteAware {
     final missing = await model.checkMissingRequirement();
     switch (missing) {
       case null:
+        model.setReadyToUse(true);
         break;
       case RequirementType.dotnet6:
         scaffoldKey.currentState?.showMaterialBanner(
@@ -303,8 +303,14 @@ class _ProjectsRoute extends State<ProjectsRoute> with RouteAware {
       body: Consumer<ProjectsModel>(
           builder: ((context, model, child) => model.isReadyToUse
               ? Column(children: buildColumn(model))
-              : const Center(
-                  child: Text('Tiny VCC is not ready to use.'),
+              : Center(
+                  child: Wrap(
+                      spacing: 8,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: const [
+                        CircularProgressIndicator(),
+                        Text('Tiny VCC is not ready to use.'),
+                      ]),
                 ))),
     );
   }

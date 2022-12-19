@@ -45,10 +45,7 @@ class ProjectsModel with ChangeNotifier {
 
   Future<RequirementType?> checkMissingRequirement() async {
     final missing = await _requirements.fetchMissingRequirement();
-    _isReadyToUse = missing == null;
-    if (!_disposed) {
-      notifyListeners();
-    }
+    setReadyToUse(missing == null);
     return missing;
   }
 
