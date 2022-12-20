@@ -247,11 +247,18 @@ class VccService {
     encoder.create(zipPath);
 
     final entities = Directory(project.path).listSync();
+    final excluded = [
+      '.git',
+      'Library',
+      'Logs',
+      'obj',
+    ].map((e) => p.join(project.path, e)).toList();
     for (final e in entities) {
+      if (excluded.contains(e.path)) {
+        continue;
+      }
+      debugPrint(e.path);
       if (e is Directory) {
-        if (e.path.endsWith('Library') || e.path.endsWith('Logs')) {
-          continue;
-        }
         await encoder.addDirectory(e);
       } else if (e is File) {
         await encoder.addFile(e);
