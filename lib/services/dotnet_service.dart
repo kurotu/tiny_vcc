@@ -56,18 +56,24 @@ class DotNetService {
     return Map.fromEntries(entries);
   }
 
-  Future<void> installGlobalTool(String packageId) async {
-    final result = await Process.run(
-        _dotnetCommand, ['tool', 'install', '--global', packageId]);
+  Future<void> installGlobalTool(String packageId, String? version) async {
+    final args = ['tool', 'install', '--global', packageId];
+    if (version != null) {
+      args.addAll(['--version', version]);
+    }
+    final result = await Process.run(_dotnetCommand, args);
     if (result.exitCode != 0) {
       throw Exception(
           'dotnet tool install --global $packageId returned ${result.exitCode}');
     }
   }
 
-  Future<void> updateGlobalTool(String packageId) async {
-    final result = await Process.run(
-        _dotnetCommand, ['tool', 'update', '--global', packageId]);
+  Future<void> updateGlobalTool(String packageId, String? version) async {
+    final args = ['tool', 'update', '--global', packageId];
+    if (version != null) {
+      args.addAll(['--version', version]);
+    }
+    final result = await Process.run(_dotnetCommand, args);
     if (result.exitCode != 0) {
       throw Exception(
           'dotnet tool update --global $packageId returned ${result.exitCode}');

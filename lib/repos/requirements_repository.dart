@@ -55,13 +55,15 @@ class RequirementsRepository {
   }
 
   Future<void> installVpmCli() async {
-    await _dotnet.installGlobalTool('vrchat.vpm.cli');
+    await _dotnet.installGlobalTool(
+        'vrchat.vpm.cli', requiredVpmVersion.toString());
     await _vcc.installTemplates();
     await _vcc.listRepos();
   }
 
   Future<void> updateVpmCli() async {
-    await _dotnet.updateGlobalTool('vrchat.vpm.cli');
+    await _dotnet.updateGlobalTool(
+        'vrchat.vpm.cli', requiredVpmVersion.toString());
     await _vcc.installTemplates();
     await _vcc.listRepos();
   }
