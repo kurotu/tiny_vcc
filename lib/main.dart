@@ -23,7 +23,6 @@ import 'package:tiny_vcc/services/unity_hub_service.dart';
 import 'package:tiny_vcc/services/updater_service.dart';
 import 'package:tiny_vcc/services/vcc_service.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:window_size/window_size.dart';
 
 import 'models/project_model.dart';
 import 'services/dotnet_service.dart';
@@ -85,7 +84,6 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-//    setWindowTitle('Tiny VCC');
     return MultiProvider(
         providers: [
           Provider(create: (context) => UnityHubService()),
