@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tiny_vcc/models/project_model.dart';
@@ -58,8 +60,18 @@ class _ProjectRoute extends State<ProjectRoute> with RouteAware {
   }
 
   void _didClickMakeBackup(BuildContext context) async {
-    showProgressDialog(context, 'Backing up ${_model(context).project.name}');
-    final file = await _model(context).backup();
+    final projectName = _model(context).project.name;
+    showProgressDialog(context, 'Backing up $projectName');
+    File file;
+    try {
+      file = await _model(context).backup();
+    } catch (error) {
+      Navigator.pop(context);
+      showAlertDialog(context,
+          title: 'Backup Error',
+          message: 'Failed to back up $projectName.\n\n$error');
+      return;
+    }
     if (!mounted) {
       return;
     }

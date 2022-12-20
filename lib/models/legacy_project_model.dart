@@ -55,11 +55,17 @@ class LegacyProjectModel extends ChangeNotifier {
   }
 
   Future<File> backup() async {
-    _isMakingBackup = true;
-    notifyListeners();
-    final file = await compute(_vcc.backup, project);
-    _isMakingBackup = false;
-    notifyListeners();
-    return file;
+    try {
+      _isMakingBackup = true;
+      notifyListeners();
+      final file = await compute(_vcc.backup, project);
+      _isMakingBackup = false;
+      notifyListeners();
+      return file;
+    } catch (error) {
+      _isMakingBackup = false;
+      notifyListeners();
+      rethrow;
+    }
   }
 }

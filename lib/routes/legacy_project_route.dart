@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tiny_vcc/routes/project_route.dart';
@@ -128,8 +130,19 @@ class LegacyProjectRoute extends StatelessWidget {
   }
 
   void _didClickMakeBackup(BuildContext context) async {
-    showProgressDialog(context, 'Backing up ${_model(context).project.name}');
-    final file = await _model(context).backup();
+    final projectName = _model(context).project.name;
+    showProgressDialog(context, 'Backing up $projectName');
+    File file;
+    try {
+      file = await _model(context).backup();
+    } catch (error) {
+      Navigator.pop(context);
+      showAlertDialog(context,
+          title: 'Backup Error',
+          message: 'Failed to back up $projectName.\n\n$error');
+      return;
+    }
+
     Navigator.pop(context);
 
     final showFile = await showDialog(
