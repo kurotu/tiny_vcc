@@ -34,7 +34,8 @@ final scaffoldKey = GlobalKey<ScaffoldMessengerState>();
 final requiredVpmVersion = Version(0, 1, 13);
 
 Future<void> _checkForUpdate() async {
-  final current = Version(0, 0, 0);
+  final current = Version.parse((await PackageInfo.fromPlatform()).version);
+  debugPrint('Current: $current');
   final Release latest;
   try {
     latest = await UpdaterService(RepositorySlug('kurotu', 'tiny-vcc'))
