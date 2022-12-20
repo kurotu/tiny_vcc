@@ -17,7 +17,14 @@ class LegacyProjectModel extends ChangeNotifier {
   VccProject get project => _project;
 
   final StringBuffer _vpmOutput = StringBuffer();
-  String get vpmOutput => _vpmOutput.toString();
+  String get vpmOutput => _vpmOutput.toString().trim();
+
+  String? _migrationErrorText;
+  String? get migrationErrorText => _migrationErrorText;
+  set migrationErrorText(String? value) {
+    _migrationErrorText = value;
+    notifyListeners();
+  }
 
   VccProject? _migratedProject;
   VccProject? get migratedProject => _migratedProject;
@@ -35,6 +42,7 @@ class LegacyProjectModel extends ChangeNotifier {
 
   Future<VccProject> _migrate(VccProject project, bool inPlace) async {
     _migratedProject = null;
+    _migrationErrorText = null;
     _vpmOutput.clear();
     notifyListeners();
 

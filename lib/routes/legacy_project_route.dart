@@ -38,13 +38,18 @@ class LegacyProjectRoute extends StatelessWidget {
     _showMigrationProgressDialog(context);
 
     VccProject project;
-    switch (action) {
-      case _MigrateAction.migrateCopy:
-        project = await _model(context).migrateCopy();
-        break;
-      case _MigrateAction.migrateInPlace:
-        project = await _model(context).migrateInPlace();
-        break;
+    try {
+      switch (action) {
+        case _MigrateAction.migrateCopy:
+          project = await _model(context).migrateCopy();
+          break;
+        case _MigrateAction.migrateInPlace:
+          project = await _model(context).migrateInPlace();
+          break;
+      }
+    } catch (error) {
+      _model(context).migrationErrorText = '$error';
+      return;
     }
 
     await Future.delayed(const Duration(seconds: 1));
@@ -95,30 +100,49 @@ class LegacyProjectRoute extends StatelessWidget {
       context: context,
       builder: (context) => ChangeNotifierProvider.value(
         value: model,
-        builder: ((context, child) => AlertDialog(
-              title: Consumer<LegacyProjectModel>(
-                builder: (context, model, child) =>
-                    Text('Migrating ${model.project.name}'),
-              ),
-              content: SizedBox(
-                width: MediaQuery.of(context).size.width,
-                child: SizedBox.expand(
-                  child: Container(
-                    decoration: const BoxDecoration(color: Colors.black87),
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(8),
-                      reverse: true,
-                      child: Consumer<LegacyProjectModel>(
-                        builder: (context, model, child) => Text(
+        builder: (context, child) => Consumer<LegacyProjectModel>(
+          builder: (context, model, child) => AlertDialog(
+            title: Text('Migrating ${model.project.name}'),
+            content: SizedBox(
+              width: MediaQuery.of(context).size.width,
+              height: MediaQuery.of(context).size.height,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Container(
+                      width: double.infinity,
+                      decoration: const BoxDecoration(color: Colors.black87),
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(8),
+                        reverse: true,
+                        child: Text(
                           model.vpmOutput,
                           style: const TextStyle(color: Colors.white70),
                         ),
                       ),
                     ),
                   ),
-                ),
+                  const Padding(padding: EdgeInsets.all(8)),
+                  Text(
+                    model.migrationErrorText ?? '',
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                ],
               ),
-            )),
+            ),
+            actions: model.migrationErrorText != null
+                ? [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: const Text('OK'),
+                    )
+                  ]
+                : null,
+          ),
+        ),
       ),
       barrierDismissible: false,
     );
