@@ -65,6 +65,7 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: windows
+          path: build/windows/runner/Release
 
       - uses: actions/download-artifact@v3
         with:
@@ -73,24 +74,24 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: linux
+          path: build/linux/x64/release/bundle
+
+      - run: ls
 
       - name: Create windows release
         run: |
-          DIR=build/windows/runner/Release
-          mkdir ${NAME}
-          cp VRCQuestTools.unitypackage ${NAME}/${NAME}.unitypackage
-          cp LICENSE ${DIR}/
-          cp README*.md ${DIR}/
-          cd build/windows/runner
           NAME=tiny_vcc-${GITHUB_REF#refs/tags/}
-          mv Release ${NAME}
-          zip -r ../../../${NAME}.zip ${NAME}
+          mv build/windows/runner/Release ${NAME}
+          cp LICENSE* ${NAME}/
+          cp README*.md ${NAME}/
+          zip -r ${NAME}.zip ${NAME}
 
       - name: Create macos release
         run: mv TinyVCC.dmg TinyVCC-${GITHUB_REF#refs/tags/}.dmg
 
       - uses: softprops/action-gh-release@v1
         with:
+          draft: true
           files: |
             *.zip
             *.dmg
