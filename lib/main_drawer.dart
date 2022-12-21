@@ -38,7 +38,8 @@ class MainDrawer extends StatelessWidget {
             },
           ),
           FutureProvider(
-            create: (context) => rootBundle.loadString('LICENSE'),
+            create: (context) =>
+                rootBundle.loadString('assets/texts/LICENSE_NOTICE'),
             initialData: null,
             builder: (context, child) {
               final license = context.watch<String?>();

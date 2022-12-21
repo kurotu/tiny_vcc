@@ -75,7 +75,7 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/images/app_icon-1024x1024.png
-    - LICENSE
+    - assets/texts/LICENSE_NOTICE
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
