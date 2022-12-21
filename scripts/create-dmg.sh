@@ -2,7 +2,7 @@
 set -eu
 
 APP_DIR="${1}"
-APP="$(basename ${APP_DIR})"
+APP="$(basename "${APP_DIR}")"
 DMG="${2}"
 
 rm -f "${DMG}"
