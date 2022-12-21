@@ -37,7 +37,7 @@ Future<void> _checkForUpdate() async {
   debugPrint('Current: $current');
   final Release latest;
   try {
-    latest = await UpdaterService(RepositorySlug('kurotu', 'tiny-vcc'))
+    latest = await UpdaterService(RepositorySlug('kurotu', 'tiny_vcc'))
         .getLatestRelease();
   } catch (error) {
     scaffoldKey.currentState?.showSnackBar(SnackBar(
