@@ -54,3 +54,43 @@ jobs:
         with:
           name: linux
           path: build/linux/x64/release/bundle
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [build-windows, build-macos, build-linux]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: windows
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: macos
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: linux
+
+      - name: Create windows release
+        run: |
+          DIR=build/windows/runner/Release
+          mkdir ${NAME}
+          cp VRCQuestTools.unitypackage ${NAME}/${NAME}.unitypackage
+          cp LICENSE ${DIR}/
+          cp README*.md ${DIR}/
+          cd build/windows/runner
+          NAME=tiny_vcc-${GITHUB_REF#refs/tags/}
+          mv Release ${NAME}
+          zip -r ../../../${NAME}.zip ${NAME}
+
+      - name: Create macos release
+        run: mv TinyVCC.dmg TinyVCC-${GITHUB_REF#refs/tags/}.dmg
+
+      - uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            *.zip
+            *.dmg
