@@ -73,9 +73,10 @@ void main() {
   Timer.periodic(const Duration(days: 1), ((timer) {
     _checkForUpdate();
   }));
-  _checkForUpdate();
 
   runApp(const MyApp());
+
+  _checkForUpdate();
 }
 
 class MyApp extends StatelessWidget {
