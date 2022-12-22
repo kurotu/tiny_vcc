@@ -41,8 +41,12 @@ class SettingsModel extends ChangeNotifier {
     }
   }
 
-  Future<void> fetchSettings() async {
-    _settings = await _settingsRepo.fetchSettings();
+  Future<void> initialize() async {
+    _fetchSettings(refresh: true);
+  }
+
+  Future<void> _fetchSettings({bool refresh = false}) async {
+    _settings = await _settingsRepo.fetchSettings(refresh: refresh);
     notifyListeners();
   }
 
@@ -51,12 +55,12 @@ class SettingsModel extends ChangeNotifier {
       await _settingsRepo.addUnityEditor(path);
     }
     await _settingsRepo.setPreferredEditor(path);
-    await fetchSettings();
+    await _fetchSettings();
   }
 
   Future<void> setBackupFolder(String path) async {
     await _settingsRepo.setBackupFolder(path);
-    await fetchSettings();
+    await _fetchSettings();
   }
 
   Future<void> addUserPackage(String packagePath) async {
@@ -68,11 +72,11 @@ class SettingsModel extends ChangeNotifier {
       return;
     }
     await _settingsRepo.addUserPackageFolder(packagePath);
-    await fetchSettings();
+    await _fetchSettings();
   }
 
   Future<void> deleteUserPackage(String packagePath) async {
     await _settingsRepo.deleteUserPackageFolder(packagePath);
-    await fetchSettings();
+    await _fetchSettings();
   }
 }

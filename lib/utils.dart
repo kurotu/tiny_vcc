@@ -50,6 +50,25 @@ Future<T?> showAlertDialog<T>(BuildContext context,
   );
 }
 
+Future<T?> showSimpleErrorDialog<T>(
+    BuildContext context, String message, Object error) {
+  return showDialog<T>(
+    context: context,
+    builder: ((context) => AlertDialog(
+          title: const Text('Error'),
+          content: Text('$message\n\n$error'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        )),
+  );
+}
+
 ProgressDialog showProgressDialog(BuildContext context, String message) {
   final pd = ProgressDialog(context: context);
   pd.show(

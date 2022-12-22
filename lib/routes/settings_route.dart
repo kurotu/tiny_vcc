@@ -27,31 +27,93 @@ class _SettingsRoute extends State<SettingsRoute> with RouteAware {
   @override
   void didPush() async {
     try {
-      await context.read<SettingsModel>().fetchSettings();
+      await context.read<SettingsModel>().initialize();
     } catch (error) {
-      if (!mounted) {
-        return;
+      if (mounted) {
+        await showSimpleErrorDialog(
+            context, 'Error occurred when loading settings.', error);
       }
-      showAlertDialog(
-        context,
-        title: 'Error',
-        message: 'Error occured when loading settings.\n\n$error',
-      );
     }
   }
 
-  void _didClickAddUserPackage() async {
-    final packagePath = await showDirectoryPickerWindow(lockParentWindow: true);
-    if (packagePath == null) {
-      return;
-    }
-    if (!mounted) {
-      return;
-    }
+  Future<void> _didClickEditorFilePicker() async {
     try {
-      context.read<SettingsModel>().addUserPackage(packagePath);
+      final path = await showFilePickerWindow(lockParentWindow: true);
+      if (path == null) {
+        return;
+      }
+      if (mounted) {
+        await context.read<SettingsModel>().setPreferredEditor(path);
+      }
     } catch (error) {
-      showAlertDialog(context, title: 'Error', message: '$error');
+      if (mounted) {
+        await showSimpleErrorDialog(context,
+            'Error occurred when setting preferred Unity editor.', error);
+      }
+    }
+  }
+
+  Future<void> _didChangePreferredEditor(String? editorPath) async {
+    try {
+      if (editorPath == null) {
+        return;
+      }
+      if (mounted) {
+        await context.read<SettingsModel>().setPreferredEditor(editorPath);
+      }
+    } catch (error) {
+      if (mounted) {
+        await showSimpleErrorDialog(context,
+            'Error occurred when changing preferred Unity editor.', error);
+      }
+    }
+  }
+
+  Future<void> _didClickBackupFolderPicker() async {
+    try {
+      final path = await showDirectoryPickerWindow(
+        lockParentWindow: true,
+        initialDirectory: context.read<SettingsModel>().backupFolder,
+      );
+      if (path == null) {
+        return;
+      }
+      if (mounted) {
+        context.read<SettingsModel>().setBackupFolder(path);
+      }
+    } catch (error) {
+      if (mounted) {
+        await showSimpleErrorDialog(
+            context, 'Error occurred when setting backup folder.', error);
+      }
+    }
+  }
+
+  Future<void> _didClickAddUserPackage() async {
+    try {
+      final packagePath =
+          await showDirectoryPickerWindow(lockParentWindow: true);
+      if (packagePath == null) {
+        return;
+      }
+      if (!mounted) {
+        return;
+      }
+      await context.read<SettingsModel>().addUserPackage(packagePath);
+    } catch (error) {
+      await showSimpleErrorDialog(
+          context, 'Error occurred when adding a package folder.', error);
+    }
+  }
+
+  Future<void> _didClickRemoveUserPackage(String userPackage) async {
+    try {
+      if (mounted) {
+        await context.read<SettingsModel>().deleteUserPackage(userPackage);
+      }
+    } catch (error) {
+      await showSimpleErrorDialog(
+          context, 'Error occurred when removing a package folder.', error);
     }
   }
 
@@ -77,29 +139,14 @@ class _SettingsRoute extends State<SettingsRoute> with RouteAware {
                       decoration: InputDecoration(
                           labelText: 'Unity Editors',
                           suffixIcon: IconButton(
-                              onPressed: () async {
-                                final path = await showFilePickerWindow(
-                                    lockParentWindow: true);
-                                if (path == null) {
-                                  return;
-                                }
-                                if (mounted) {
-                                  context
-                                      .read<SettingsModel>()
-                                      .setPreferredEditor(path);
-                                }
-                              },
+                              onPressed: _didClickEditorFilePicker,
                               icon: const Icon(Icons.folder))),
                       value: model.preferredEditor,
                       items: model.unityEditors
                           .map(
                               (e) => DropdownMenuItem(value: e, child: Text(e)))
                           .toList(),
-                      onChanged: (value) {
-                        if (value != null) {
-                          model.setPreferredEditor(value);
-                        }
-                      },
+                      onChanged: _didChangePreferredEditor,
                     )),
               ),
               const Padding(padding: EdgeInsets.symmetric(vertical: 8)),
@@ -109,20 +156,7 @@ class _SettingsRoute extends State<SettingsRoute> with RouteAware {
                       decoration: InputDecoration(
                         labelText: 'Backups',
                         suffixIcon: IconButton(
-                          onPressed: () async {
-                            final path = await showDirectoryPickerWindow(
-                              lockParentWindow: true,
-                              initialDirectory: model.backupFolder,
-                            );
-                            if (path == null) {
-                              return;
-                            }
-                            if (mounted) {
-                              context
-                                  .read<SettingsModel>()
-                                  .setBackupFolder(path);
-                            }
-                          },
+                          onPressed: _didClickBackupFolderPicker,
                           icon: const Icon(Icons.folder),
                         ),
                       ),
@@ -135,9 +169,7 @@ class _SettingsRoute extends State<SettingsRoute> with RouteAware {
                   const Text('User Packages'),
                   const Padding(padding: EdgeInsets.symmetric(horizontal: 4)),
                   OutlinedButton(
-                      onPressed: () {
-                        _didClickAddUserPackage();
-                      },
+                      onPressed: _didClickAddUserPackage,
                       child: const Text('Add')),
                 ],
               ),
@@ -148,8 +180,8 @@ class _SettingsRoute extends State<SettingsRoute> with RouteAware {
                           title: Text(model.userPackages[index]),
                           trailing: IconButton(
                             onPressed: () {
-                              model
-                                  .deleteUserPackage(model.userPackages[index]);
+                              _didClickRemoveUserPackage(
+                                  model.userPackages[index]);
                             },
                             icon: const Icon(Icons.delete),
                           ),
