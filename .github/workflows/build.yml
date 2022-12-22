@@ -89,9 +89,13 @@ jobs:
       - name: Create macos release
         run: mv TinyVCC.dmg TinyVCC-${GITHUB_REF#refs/tags/}.dmg
 
+      - name: Create release note
+        run: ./scripts/generate-releasenote.sh ${GITHUB_REF#refs/tags/v} | tee ${{ github.workspace }}-release.txt
+
       - uses: softprops/action-gh-release@v1
         with:
           draft: true
+          body_path: ${{ github.workspace }}-release.txt
           files: |
             *.zip
             *.dmg
