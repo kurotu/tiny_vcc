@@ -326,6 +326,11 @@ class VccService {
     final setting = await getSettings();
     _hub.setUnityHubExe(setting.pathToUnityHub);
     final editors = await _hub.listInstalledEditors();
+    if (Platform.isMacOS) {
+      final newEntries = editors.entries.map((entry) =>
+          MapEntry(entry.key, p.join(entry.value, 'Contents/MacOS/unity')));
+      editors.addEntries(newEntries);
+    }
     await setSettings(unityEditors: editors.values.toList());
     return editors;
 
