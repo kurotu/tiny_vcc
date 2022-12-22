@@ -10,29 +10,7 @@ import 'package:pub_semver/pub_semver.dart';
 import 'package:tiny_vcc/services/unity_hub_service.dart';
 import 'package:yaml/yaml.dart';
 
-class VccSetting {
-  VccSetting({
-    required this.pathToUnityExe,
-    required this.pathToUnityHub,
-    required this.projectBackupPath,
-    required this.userProjects,
-    required this.unityEditors,
-    required this.defaultProjectPath,
-    required this.userPackageFolders,
-    required this.showPrereleasePackages,
-    required this.userRepos,
-  });
-
-  final String pathToUnityExe;
-  final String pathToUnityHub;
-  final String projectBackupPath;
-  final List<String> userProjects;
-  final List<String> unityEditors;
-  final String defaultProjectPath;
-  final List<String> userPackageFolders;
-  final bool showPrereleasePackages;
-  final List<String> userRepos;
-}
+import '../data/vcc_data.dart';
 
 class VccProject {
   VccProject(this.path);
@@ -129,9 +107,9 @@ class VccService {
     return Version.parse(result.stdout.toString().trim());
   }
 
-  Future<VccSetting> getSettings() async {
+  Future<VccSettings> getSettings() async {
     var json = await _getSettingsJson();
-    var setting = VccSetting(
+    final settings = VccSettings(
       pathToUnityExe: json['pathToUnityExe'].toString(),
       pathToUnityHub: json['pathToUnityHub'].toString(),
       projectBackupPath: json['projectBackupPath'].toString(),
@@ -144,7 +122,7 @@ class VccService {
           .map((e) => e['localPath'].toString())
           .toList(),
     );
-    return setting;
+    return settings;
   }
 
   Future<void> addUserProject(Directory directory) async {

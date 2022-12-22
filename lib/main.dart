@@ -12,7 +12,7 @@ import 'package:tiny_vcc/models/settings_model.dart';
 import 'package:tiny_vcc/repos/requirements_repository.dart';
 import 'package:tiny_vcc/repos/unity_editors_repository.dart';
 import 'package:tiny_vcc/repos/vcc_projects_repository.dart';
-import 'package:tiny_vcc/repos/vcc_setting_repository.dart';
+import 'package:tiny_vcc/repos/vcc_settings_repository.dart';
 import 'package:tiny_vcc/repos/vpm_packages_repository.dart';
 import 'package:tiny_vcc/routes/legacy_project_route.dart';
 import 'package:tiny_vcc/routes/new_project_route.dart';
@@ -94,7 +94,7 @@ class MyApp extends StatelessWidget {
           Provider(create: (context) => VccProjectsRepository(context)),
           Provider(create: (context) => VpmPackagesRepository(context)),
           Provider(create: (context) => UnityEditorsRepository(context)),
-          Provider(create: (context) => VccSettingRepository(context)),
+          Provider(create: (context) => VccSettingsRepository(context)),
           FutureProvider(
             create: ((context) => PackageInfo.fromPlatform()),
             initialData: null,

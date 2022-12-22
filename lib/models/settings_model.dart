@@ -2,25 +2,29 @@ import 'dart:io';
 
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
-import 'package:tiny_vcc/repos/vcc_setting_repository.dart';
+import 'package:tiny_vcc/data/vcc_data.dart';
+import 'package:tiny_vcc/repos/vcc_settings_repository.dart';
 import 'package:path/path.dart' as p;
 
 class SettingsModel extends ChangeNotifier {
-  SettingsModel(BuildContext context) : _setting = context.read();
+  SettingsModel(BuildContext context) : _settingsRepo = context.read();
 
-  final VccSettingRepository _setting;
+  final VccSettingsRepository _settingsRepo;
 
-  List<String> _unityEditors = [];
-  List<String> get unityEditors => _unityEditors;
+  VccSettings? _settings;
 
-  String? _preferedEditor;
-  String? get preferedEditor => _preferedEditor;
+  List<String> get unityEditors => _settings?.unityEditors ?? [];
 
-  String _backupFolder = "";
-  String get backupFolder => _backupFolder;
+  String? get preferredEditor {
+    if (_settings?.pathToUnityExe == '') {
+      return null;
+    }
+    return _settings?.pathToUnityExe;
+  }
 
-  List<String> _userPackages = [];
-  List<String> get userPackages => _userPackages;
+  String get backupFolder => _settings?.projectBackupPath ?? '';
+
+  List<String> get userPackages => _settings?.userPackageFolders ?? [];
 
   bool _disposed = false;
 
@@ -37,50 +41,38 @@ class SettingsModel extends ChangeNotifier {
     }
   }
 
-  Future<void> fetchSetting() async {
-    final setting = await _setting.fetchSetting();
-    _unityEditors = setting.unityEditors;
-    _preferedEditor = setting.pathToUnityExe;
-    if (_preferedEditor == "") {
-      _preferedEditor = null;
+  Future<void> fetchSettings() async {
+    _settings = await _settingsRepo.fetchSettings();
+    notifyListeners();
+  }
+
+  Future<void> setPreferredEditor(String path) async {
+    if (!unityEditors.contains(path)) {
+      await _settingsRepo.addUnityEditor(path);
     }
-    _backupFolder = setting.projectBackupPath;
-    _userPackages = setting.userPackageFolders;
-    notifyListeners();
+    await _settingsRepo.setPreferredEditor(path);
+    await fetchSettings();
   }
 
-  void setPreferedEditor(String path) {
-    if (!_unityEditors.contains(path)) {
-      _unityEditors.add(path);
-      _setting.addUnityEditor(path);
-    }
-    _preferedEditor = path;
-    _setting.setPreferedEditor(path);
-    notifyListeners();
+  Future<void> setBackupFolder(String path) async {
+    await _settingsRepo.setBackupFolder(path);
+    await fetchSettings();
   }
 
-  void setBackupFolder(String path) {
-    _backupFolder = path;
-    _setting.setBackupFolder(path);
-    notifyListeners();
-  }
-
-  void addUserPackage(String packagePath) {
-    if (!File(p.join(packagePath, 'package.json')).existsSync()) {
+  Future<void> addUserPackage(String packagePath) async {
+    if (!await File(p.join(packagePath, 'package.json')).exists()) {
       throw Exception(
           '$packagePath is not a package. package.json is missing.');
     }
-    if (_userPackages.contains(packagePath)) {
+    if (userPackages.contains(packagePath)) {
       return;
     }
-    _userPackages.add(packagePath);
-    _setting.addUserPackageFolder(packagePath);
-    notifyListeners();
+    await _settingsRepo.addUserPackageFolder(packagePath);
+    await fetchSettings();
   }
 
-  void deleteUserPackage(String packagePath) {
-    _userPackages.remove(packagePath);
-    _setting.deleteUserPackageFolder(packagePath);
-    notifyListeners();
+  Future<void> deleteUserPackage(String packagePath) async {
+    await _settingsRepo.deleteUserPackageFolder(packagePath);
+    await fetchSettings();
   }
 }

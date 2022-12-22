@@ -4,7 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:pub_semver/pub_semver.dart';
 import 'package:tiny_vcc/repos/vcc_projects_repository.dart';
-import 'package:tiny_vcc/repos/vcc_setting_repository.dart';
+import 'package:tiny_vcc/repos/vcc_settings_repository.dart';
 import 'package:tiny_vcc/repos/vpm_packages_repository.dart';
 import 'package:tiny_vcc/services/vcc_service.dart';
 
@@ -19,7 +19,7 @@ class ProjectsModel with ChangeNotifier {
 
   final VccProjectsRepository _vccData;
   final VpmPackagesRepository _packages;
-  final VccSettingRepository _vccSetting;
+  final VccSettingsRepository _vccSetting;
   final RequirementsRepository _requirements;
 
   bool _isReadyToUse = true;

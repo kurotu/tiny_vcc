@@ -25,8 +25,19 @@ class _SettingsRoute extends State<SettingsRoute> with RouteAware {
   }
 
   @override
-  void didPush() {
-    context.read<SettingsModel>().fetchSetting();
+  void didPush() async {
+    try {
+      await context.read<SettingsModel>().fetchSettings();
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      showAlertDialog(
+        context,
+        title: 'Error',
+        message: 'Error occured when loading settings.\n\n$error',
+      );
+    }
   }
 
   void _didClickAddUserPackage() async {
@@ -75,18 +86,18 @@ class _SettingsRoute extends State<SettingsRoute> with RouteAware {
                                 if (mounted) {
                                   context
                                       .read<SettingsModel>()
-                                      .setPreferedEditor(path);
+                                      .setPreferredEditor(path);
                                 }
                               },
                               icon: const Icon(Icons.folder))),
-                      value: model.preferedEditor,
+                      value: model.preferredEditor,
                       items: model.unityEditors
                           .map(
                               (e) => DropdownMenuItem(value: e, child: Text(e)))
                           .toList(),
                       onChanged: (value) {
                         if (value != null) {
-                          model.setPreferedEditor(value);
+                          model.setPreferredEditor(value);
                         }
                       },
                     )),
