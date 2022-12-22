@@ -48,14 +48,6 @@ class _NewProjectRoute extends State<NewProjectRoute> with RouteAware {
 
   @override
   Widget build(BuildContext context) {
-    final TextEditingController projectNameController =
-        TextEditingController(text: _model(context).projectName);
-    final TextEditingController locationController =
-        TextEditingController(text: _model(context).location);
-    Provider.of<NewProjectModel>(context).addListener(() {
-      locationController.text = context.read<NewProjectModel>().location;
-    });
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('New Project'),
@@ -93,10 +85,8 @@ class _NewProjectRoute extends State<NewProjectRoute> with RouteAware {
                   }
                   return null;
                 },
-                controller: projectNameController,
-                onChanged: (value) {
-                  _model(context).projectName = value;
-                },
+                controller:
+                    context.read<NewProjectModel>().projectNameController,
               ),
               TextFormField(
                 readOnly: true,
@@ -104,11 +94,12 @@ class _NewProjectRoute extends State<NewProjectRoute> with RouteAware {
                   labelText: 'Location',
                   suffixIcon: IconButton(
                     onPressed: () {
-                      final model = _model(context);
                       _selectLocation().then((path) {
                         if (path != null) {
-                          model.location = path;
-                          locationController.text = path;
+                          context
+                              .read<NewProjectModel>()
+                              .locationController
+                              .text = path;
                         }
                       });
                     },
@@ -121,7 +112,7 @@ class _NewProjectRoute extends State<NewProjectRoute> with RouteAware {
                   }
                   return null;
                 },
-                controller: locationController,
+                controller: context.read<NewProjectModel>().locationController,
               ),
               const Padding(padding: EdgeInsets.symmetric(vertical: 8)),
               Consumer<NewProjectModel>(

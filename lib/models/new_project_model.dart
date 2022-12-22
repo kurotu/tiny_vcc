@@ -14,20 +14,11 @@ class NewProjectModel extends ChangeNotifier {
   VpmTemplate? _template;
   VpmTemplate? get template => _template;
 
-  String _projectName = '';
-  String get projectName => _projectName;
-  set projectName(String name) {
-    _projectName = name;
-    notifyListeners();
-  }
+  final TextEditingController projectNameController = TextEditingController();
+  final TextEditingController locationController = TextEditingController();
 
-  String _location = '';
-  String get location => _location;
-  set location(String location) {
-    _location = location;
-    _vcc.setSettings(defaultProjectPath: location);
-    notifyListeners();
-  }
+  String get projectName => projectNameController.text;
+  String get location => locationController.text;
 
   bool _isCreatingProject = false;
   bool get isCreatingProject => _isCreatingProject;
@@ -35,7 +26,7 @@ class NewProjectModel extends ChangeNotifier {
   Future<void> fetchInitialData() async {
     await getProjectTemplates();
     final setting = await _vcc.getSettings();
-    _location = setting.defaultProjectPath;
+    locationController.text = setting.defaultProjectPath;
     notifyListeners();
   }
 
