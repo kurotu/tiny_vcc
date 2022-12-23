@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:tiny_vcc/data/exceptions.dart';
+
 class UnityHubService {
   late String _unityHubExe;
 
@@ -8,8 +10,12 @@ class UnityHubService {
   }
 
   Future<Map<String, String>> listInstalledEditors() async {
-    final result =
-        await Process.run(_unityHubExe, ['--', '--headless', 'editors', '-i']);
+    final exe = _unityHubExe;
+    final args = ['--', '--headless', 'editors', '-i'];
+    final result = await Process.run(exe, args);
+    if (result.exitCode != 0) {
+      throw NonZeroExitException(exe, args, result.exitCode);
+    }
     final lines =
         result.stdout.toString().split('\n').map((e) => e.trim()).toList();
     final regex = RegExp(r'^(.*) , installed at (.*)$');

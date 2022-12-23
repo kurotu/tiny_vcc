@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import 'package:provider/provider.dart';
 import 'package:pub_semver/pub_semver.dart';
+import 'package:tiny_vcc/data/exceptions.dart';
 import 'package:tiny_vcc/services/unity_hub_service.dart';
 import 'package:yaml/yaml.dart';
 
@@ -100,9 +101,11 @@ class VccService {
   UnityHubService _hub;
 
   Future<Version> getCliVersion() async {
-    final result = await Process.run(_vpmPath, ['--version']);
+    final exe = _vpmPath;
+    final args = ['--version'];
+    final result = await Process.run(exe, args);
     if (result.exitCode != 0) {
-      throw Exception('vpm --version returned ${result.exitCode}');
+      throw NonZeroExitException(exe, args, result.exitCode);
     }
     return Version.parse(result.stdout.toString().trim());
   }
@@ -135,15 +138,17 @@ class VccService {
 
   Future<VccProject> createNewProject(
       VpmTemplate template, String name, String location) async {
-    final result = await Process.run(_vpmPath, [
+    final exe = _vpmPath;
+    final args = [
       'new',
       name,
       template.path,
       '--path',
       location,
-    ]);
+    ];
+    final result = await Process.run(_vpmPath, args);
     if (result.exitCode != 0) {
-      throw Exception('vpm returned exit code ${result.exitCode}');
+      throw NonZeroExitException(_vpmPath, args, result.exitCode);
     }
     final path = p.join(location, name);
     await addUserProject(Directory(path));
@@ -157,13 +162,14 @@ class VccService {
   }
 
   Future<VccProject> migrateProject(VccProject project, bool inPlace) async {
+    final exe = _vpmPath;
     final args = ['migrate', 'project', project.path];
     if (inPlace) {
       args.add('--inplace');
     }
-    final result = await Process.run(_vpmPath, args);
+    final result = await Process.run(exe, args);
     if (result.exitCode != 0) {
-      throw Exception('vpm returned exit code ${result.exitCode}');
+      throw NonZeroExitException(exe, args, result.exitCode);
     }
     if (inPlace) {
       return project;
@@ -179,11 +185,12 @@ class VccService {
     required void Function(String event) onStdout,
     required void Function(String event) onStderr,
   }) async {
+    final exe = _vpmPath;
     final args = ['migrate', 'project', project.path];
     if (inPlace) {
       args.add('--inplace');
     }
-    final process = await Process.start(_vpmPath, args);
+    final process = await Process.start(exe, args);
 
     final stdout = process.stdout.transform(utf8.decoder).asBroadcastStream();
     stdout.listen(onStdout);
@@ -196,7 +203,7 @@ class VccService {
 
     final exitCode = await process.exitCode;
     if (exitCode != 0) {
-      throw Exception('vpm migrate project returned exit code $exitCode');
+      throw NonZeroExitException(exe, args, exitCode);
     }
     if (inPlace) {
       return project;
@@ -247,10 +254,11 @@ class VccService {
   }
 
   Future<VccProjectType> checkUserProject(VccProject project) async {
-    final result =
-        await Process.run(_vpmPath, ['check', 'project', project.path]);
+    final exe = _vpmPath;
+    final args = ['check', 'project', project.path];
+    final result = await Process.run(exe, args);
     if (result.exitCode != 0) {
-      throw 'vpm returned exit code ${result.exitCode}';
+      throw NonZeroExitException(exe, args, result.exitCode);
     }
     final str = result.stdout.toString();
     if (str.contains('AvatarVPM')) {
@@ -313,9 +321,11 @@ class VccService {
     return editors;
 
     /*
-    var result = await Process.run(_vpmPath, ['list', 'unity']);
+    final exe = _vpmPath;
+    final args = ['list', 'unity'];
+    var result = await Process.run(exe, args;
     if (result.exitCode != 0) {
-      throw Exception('vpm returned exit code ${result.exitCode}');
+      throw NonZeroExitException(exe, args, result.exitCode);
     }
     var out = result.stdout.toString();
     var entries = out.split('\n').sublist(1).where((e) => e != '').map((e) {
@@ -328,16 +338,20 @@ class VccService {
   }
 
   Future<void> installTemplates() async {
-    final result = await Process.run(_vpmPath, ['install', 'templates']);
+    final exe = _vpmPath;
+    final args = ['install', 'templates'];
+    final result = await Process.run(exe, args);
     if (result.exitCode != 0) {
-      throw Exception('vpm install templates returned ${result.exitCode}');
+      throw NonZeroExitException(exe, args, result.exitCode);
     }
   }
 
   Future<List<VpmTemplate>> getTemplates() async {
-    final result = await Process.run(_vpmPath, ['list', 'templates']);
+    final exe = _vpmPath;
+    final args = ['list', 'templates'];
+    final result = await Process.run(exe, args);
     if (result.exitCode != 0) {
-      throw Exception('vpm returned exit code ${result.exitCode}');
+      throw NonZeroExitException(exe, args, result.exitCode);
     }
     final out = result.stdout.toString();
     final lines = out
@@ -517,9 +531,11 @@ class VccService {
   }
 
   Future<void> listRepos() async {
-    final result = await Process.run(_vpmPath, ['list', 'repos']);
+    final exe = _vpmPath;
+    final args = ['list', 'repos'];
+    final result = await Process.run(exe, args);
     if (result.exitCode != 0) {
-      throw Exception('vpm list repos returned ${result.exitCode}');
+      throw NonZeroExitException(exe, args, result.exitCode);
     }
   }
 

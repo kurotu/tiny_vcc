@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:tiny_vcc/data/exceptions.dart';
+
 class DotNetService {
   DotNetService() {
     _dotnetCommand = findDotNet() ?? 'dotnet';
@@ -41,9 +43,11 @@ class DotNetService {
   }
 
   Future<Map<String, String>> listSdks() async {
-    final result = await Process.run(_dotnetCommand, ['--list-sdks']);
+    final exe = _dotnetCommand;
+    final args = ['--list-sdks'];
+    final result = await Process.run(_dotnetCommand, args);
     if (result.exitCode != 0) {
-      throw Exception('dotnet --list-sdks returned ${result.exitCode}');
+      throw NonZeroExitException(exe, args, result.exitCode);
     }
     final lines = result.stdout.toString().split('\n').map((l) => l.trim());
     final regex = RegExp(r'([^ ]*) \[(.*)\]');
@@ -57,26 +61,26 @@ class DotNetService {
   }
 
   Future<void> installGlobalTool(String packageId, String? version) async {
+    final exe = _dotnetCommand;
     final args = ['tool', 'install', '--global', packageId];
     if (version != null) {
       args.addAll(['--version', version]);
     }
-    final result = await Process.run(_dotnetCommand, args);
+    final result = await Process.run(exe, args);
     if (result.exitCode != 0) {
-      throw Exception(
-          'dotnet tool install --global $packageId returned ${result.exitCode}');
+      throw NonZeroExitException(exe, args, result.exitCode);
     }
   }
 
   Future<void> updateGlobalTool(String packageId, String? version) async {
+    final exe = _dotnetCommand;
     final args = ['tool', 'update', '--global', packageId];
     if (version != null) {
       args.addAll(['--version', version]);
     }
-    final result = await Process.run(_dotnetCommand, args);
+    final result = await Process.run(exe, args);
     if (result.exitCode != 0) {
-      throw Exception(
-          'dotnet tool update --global $packageId returned ${result.exitCode}');
+      throw NonZeroExitException(exe, args, result.exitCode);
     }
   }
 }
