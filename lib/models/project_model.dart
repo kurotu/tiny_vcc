@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:pub_semver/pub_semver.dart';
+import 'package:tiny_vcc/repos/vcc_settings_repository.dart';
 
 import '../repos/unity_editors_repository.dart';
 import '../repos/vcc_projects_repository.dart';
@@ -15,13 +16,13 @@ class ProjectModel with ChangeNotifier {
     BuildContext context,
     this.project,
   )   : vcc = Provider.of(context, listen: false),
-        _unityRepo = Provider.of(context, listen: false),
+        _vccSettings = context.read<VccSettingsRepository>(),
         _projectsRepo = Provider.of(context, listen: false),
         _packageRepo = Provider.of(context, listen: false);
 
   final VccProject project;
   final VccService vcc;
-  final UnityEditorsRepository _unityRepo;
+  final VccSettingsRepository _vccSettings;
   final VccProjectsRepository _projectsRepo;
   final VpmPackagesRepository _packageRepo;
 
@@ -46,8 +47,12 @@ class ProjectModel with ChangeNotifier {
 
   void openProject() async {
     var editorVersion = await project.getUnityEditorVersion();
-    final editor = await _unityRepo.getEditor(editorVersion);
-    Process.run(editor!.path, ['-projectPath', project.path]);
+    final editor = await _vccSettings.getUnityEditor(editorVersion);
+    if (editor == null) {
+      throw Exception('Unity $editorVersion not found in VCC settings.');
+    }
+    await Process.start(editor, ['-projectPath', project.path],
+        mode: ProcessStartMode.detached);
   }
 
   Future<File> backup() async {

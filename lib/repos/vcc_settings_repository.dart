@@ -40,6 +40,18 @@ class VccSettingsRepository {
     await fetchSettings(refresh: true);
   }
 
+  Future<String?> getUnityEditor(String version) async {
+    final settings = await fetchSettings();
+    final editor = settings.unityEditors.firstWhere(
+      (editorPath) => editorPath.contains(version),
+      orElse: () => '',
+    );
+    if (editor == '') {
+      return null;
+    }
+    return editor;
+  }
+
   Future<void> addUserPackageFolder(String path) async {
     await _vcc.addUserPackageFolder(path);
     await fetchSettings(refresh: true);
