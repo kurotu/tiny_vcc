@@ -4,7 +4,7 @@ import 'package:tiny_vcc/main_drawer.dart';
 import 'package:tiny_vcc/models/settings_model.dart';
 import 'package:tiny_vcc/utils.dart';
 
-import '../main.dart';
+import '../globals.dart';
 
 class SettingsRoute extends StatefulWidget {
   const SettingsRoute({super.key});

@@ -1,8 +1,9 @@
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
-import 'package:tiny_vcc/main.dart';
 import 'package:tiny_vcc/services/dotnet_service.dart';
 import 'package:tiny_vcc/services/vcc_service.dart';
+
+import '../globals.dart';
 
 enum RequirementType {
   dotnet6,

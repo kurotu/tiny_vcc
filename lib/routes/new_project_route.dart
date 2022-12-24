@@ -4,7 +4,7 @@ import 'package:tiny_vcc/models/new_project_model.dart';
 import 'package:tiny_vcc/routes/project_route.dart';
 import 'package:tiny_vcc/utils.dart';
 
-import '../main.dart';
+import '../globals.dart';
 
 class NewProjectRoute extends StatefulWidget {
   static const routeName = '/new_project';

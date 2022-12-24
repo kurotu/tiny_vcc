@@ -10,7 +10,7 @@ import 'package:tiny_vcc/services/vcc_service.dart';
 import 'package:tiny_vcc/utils.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../main.dart';
+import '../globals.dart';
 import '../repos/requirements_repository.dart';
 import 'legacy_project_route.dart';
 

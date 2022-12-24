@@ -24,13 +24,9 @@ import 'package:tiny_vcc/services/updater_service.dart';
 import 'package:tiny_vcc/services/vcc_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'globals.dart';
 import 'models/project_model.dart';
 import 'services/dotnet_service.dart';
-
-final RouteObserver<ModalRoute<void>> routeObserver =
-    RouteObserver<ModalRoute<void>>();
-final scaffoldKey = GlobalKey<ScaffoldMessengerState>();
-final requiredVpmVersion = Version(0, 1, 13);
 
 Future<void> _checkForUpdate() async {
   final current = Version.parse((await PackageInfo.fromPlatform()).version);

@@ -8,7 +8,7 @@ import 'package:tiny_vcc/utils.dart';
 import 'package:tiny_vcc/widgets/package_list_item.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../main.dart';
+import '../globals.dart';
 
 class ProjectRouteArguments {
   ProjectRouteArguments({required this.project});
