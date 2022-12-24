@@ -14,7 +14,6 @@ import 'models/project_model.dart';
 import 'models/projects_model.dart';
 import 'models/settings_model.dart';
 import 'repos/requirements_repository.dart';
-import 'repos/unity_editors_repository.dart';
 import 'repos/vcc_projects_repository.dart';
 import 'repos/vcc_settings_repository.dart';
 import 'repos/vpm_packages_repository.dart';
@@ -89,7 +88,6 @@ class MyApp extends StatelessWidget {
           Provider(create: (context) => RequirementsRepository(context)),
           Provider(create: (context) => VccProjectsRepository(context)),
           Provider(create: (context) => VpmPackagesRepository(context)),
-          Provider(create: (context) => UnityEditorsRepository(context)),
           Provider(create: (context) => VccSettingsRepository(context)),
         ],
         child: MaterialApp(

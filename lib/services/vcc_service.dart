@@ -91,16 +91,46 @@ class VpmTemplate {
 }
 
 class VccService {
-  VccService(BuildContext context) : _hub = Provider.of(context, listen: false);
+  VccService(BuildContext context)
+      : _hub = Provider.of(context, listen: false) {
+    _findVpm();
+  }
 
-  String get _vpmPath {
+  String _vpmPath = 'vpm';
+
+  final UnityHubService _hub;
+
+  String? _findVpm() {
+    // find in PATH.
+    if (Platform.isWindows) {
+      final result = Process.runSync('where', ['vpm']);
+      if (result.exitCode == 0) {
+        _vpmPath = 'vpm';
+        return 'vpm';
+      }
+    } else {
+      final result = Process.runSync('which', ['vpm']);
+      if (result.exitCode == 0) {
+        _vpmPath = 'vpm';
+        return 'vpm';
+      }
+    }
+    // find in default install.
     final home = Platform.isWindows
         ? Platform.environment['USERPROFILE']!
         : Platform.environment['HOME']!;
-    return p.join(home, '.dotnet', 'tools', 'vpm');
+    final vpmPath = p.join(home, '.dotnet', 'tools', 'vpm');
+    if (File(vpmPath).existsSync()) {
+      _vpmPath = vpmPath;
+      return vpmPath;
+    }
+    _vpmPath = 'vpm';
+    return null;
   }
 
-  UnityHubService _hub;
+  bool isInstalled() {
+    return _findVpm() != null;
+  }
 
   Future<Version> getCliVersion() async {
     final exe = _vpmPath;
@@ -308,31 +338,58 @@ class VccService {
     if (str.contains('Found unity version  at')) {
       return false;
     }
-    if (!await File((await getSettings()).pathToUnityHub).exists()) {
+    final unityHubExe = (await getSettings()).pathToUnityHub;
+    if (!await File(unityHubExe).exists()) {
       return false;
     }
+    _hub.setUnityHubExe(unityHubExe);
     return true;
   }
 
-  Future<Map<String, String>> getUnityEditors() async {
-    // `vpm list unity` can't list unity editors on macOS.
-    // https://github.com/vrchat-community/creator-companion/issues/46
-    await checkHub();
-    final setting = await getSettings();
-    _hub.setUnityHubExe(setting.pathToUnityHub);
-    final editors = await _hub.listInstalledEditors();
-    if (Platform.isMacOS) {
-      final newEntries = editors.entries.map((entry) =>
-          MapEntry(entry.key, p.join(entry.value, 'Contents/MacOS/unity')));
-      editors.addEntries(newEntries);
+  Future<bool> checkUnity() async {
+    final result = await Process.run(_vpmPath, ['check', 'unity']);
+    if (result.exitCode != 0) {
+      return false;
     }
-    await setSettings(unityEditors: editors.values.toList());
-    return editors;
 
-    /*
+    if (Platform.isMacOS) {
+      // vpm doesn't update pathToUnityExe and unityEditors on macOS.
+      final settings = await getSettings();
+      if (settings.pathToUnityExe == '') {
+        final editors = await listUnity();
+        if (editors.isEmpty) {
+          return false;
+        }
+        final editor = editors.values.last;
+        await setSettings(
+          pathToUnityExe: editor,
+          unityEditors: [editor],
+        );
+      }
+      return true;
+    }
+
+    return true;
+  }
+
+  Future<Map<String, String>> listUnity() async {
+    if (Platform.isMacOS) {
+      // `vpm list unity` can't properly list unity editors on macOS.
+      // https://github.com/vrchat-community/creator-companion/issues/46
+      await checkHub();
+      final editors = await _hub.listInstalledEditors();
+      if (Platform.isMacOS) {
+        final newEntries = editors.entries.map((entry) =>
+            MapEntry(entry.key, p.join(entry.value, 'Contents/MacOS/unity')));
+        editors.addEntries(newEntries);
+      }
+      await setSettings(unityEditors: editors.values.toList());
+      return editors;
+    }
+
     final exe = _vpmPath;
     final args = ['list', 'unity'];
-    var result = await Process.run(exe, args;
+    var result = await Process.run(exe, args);
     if (result.exitCode != 0) {
       throw NonZeroExitException(exe, args, result.exitCode);
     }
@@ -343,7 +400,6 @@ class VccService {
       return MapEntry(version, path);
     });
     return Map.fromEntries(entries);
-    */
   }
 
   Future<void> installTemplates() async {

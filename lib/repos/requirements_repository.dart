@@ -33,13 +33,13 @@ class RequirementsRepository {
       return RequirementType.dotnet6;
     }
 
-    try {
-      final vpmVersion = await _vcc.getCliVersion();
-      if (vpmVersion < requiredVpmVersion) {
-        return RequirementType.vpmVersion;
-      }
-    } on Exception catch (error) {
+    final hasVpm = _vcc.isInstalled();
+    if (!hasVpm) {
       return RequirementType.vpm;
+    }
+    final vpmVersion = await _vcc.getCliVersion();
+    if (vpmVersion < requiredVpmVersion) {
+      return RequirementType.vpmVersion;
     }
 
     final hasHub = await _vcc.checkHub();
@@ -47,8 +47,8 @@ class RequirementsRepository {
       return RequirementType.hub;
     }
 
-    final editors = await _vcc.getUnityEditors();
-    if (editors.isEmpty) {
+    final hasEditors = await _vcc.checkUnity();
+    if (!hasEditors) {
       return RequirementType.unity;
     }
 

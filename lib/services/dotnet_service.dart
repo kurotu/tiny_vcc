@@ -4,40 +4,48 @@ import '../data/exceptions.dart';
 
 class DotNetService {
   DotNetService() {
-    _dotnetCommand = findDotNet() ?? 'dotnet';
+    _findDotNet();
   }
 
   String _dotnetCommand = 'dotnet';
 
-  String? findDotNet() {
+  String? _findDotNet() {
     if (Platform.isWindows) {
       if (Process.runSync('where', ['dotnet']).exitCode == 0) {
+        _dotnetCommand = 'dotnet';
         return 'dotnet';
       }
+      _dotnetCommand = 'dotnet';
       return null;
     }
     if (Platform.isMacOS) {
       if (Process.runSync('which', ['dotnet']).exitCode == 0) {
+        _dotnetCommand = 'dotnet';
         return 'dotnet';
       }
       const defaultDotNet = '/usr/local/share/dotnet/dotnet';
       if (File(defaultDotNet).existsSync()) {
+        _dotnetCommand = defaultDotNet;
         return defaultDotNet;
       }
       const brewDotNet6 = '/usr/local/opt/dotnet@6/bin/dotnet';
       if (File(brewDotNet6).existsSync()) {
+        _dotnetCommand = brewDotNet6;
         return brewDotNet6;
       }
+      _dotnetCommand = 'dotnet';
       return null;
     }
     if (Process.runSync('which', ['dotnet']).exitCode == 0) {
+      _dotnetCommand = 'dotnet';
       return 'dotnet';
     }
+    _dotnetCommand = 'dotnet';
     return null;
   }
 
   Future<bool> isInstalled() async {
-    final dotnet = findDotNet();
+    final dotnet = _findDotNet();
     _dotnetCommand = dotnet ?? 'dotnet';
     return dotnet != null;
   }
