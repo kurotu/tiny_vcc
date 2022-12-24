@@ -10,8 +10,6 @@ class MainDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final info = context.watch<PackageInfo?>();
-
     return Drawer(
       child: ListView(
         children: <Widget>[
@@ -38,19 +36,26 @@ class MainDrawer extends StatelessWidget {
             },
           ),
           FutureProvider(
-            create: (context) =>
-                rootBundle.loadString('assets/texts/LICENSE_NOTICE'),
+            create: (context) async {
+              final notice =
+                  await rootBundle.loadString('assets/texts/LICENSE_NOTICE');
+              final packageInfo = await PackageInfo.fromPlatform();
+              return _AboutListTileData(
+                applicationVersion: packageInfo.version,
+                applicationLegalese: notice,
+              );
+            },
             initialData: null,
             builder: (context, child) {
-              final license = context.watch<String?>();
+              final info = context.watch<_AboutListTileData?>();
               return AboutListTile(
-                applicationVersion: info?.version,
+                applicationVersion: info?.applicationVersion,
                 applicationIcon: Image.asset(
                   'assets/images/app_icon-1024x1024.png',
                   width: 64,
                   height: 64,
                 ),
-                applicationLegalese: license,
+                applicationLegalese: info?.applicationLegalese,
               );
             },
           ),
@@ -58,4 +63,14 @@ class MainDrawer extends StatelessWidget {
       ),
     );
   }
+}
+
+class _AboutListTileData {
+  _AboutListTileData({
+    required this.applicationVersion,
+    required this.applicationLegalese,
+  });
+
+  final String applicationVersion;
+  final String applicationLegalese;
 }

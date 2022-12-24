@@ -95,10 +95,6 @@ class MyApp extends StatelessWidget {
           Provider(create: (context) => VpmPackagesRepository(context)),
           Provider(create: (context) => UnityEditorsRepository(context)),
           Provider(create: (context) => VccSettingsRepository(context)),
-          FutureProvider(
-            create: ((context) => PackageInfo.fromPlatform()),
-            initialData: null,
-          ),
         ],
         child: MaterialApp(
           title: 'Tiny VCC',
