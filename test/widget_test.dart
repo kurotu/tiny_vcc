@@ -5,16 +5,14 @@
 // gestures. You can also use WidgetTester to find child widgets in the widget
 // tree, read text, and verify that the values of widget properties are correct.
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:tiny_vcc/main.dart';
-import 'package:tiny_vcc/services/vcc_service.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(MyApp(vcc: VccService()));
+    await tester.pumpWidget(const MyApp());
     // Wait async tasks
     await tester.pumpAndSettle();
 /*
