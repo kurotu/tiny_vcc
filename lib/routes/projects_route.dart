@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../data/exceptions.dart';
 import '../globals.dart';
 import '../main_drawer.dart';
 import '../models/projects_model.dart';
@@ -28,33 +29,16 @@ class _ProjectsRoute extends State<ProjectsRoute> with RouteAware {
     final path = await showDirectoryPickerWindow(lockParentWindow: true);
     try {
       await model.addProject(path);
-    } on VccProjectType catch (type) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Invalid Project'),
-          content: Text(() {
-            switch (type) {
-              case VccProjectType.invalid:
-              case VccProjectType.unknown:
-                return '"$path" is not a valid Unity project.';
-              case VccProjectType.legacySdk2:
-                return '"$path" is a VRCSDK2 project.';
-              case VccProjectType.avatarVpm:
-              case VccProjectType.worldVpm:
-              case VccProjectType.legacySdk3Avatar:
-              case VccProjectType.legacySdk3World:
-                throw Error();
-            }
-          }()),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, 'OK'),
-              child: const Text('OK'),
-            ),
-          ],
-        ),
-      );
+    } on VccProjectTypeException catch (error) {
+      if (mounted) {
+        await showSimpleErrorDialog(
+            context, 'Project "$path" is not supported.', error);
+      }
+    } on Exception catch (error) {
+      if (mounted) {
+        await showSimpleErrorDialog(
+            context, 'Error occurred when adding a project.', error);
+      }
     }
   }
 
@@ -217,6 +201,18 @@ class _ProjectsRoute extends State<ProjectsRoute> with RouteAware {
           ProjectRoute.routeName,
           arguments: ProjectRouteArguments(project: project),
         );
+        break;
+      case VccProjectType.avatarGit:
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(
+              'Avatar Git project (${project.path}) is not supported in Tiny VCC.'),
+        ));
+        break;
+      case VccProjectType.worldGit:
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(
+              'World Git project (${project.path}) is not supported in Tiny VCC.'),
+        ));
         break;
       case VccProjectType.legacySdk3Avatar:
       case VccProjectType.legacySdk3World:

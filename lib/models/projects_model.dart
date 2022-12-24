@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:pub_semver/pub_semver.dart';
 
+import '../data/exceptions.dart';
 import '../repos/requirements_repository.dart';
 import '../repos/vcc_projects_repository.dart';
 import '../repos/vcc_settings_repository.dart';
@@ -66,10 +67,21 @@ class ProjectsModel with ChangeNotifier {
       case VccProjectType.legacySdk3Avatar:
       case VccProjectType.legacySdk3World:
         break;
+      case VccProjectType.avatarGit:
+        throw VccProjectTypeException(
+            'Avatar Git project type is not supported in Tiny VCC. Migrate with the official VCC.',
+            type);
+      case VccProjectType.worldGit:
+        throw VccProjectTypeException(
+            'World Git project type is not supported in Tiny VCC. Migrate with the official VCC.',
+            type);
       case VccProjectType.legacySdk2:
+        throw VccProjectTypeException(
+            'VRCSDK2 project is not supported.', type);
       case VccProjectType.invalid:
+        throw VccProjectTypeException('Invalid Unity project.', type);
       case VccProjectType.unknown:
-        throw type;
+        throw VccProjectTypeException('Unknown Unity project type.', type);
     }
     await _vccData.addVccProject(project);
     await getProjects();
