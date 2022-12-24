@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 追加
+
+- 設定画面に設定フォルダを開くボタンを追加。
+
 ### 修正
 
 - AvatarGitまたはWorldGitプロジェクトを追加するとアプリがクラッシュする問題を修正。

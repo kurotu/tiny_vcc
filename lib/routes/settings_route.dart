@@ -38,6 +38,11 @@ class _SettingsRoute extends State<SettingsRoute> with RouteAware {
     }
   }
 
+  void _didClickOpenSettingsFolder() {
+    final dir = context.read<VccService>().getSettingsDirectory();
+    launchUrl(Uri.file(dir.path));
+  }
+
   Future<void> _didClickEditorFilePicker() async {
     try {
       final path = await showFilePickerWindow(lockParentWindow: true);
@@ -137,6 +142,12 @@ class _SettingsRoute extends State<SettingsRoute> with RouteAware {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: OutlinedButton(
+                      onPressed: _didClickOpenSettingsFolder,
+                      child: const Text('Open Settings Folder')),
+                ),
                 Consumer<SettingsModel>(
                   builder: ((context, model, child) => DropdownButtonFormField(
                         decoration: InputDecoration(
