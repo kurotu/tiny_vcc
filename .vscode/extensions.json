@@ -1,5 +1,6 @@
 {
     "recommendations": [
-        "dart-code.flutter"
+        "dart-code.flutter",
+        "luanpotter.dart-import"
     ]
 }

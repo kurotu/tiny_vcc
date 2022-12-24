@@ -4,10 +4,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:pub_semver/pub_semver.dart';
-import 'package:tiny_vcc/repos/unity_editors_repository.dart';
-import 'package:tiny_vcc/repos/vcc_projects_repository.dart';
-import 'package:tiny_vcc/repos/vpm_packages_repository.dart';
-import 'package:tiny_vcc/services/vcc_service.dart';
+
+import '../repos/unity_editors_repository.dart';
+import '../repos/vcc_projects_repository.dart';
+import '../repos/vpm_packages_repository.dart';
+import '../services/vcc_service.dart';
 
 class ProjectModel with ChangeNotifier {
   ProjectModel(

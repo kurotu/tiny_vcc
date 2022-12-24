@@ -3,7 +3,8 @@ import 'dart:io';
 
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
-import 'package:tiny_vcc/services/vcc_service.dart';
+
+import '../services/vcc_service.dart';
 
 class VccProjectsRepository {
   VccProjectsRepository(BuildContext context)

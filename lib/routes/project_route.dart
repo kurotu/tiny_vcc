@@ -2,13 +2,13 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:tiny_vcc/models/project_model.dart';
-import 'package:tiny_vcc/services/vcc_service.dart';
-import 'package:tiny_vcc/utils.dart';
-import 'package:tiny_vcc/widgets/package_list_item.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../globals.dart';
+import '../models/project_model.dart';
+import '../services/vcc_service.dart';
+import '../utils.dart';
+import '../widgets/package_list_item.dart';
 
 class ProjectRouteArguments {
   ProjectRouteArguments({required this.project});

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pub_semver/pub_semver.dart';
-import 'package:tiny_vcc/models/project_model.dart';
 
+import '../models/project_model.dart';
 import '../services/vcc_service.dart';
 
 class PackageListItem extends StatelessWidget {

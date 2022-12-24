@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:tiny_vcc/data/exceptions.dart';
+import '../data/exceptions.dart';
 
 class DotNetService {
   DotNetService() {

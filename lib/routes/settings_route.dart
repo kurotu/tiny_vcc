@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:tiny_vcc/main_drawer.dart';
-import 'package:tiny_vcc/models/settings_model.dart';
-import 'package:tiny_vcc/utils.dart';
 
 import '../globals.dart';
+import '../main_drawer.dart';
+import '../models/settings_model.dart';
+import '../utils.dart';
 
 class SettingsRoute extends StatefulWidget {
   const SettingsRoute({super.key});

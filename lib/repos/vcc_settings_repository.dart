@@ -1,10 +1,10 @@
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:pub_semver/pub_semver.dart';
-import 'package:tiny_vcc/caches/simple_cache.dart';
-import 'package:tiny_vcc/services/vcc_service.dart';
 
+import '../caches/simple_cache.dart';
 import '../data/vcc_data.dart';
+import '../services/vcc_service.dart';
 
 class VccSettingsRepository {
   VccSettingsRepository(BuildContext context)

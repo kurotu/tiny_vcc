@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
-import 'package:tiny_vcc/routes/projects_route.dart';
-import 'package:tiny_vcc/routes/settings_route.dart';
+
+import 'routes/projects_route.dart';
+import 'routes/settings_route.dart';
 
 class MainDrawer extends StatelessWidget {
   const MainDrawer({super.key});

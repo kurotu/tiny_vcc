@@ -7,11 +7,11 @@ import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import 'package:provider/provider.dart';
 import 'package:pub_semver/pub_semver.dart';
-import 'package:tiny_vcc/data/exceptions.dart';
-import 'package:tiny_vcc/services/unity_hub_service.dart';
 import 'package:yaml/yaml.dart';
 
+import '../data/exceptions.dart';
 import '../data/vcc_data.dart';
+import 'unity_hub_service.dart';
 
 class VccProject {
   VccProject(this.path);

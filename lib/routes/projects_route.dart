@@ -2,17 +2,17 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:tiny_vcc/main_drawer.dart';
-import 'package:tiny_vcc/models/projects_model.dart';
-import 'package:tiny_vcc/routes/new_project_route.dart';
-import 'package:tiny_vcc/routes/project_route.dart';
-import 'package:tiny_vcc/services/vcc_service.dart';
-import 'package:tiny_vcc/utils.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../globals.dart';
+import '../main_drawer.dart';
+import '../models/projects_model.dart';
 import '../repos/requirements_repository.dart';
+import '../services/vcc_service.dart';
+import '../utils.dart';
 import 'legacy_project_route.dart';
+import 'new_project_route.dart';
+import 'project_route.dart';
 
 class ProjectsRoute extends StatefulWidget {
   const ProjectsRoute({super.key});

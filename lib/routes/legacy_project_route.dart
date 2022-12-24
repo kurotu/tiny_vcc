@@ -2,12 +2,12 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:tiny_vcc/routes/project_route.dart';
-import 'package:tiny_vcc/services/vcc_service.dart';
-import 'package:tiny_vcc/utils.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../models/legacy_project_model.dart';
+import '../services/vcc_service.dart';
+import '../utils.dart';
+import 'project_route.dart';
 
 class LegacyProjectRouteArguments {
   LegacyProjectRouteArguments({required this.project});

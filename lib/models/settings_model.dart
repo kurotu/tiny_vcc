@@ -1,10 +1,11 @@
 import 'dart:io';
 
 import 'package:flutter/widgets.dart';
-import 'package:provider/provider.dart';
-import 'package:tiny_vcc/data/vcc_data.dart';
-import 'package:tiny_vcc/repos/vcc_settings_repository.dart';
 import 'package:path/path.dart' as p;
+import 'package:provider/provider.dart';
+
+import '../data/vcc_data.dart';
+import '../repos/vcc_settings_repository.dart';
 
 class SettingsModel extends ChangeNotifier {
   SettingsModel(BuildContext context) : _settingsRepo = context.read();
