@@ -47,7 +47,7 @@ class LegacyProjectRoute extends StatelessWidget {
           project = await _model(context).migrateInPlace();
           break;
       }
-    } catch (error) {
+    } on Exception catch (error) {
       _model(context).migrationErrorText = '$error';
       return;
     }
@@ -159,7 +159,7 @@ class LegacyProjectRoute extends StatelessWidget {
     File file;
     try {
       file = await _model(context).backup();
-    } catch (error) {
+    } on Exception catch (error) {
       Navigator.pop(context);
       showAlertDialog(context,
           title: 'Backup Error',

@@ -38,7 +38,7 @@ class RequirementsRepository {
       if (vpmVersion < requiredVpmVersion) {
         return RequirementType.vpmVersion;
       }
-    } catch (error) {
+    } on Exception catch (error) {
       return RequirementType.vpm;
     }
 

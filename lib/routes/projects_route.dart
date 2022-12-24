@@ -66,7 +66,7 @@ class _ProjectsRoute extends State<ProjectsRoute> with RouteAware {
     try {
       await model.getProjects();
       await model.getPackages();
-    } catch (error) {
+    } on Exception catch (error) {
       print(error);
     }
     if (!mounted) {

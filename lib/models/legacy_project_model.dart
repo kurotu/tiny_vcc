@@ -71,7 +71,7 @@ class LegacyProjectModel extends ChangeNotifier {
       _isMakingBackup = false;
       notifyListeners();
       return file;
-    } catch (error) {
+    } on Exception {
       _isMakingBackup = false;
       notifyListeners();
       rethrow;

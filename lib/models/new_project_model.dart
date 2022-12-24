@@ -52,7 +52,7 @@ class NewProjectModel extends ChangeNotifier {
       _isCreatingProject = false;
       notifyListeners();
       return project;
-    } catch (err) {
+    } on Exception catch (err) {
       _isCreatingProject = false;
       notifyListeners();
       print(err);

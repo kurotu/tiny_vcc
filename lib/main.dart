@@ -35,7 +35,7 @@ Future<void> _checkForUpdate() async {
   try {
     latest = await UpdaterService(RepositorySlug('kurotu', 'tiny_vcc'))
         .getLatestRelease();
-  } catch (error) {
+  } on Exception catch (error) {
     scaffoldKey.currentState?.showSnackBar(SnackBar(
       content: Text('Failed to check for update: $error'),
     ));

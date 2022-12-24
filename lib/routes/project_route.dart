@@ -65,7 +65,7 @@ class _ProjectRoute extends State<ProjectRoute> with RouteAware {
     File file;
     try {
       file = await _model(context).backup();
-    } catch (error) {
+    } on Exception catch (error) {
       Navigator.pop(context);
       showAlertDialog(context,
           title: 'Backup Error',

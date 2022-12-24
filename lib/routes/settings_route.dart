@@ -28,7 +28,7 @@ class _SettingsRoute extends State<SettingsRoute> with RouteAware {
   void didPush() async {
     try {
       await context.read<SettingsModel>().initialize();
-    } catch (error) {
+    } on Exception catch (error) {
       if (mounted) {
         await showSimpleErrorDialog(
             context, 'Error occurred when loading settings.', error);
@@ -45,7 +45,7 @@ class _SettingsRoute extends State<SettingsRoute> with RouteAware {
       if (mounted) {
         await context.read<SettingsModel>().setPreferredEditor(path);
       }
-    } catch (error) {
+    } on Exception catch (error) {
       if (mounted) {
         await showSimpleErrorDialog(context,
             'Error occurred when setting preferred Unity editor.', error);
@@ -61,7 +61,7 @@ class _SettingsRoute extends State<SettingsRoute> with RouteAware {
       if (mounted) {
         await context.read<SettingsModel>().setPreferredEditor(editorPath);
       }
-    } catch (error) {
+    } on Exception catch (error) {
       if (mounted) {
         await showSimpleErrorDialog(context,
             'Error occurred when changing preferred Unity editor.', error);
@@ -81,7 +81,7 @@ class _SettingsRoute extends State<SettingsRoute> with RouteAware {
       if (mounted) {
         context.read<SettingsModel>().setBackupFolder(path);
       }
-    } catch (error) {
+    } on Exception catch (error) {
       if (mounted) {
         await showSimpleErrorDialog(
             context, 'Error occurred when setting backup folder.', error);
@@ -100,7 +100,7 @@ class _SettingsRoute extends State<SettingsRoute> with RouteAware {
         return;
       }
       await context.read<SettingsModel>().addUserPackage(packagePath);
-    } catch (error) {
+    } on Exception catch (error) {
       await showSimpleErrorDialog(
           context, 'Error occurred when adding a package folder.', error);
     }
@@ -111,7 +111,7 @@ class _SettingsRoute extends State<SettingsRoute> with RouteAware {
       if (mounted) {
         await context.read<SettingsModel>().deleteUserPackage(userPackage);
       }
-    } catch (error) {
+    } on Exception catch (error) {
       await showSimpleErrorDialog(
           context, 'Error occurred when removing a package folder.', error);
     }

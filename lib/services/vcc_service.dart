@@ -282,7 +282,8 @@ class VccService {
     if (str.contains('Unknown')) {
       return VccProjectType.unknown;
     }
-    throw 'Unhandled output: ${str.trim()}';
+    throw Exception(
+        'Failed to detect project type from vpm output: ${str.trim()}');
   }
 
   Future<bool> checkHub() async {
