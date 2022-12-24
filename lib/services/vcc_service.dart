@@ -388,13 +388,13 @@ class VccService {
   }
 
   Future<List<VpmPackage>> getOfficialPackages() async {
-    final dir = _getSettingsDirectory();
+    final dir = getSettingsDirectory();
     final file = File(p.join(dir.path, 'Repos', 'vrc-official.json'));
     return _getVpmPackages(file, RepositoryType.official);
   }
 
   Future<List<VpmPackage>> getCuratedPackages() async {
-    final dir = _getSettingsDirectory();
+    final dir = getSettingsDirectory();
     final file = File(p.join(dir.path, 'Repos', 'vrc-curated.json'));
     return _getVpmPackages(file, RepositoryType.curated);
   }
@@ -444,7 +444,7 @@ class VccService {
     return packages;
   }
 
-  Directory _getSettingsDirectory() {
+  Directory getSettingsDirectory() {
     if (Platform.isWindows) {
       var appdata =
           Platform.environment['APPDATA']; // %USERPROFILE%\AppData\Roaming
@@ -466,7 +466,7 @@ class VccService {
   }
 
   File _getSettingsFile() {
-    var settings = _getSettingsDirectory();
+    var settings = getSettingsDirectory();
     return File(p.join(settings.path, 'settings.json'));
   }
 
