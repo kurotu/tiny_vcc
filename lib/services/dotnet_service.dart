@@ -7,21 +7,25 @@ class DotNetService {
     _findDotNet();
   }
 
-  String _dotnetCommand = 'dotnet';
+  /// Use full path to avoid crash.
+  /// https://stackoverflow.com/questions/69139808/
+  String _dotnetCommand = '';
 
   String? _findDotNet() {
     if (Platform.isWindows) {
-      if (Process.runSync('where', ['dotnet']).exitCode == 0) {
-        _dotnetCommand = 'dotnet';
-        return 'dotnet';
+      final result = Process.runSync('where', ['dotnet']);
+      if (result.exitCode == 0) {
+        _dotnetCommand = result.stdout.toString().trim();
+        return _dotnetCommand;
       }
-      _dotnetCommand = 'dotnet';
+      _dotnetCommand = '';
       return null;
     }
     if (Platform.isMacOS) {
-      if (Process.runSync('which', ['dotnet']).exitCode == 0) {
-        _dotnetCommand = 'dotnet';
-        return 'dotnet';
+      final result = Process.runSync('which', ['dotnet']);
+      if (result.exitCode == 0) {
+        _dotnetCommand = result.stdout.toString().trim();
+        return _dotnetCommand;
       }
       const defaultDotNet = '/usr/local/share/dotnet/dotnet';
       if (File(defaultDotNet).existsSync()) {
@@ -33,14 +37,15 @@ class DotNetService {
         _dotnetCommand = brewDotNet6;
         return brewDotNet6;
       }
-      _dotnetCommand = 'dotnet';
+      _dotnetCommand = '';
       return null;
     }
-    if (Process.runSync('which', ['dotnet']).exitCode == 0) {
-      _dotnetCommand = 'dotnet';
-      return 'dotnet';
+    final result = Process.runSync('which', ['dotnet']);
+    if (result.exitCode == 0) {
+      _dotnetCommand = result.stdout.toString().trim();
+      return _dotnetCommand;
     }
-    _dotnetCommand = 'dotnet';
+    _dotnetCommand = '';
     return null;
   }
 
