@@ -2,13 +2,13 @@ import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:pub_semver/pub_semver.dart';
 
+import '../globals.dart';
 import '../repos/requirements_repository.dart';
 
 class RequirementsModel extends ChangeNotifier {
   RequirementsModel(BuildContext context) : _req = context.read();
 
   final RequirementsRepository _req;
-  final requiredVpmVersion = Version(0, 1, 13);
 
   RequirementState get hasDotNet6 =>
       _combineStates([hasDotNetCommand, hasDotNet6Sdk]);

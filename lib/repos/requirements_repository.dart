@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:pub_semver/pub_semver.dart';
@@ -33,11 +35,15 @@ class RequirementsRepository {
   }
 
   Future<bool> checkVpmVersion(Version requiredVersion) async {
-    final version = await _vcc.getCliVersion();
-    if (version < requiredVersion) {
-      false;
+    try {
+      final version = await _vcc.getCliVersion();
+      if (version < requiredVersion) {
+        false;
+      }
+      return true;
+    } on ProcessException {
+      return false;
     }
-    return true;
   }
 
   Future<bool> checkUnityHub() async {

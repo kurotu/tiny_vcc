@@ -2,13 +2,12 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:tiny_vcc/routes/requirements_route.dart';
 
 import '../data/exceptions.dart';
 import '../globals.dart';
 import '../main_drawer.dart';
 import '../models/projects_model.dart';
-import '../repos/requirements_repository.dart';
 import '../services/vcc_service.dart';
 import '../utils.dart';
 import 'legacy_project_route.dart';
@@ -52,133 +51,6 @@ class _ProjectsRoute extends State<ProjectsRoute> with RouteAware {
       await model.getPackages();
     } on Exception catch (error) {
       print(error);
-    }
-    if (!mounted) {
-      return;
-    }
-    final missing = await model.checkMissingRequirement();
-    switch (missing) {
-      case null:
-        model.setReadyToUse(true);
-        break;
-      case RequirementType.dotnet6:
-        scaffoldKey.currentState?.showMaterialBanner(
-          MaterialBanner(
-            content: const Text(
-                '.NET 6 SDK is required to execute VPM CLI. Download and install.'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  launchUrl(Uri.parse(
-                      'https://dotnet.microsoft.com/download/dotnet/6.0'));
-                },
-                child: const Text('Download'),
-              ),
-              TextButton(
-                onPressed: () {
-                  scaffoldKey.currentState?.clearMaterialBanners();
-                  _refreshProjects();
-                },
-                child: const Text('Check again'),
-              ),
-            ],
-          ),
-        );
-        break;
-      case RequirementType.vpm:
-        scaffoldKey.currentState?.showMaterialBanner(MaterialBanner(
-          content: const Text('VPM CLI is required.'),
-          actions: [
-            TextButton(
-              onPressed: () async {
-                scaffoldKey.currentState?.clearMaterialBanners();
-                scaffoldKey.currentState?.showSnackBar(
-                    const SnackBar(content: Text('Installing vrchat.vpm.cli')));
-                await model.installVpmCli();
-                scaffoldKey.currentState?.showSnackBar(
-                    const SnackBar(content: Text('Installed vrchat.vpm.cli')));
-                _refreshProjects();
-              },
-              child: const Text('Install'),
-            ),
-            TextButton(
-              onPressed: () {
-                scaffoldKey.currentState?.clearMaterialBanners();
-                _refreshProjects();
-              },
-              child: const Text('Check again'),
-            ),
-          ],
-        ));
-        break;
-      case RequirementType.vpmVersion:
-        scaffoldKey.currentState?.showMaterialBanner(MaterialBanner(
-          content: Text('VPM CLI $requiredVpmVersion is required.'),
-          actions: [
-            TextButton(
-              onPressed: () async {
-                scaffoldKey.currentState?.clearMaterialBanners();
-                scaffoldKey.currentState?.showSnackBar(
-                    const SnackBar(content: Text('Updating vrchat.vpm.cli')));
-                await model.updateVpmCli();
-                scaffoldKey.currentState?.showSnackBar(
-                    const SnackBar(content: Text('Updated vrchat.vpm.cli')));
-                _refreshProjects();
-              },
-              child: const Text('Update'),
-            ),
-            TextButton(
-              onPressed: () {
-                scaffoldKey.currentState?.clearMaterialBanners();
-                _refreshProjects();
-              },
-              child: const Text('Check again'),
-            ),
-          ],
-        ));
-        break;
-      case RequirementType.hub:
-        scaffoldKey.currentState?.showMaterialBanner(MaterialBanner(
-          content: const Text('Unity Hub is required.'),
-          actions: [
-            TextButton(
-              onPressed: () async {
-                launchUrl(
-                    Uri.parse('https://unity.com/download#how-get-started'));
-              },
-              child: const Text('Download'),
-            ),
-            TextButton(
-              onPressed: () {
-                scaffoldKey.currentState?.clearMaterialBanners();
-                _refreshProjects();
-              },
-              child: const Text('Check again'),
-            ),
-          ],
-        ));
-        break;
-      case RequirementType.unity:
-        scaffoldKey.currentState?.showMaterialBanner(MaterialBanner(
-          content: const Text('Unity is required. Install with Unity Hub.'),
-          actions: [
-            TextButton(
-              onPressed: () async {
-                launchUrl(Uri.parse(
-                    'https://docs.vrchat.com/docs/current-unity-version'));
-              },
-              child: const Text('See current version'),
-            ),
-            TextButton(
-              onPressed: () {
-                scaffoldKey.currentState?.clearMaterialBanners();
-                _refreshProjects();
-              },
-              child: const Text('Check again'),
-            ),
-          ],
-        ));
-        break;
     }
   }
 
@@ -250,6 +122,11 @@ class _ProjectsRoute extends State<ProjectsRoute> with RouteAware {
 
   @override
   void didPush() {
+    _model(context).checkReadyToUse().then((value) {
+      if (!value) {
+        Navigator.of(context).pushReplacementNamed(RequirementsRoute.routeName);
+      }
+    });
     _refreshProjects();
   }
 
@@ -274,40 +151,29 @@ class _ProjectsRoute extends State<ProjectsRoute> with RouteAware {
         title: const Text('Projects'),
         actions: [
           Consumer<ProjectsModel>(
-              builder: ((context, model, child) => TextButton(
-                    style: style,
-                    onPressed: model.isReadyToUse
-                        ? () {
-                            _addProject(_model(context));
-                          }
-                        : null,
-                    child: const Text('Add'),
-                  ))),
+            builder: ((context, model, child) => TextButton(
+                  style: style,
+                  onPressed: () {
+                    _addProject(_model(context));
+                  },
+                  child: const Text('Add'),
+                )),
+          ),
           Consumer<ProjectsModel>(
-              builder: ((context, model, child) => TextButton(
-                    style: style,
-                    onPressed: model.isReadyToUse
-                        ? () {
-                            Navigator.pushNamed(
-                                context, NewProjectRoute.routeName);
-                          }
-                        : null,
-                    child: const Text('New'),
-                  ))),
+            builder: ((context, model, child) => TextButton(
+                  style: style,
+                  onPressed: () {
+                    Navigator.pushNamed(context, NewProjectRoute.routeName);
+                  },
+                  child: const Text('New'),
+                )),
+          ),
         ],
       ),
       body: Consumer<ProjectsModel>(
-          builder: ((context, model, child) => model.isReadyToUse
-              ? Column(children: buildColumn(model))
-              : Center(
-                  child: Wrap(
-                      spacing: 8,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: const [
-                        CircularProgressIndicator(),
-                        Text('Tiny VCC is not ready to use.'),
-                      ]),
-                ))),
+        builder: ((context, model, child) =>
+            Column(children: buildColumn(model))),
+      ),
     );
   }
 

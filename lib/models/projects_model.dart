@@ -1,6 +1,10 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:pub_semver/pub_semver.dart';
+import 'package:tiny_vcc/globals.dart';
 
 import '../data/exceptions.dart';
 import '../repos/requirements_repository.dart';
@@ -14,15 +18,12 @@ class ProjectsModel with ChangeNotifier {
       : _vccData = Provider.of(context, listen: false),
         _packages = Provider.of(context, listen: false),
         _vccSetting = Provider.of(context, listen: false),
-        _requirements = Provider.of(context, listen: false);
+        _req = Provider.of(context, listen: false);
 
   final VccProjectsRepository _vccData;
   final VpmPackagesRepository _packages;
   final VccSettingsRepository _vccSetting;
-  final RequirementsRepository _requirements;
-
-  bool _isReadyToUse = true;
-  bool get isReadyToUse => _isReadyToUse;
+  final RequirementsRepository _req;
 
   List<VccProject> _projects = [];
   List<VccProject> get projects => _projects;
@@ -35,17 +36,15 @@ class ProjectsModel with ChangeNotifier {
     _disposed = true;
   }
 
-  void setReadyToUse(bool ready) {
-    _isReadyToUse = ready;
-    if (!_disposed) {
-      notifyListeners();
-    }
-  }
-
-  Future<RequirementType?> checkMissingRequirement() async {
-    final missing = await _requirements.fetchMissingRequirement();
-    setReadyToUse(missing == null);
-    return missing;
+  Future<bool> checkReadyToUse() async {
+    // Quick check for startup.
+    final settings = await _vccSetting.fetchSettings();
+    final results = await Future.wait([
+      compute(_req.checkVpmVersion, requiredVpmVersion),
+      compute((_) => File(settings.pathToUnityHub).exists(), null),
+      compute((_) => File(settings.pathToUnityExe).exists(), null),
+    ]);
+    return !results.contains(false);
   }
 
   Future<void> getProjects() async {
@@ -99,14 +98,6 @@ class ProjectsModel with ChangeNotifier {
 
   Future<Version?> fetchVpmVersion() {
     return _vccSetting.fetchCliVersion();
-  }
-
-  Future<void> installVpmCli() async {
-    await _requirements.installVpmCli();
-  }
-
-  Future<void> updateVpmCli() async {
-    await _requirements.updateVpmCli();
   }
 
   Future<void> getPackages() async {

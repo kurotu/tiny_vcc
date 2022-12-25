@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../globals.dart';
 import '../models/requirements_model.dart';
 import '../utils.dart';
+import 'projects_route.dart';
 
 class RequirementsRoute extends StatefulWidget {
   static const routeName = '/requirements';
@@ -52,7 +53,7 @@ class _RequirementsRoute extends State<RequirementsRoute> with RouteAware {
             Consumer<RequirementsModel>(
               builder: ((context, model, child) => _RequirementItem(
                     state: model.hasVpm,
-                    title: 'VPM CLI ${model.requiredVpmVersion}',
+                    title: 'VPM CLI $requiredVpmVersion',
                   )),
             ),
             Consumer<RequirementsModel>(
@@ -79,8 +80,12 @@ class _RequirementsRoute extends State<RequirementsRoute> with RouteAware {
 
   Future<void> _checkRequirements() async {
     await context.read<RequirementsModel>().fetchRequirements();
-    if (mounted && !context.read<RequirementsModel>().isReadyToUse) {
-      _showBannerForMissingRequirements();
+    if (mounted) {
+      if (context.read<RequirementsModel>().isReadyToUse) {
+        Navigator.pushReplacementNamed(context, ProjectsRoute.routeName);
+      } else {
+        _showBannerForMissingRequirements();
+      }
     }
   }
 
@@ -97,8 +102,9 @@ class _RequirementsRoute extends State<RequirementsRoute> with RouteAware {
       _showUnityHubBanner();
     } else if (model.hasUnity == RequirementState.ng) {
       _showUnityBanner();
+    } else {
+      throw Error();
     }
-    throw Error();
   }
 
   void _showDotNetBanner() {
@@ -159,7 +165,6 @@ class _RequirementsRoute extends State<RequirementsRoute> with RouteAware {
   }
 
   void _showVpmUpdateBanner() {
-    final requiredVpmVersion = _model(context).requiredVpmVersion;
     ScaffoldFeatureController<MaterialBanner, MaterialBannerClosedReason>?
         controller;
     final banner = MaterialBanner(
