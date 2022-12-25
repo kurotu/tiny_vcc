@@ -39,12 +39,21 @@ class ProjectsModel with ChangeNotifier {
   Future<bool> checkReadyToUse() async {
     // Quick check for startup.
     final settings = await _vccSetting.fetchSettings();
-    final results = await Future.wait([
-      compute(_req.checkVpmVersion, requiredVpmVersion),
-      compute((_) => File(settings.pathToUnityHub).exists(), null),
-      compute((_) => File(settings.pathToUnityExe).exists(), null),
-    ]);
-    return !results.contains(false);
+    final hasVpm = await _req.checkVpmCommand();
+    if (!hasVpm) {
+      return false;
+    }
+    final hasCorrectVpm = await _req.checkVpmVersion(requiredVpmVersion);
+    if (!hasCorrectVpm) {
+      return false;
+    }
+    if (!await (File(settings.pathToUnityHub).exists())) {
+      return false;
+    }
+    if (!await (File(settings.pathToUnityExe).exists())) {
+      return false;
+    }
+    return true;
   }
 
   Future<void> getProjects() async {

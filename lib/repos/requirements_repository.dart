@@ -56,6 +56,9 @@ class RequirementsRepository {
 
   Future<void> installVpmCli(Version version) async {
     await _dotnet.installGlobalTool('vrchat.vpm.cli', version.toString());
+    if (!_vcc.isInstalled()) {
+      throw Exception('Installed vpm not detected.');
+    }
     await _vcc.installTemplates();
     await _vcc.listRepos();
   }

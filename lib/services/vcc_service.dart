@@ -96,7 +96,9 @@ class VccService {
     _findVpm();
   }
 
-  String _vpmPath = 'vpm';
+  /// Use full path to avoid crash.
+  /// https://stackoverflow.com/questions/69139808/
+  String _vpmPath = '';
 
   final UnityHubService _hub;
 
@@ -105,14 +107,14 @@ class VccService {
     if (Platform.isWindows) {
       final result = Process.runSync('where', ['vpm']);
       if (result.exitCode == 0) {
-        _vpmPath = 'vpm';
-        return 'vpm';
+        _vpmPath = result.stdout.toString().trim();
+        return _vpmPath;
       }
     } else {
       final result = Process.runSync('which', ['vpm']);
       if (result.exitCode == 0) {
-        _vpmPath = 'vpm';
-        return 'vpm';
+        _vpmPath = result.stdout.toString().trim();
+        return _vpmPath;
       }
     }
     // find in default install.
@@ -124,7 +126,7 @@ class VccService {
       _vpmPath = vpmPath;
       return vpmPath;
     }
-    _vpmPath = 'vpm';
+    _vpmPath = '';
     return null;
   }
 
