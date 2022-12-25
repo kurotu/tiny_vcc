@@ -12,6 +12,7 @@ import 'models/legacy_project_model.dart';
 import 'models/new_project_model.dart';
 import 'models/project_model.dart';
 import 'models/projects_model.dart';
+import 'models/requirements_model.dart';
 import 'models/settings_model.dart';
 import 'repos/requirements_repository.dart';
 import 'repos/vcc_projects_repository.dart';
@@ -21,6 +22,7 @@ import 'routes/legacy_project_route.dart';
 import 'routes/new_project_route.dart';
 import 'routes/project_route.dart';
 import 'routes/projects_route.dart';
+import 'routes/requirements_route.dart';
 import 'routes/settings_route.dart';
 import 'services/dotnet_service.dart';
 import 'services/unity_hub_service.dart';
@@ -121,6 +123,11 @@ class MyApp extends StatelessWidget {
                 ChangeNotifierProvider<SettingsModel>(
                   create: (context) => SettingsModel(context),
                   child: const SettingsRoute(),
+                ),
+            RequirementsRoute.routeName: (context) =>
+                ChangeNotifierProvider<RequirementsModel>(
+                  create: (context) => RequirementsModel(context),
+                  child: const RequirementsRoute(),
                 ),
           },
           onGenerateRoute: (settings) {
