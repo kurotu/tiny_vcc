@@ -5,18 +5,18 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:logger/logger.dart';
 import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 import 'package:sn_progress_dialog/sn_progress_dialog.dart';
 
+import 'services/tiny_vcc_service.dart';
 import 'utils/file_output.dart';
 
 Future<Logger> createLogger(bool isRelease) async {
-  final appSupport = await getApplicationSupportDirectory();
-  await Directory(p.join(appSupport.path, 'logs')).create();
+  final dir = await TinyVccService().getLogsDirectory();
+  await dir.create(recursive: true);
   final logFileName =
       'tiny-vcc_${DateFormat('yyyy-MM-dd_HH-mm-ss.SSS').format(DateTime.now())}.txt';
   return isRelease
-      ? createReleaseLogger(File(p.join(appSupport.path, 'logs', logFileName)))
+      ? createReleaseLogger(File(p.join(dir.path, logFileName)))
       : createDevelopLogger();
 }
 

@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../globals.dart';
 import '../main_drawer.dart';
 import '../models/settings_model.dart';
+import '../services/tiny_vcc_service.dart';
 import '../services/vcc_service.dart';
 import '../utils.dart';
 
@@ -40,6 +41,11 @@ class _SettingsRoute extends State<SettingsRoute> with RouteAware {
 
   void _didClickOpenSettingsFolder() {
     final dir = context.read<VccService>().getSettingsDirectory();
+    launchUrl(Uri.file(dir.path));
+  }
+
+  void _didClickOpenLogsFolder() async {
+    final dir = await context.read<TinyVccService>().getLogsDirectory();
     launchUrl(Uri.file(dir.path));
   }
 
@@ -133,7 +139,23 @@ class _SettingsRoute extends State<SettingsRoute> with RouteAware {
     });
     return Scaffold(
       drawer: const MainDrawer(),
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(
+        title: const Text('Settings'),
+        actions: [
+          PopupMenuButton(
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                onTap: _didClickOpenSettingsFolder,
+                child: const Text('Open VCC Settings Folder'),
+              ),
+              PopupMenuItem(
+                onTap: _didClickOpenLogsFolder,
+                child: const Text('Open Logs Folder'),
+              ),
+            ],
+          ),
+        ],
+      ),
       body: SingleChildScrollView(
         child: Container(
           padding: const EdgeInsets.all(15),
@@ -142,12 +164,6 @@ class _SettingsRoute extends State<SettingsRoute> with RouteAware {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: OutlinedButton(
-                      onPressed: _didClickOpenSettingsFolder,
-                      child: const Text('Open Settings Folder')),
-                ),
                 Consumer<SettingsModel>(
                   builder: ((context, model, child) => DropdownButtonFormField(
                         decoration: InputDecoration(

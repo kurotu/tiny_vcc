@@ -9,7 +9,6 @@ import 'package:logger/logger.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:pub_semver/pub_semver.dart';
-import 'package:tiny_vcc/utils.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'globals.dart';
@@ -30,9 +29,11 @@ import 'routes/projects_route.dart';
 import 'routes/requirements_route.dart';
 import 'routes/settings_route.dart';
 import 'services/dotnet_service.dart';
+import 'services/tiny_vcc_service.dart';
 import 'services/unity_hub_service.dart';
 import 'services/updater_service.dart';
 import 'services/vcc_service.dart';
+import 'utils.dart';
 
 Future<void> _checkForUpdate() async {
   final current = Version.parse((await PackageInfo.fromPlatform()).version);
@@ -126,6 +127,7 @@ class MyApp extends StatelessWidget {
           Provider(create: (context) => UnityHubService()),
           Provider(create: (context) => DotNetService()),
           Provider(create: (context) => VccService(context)),
+          Provider(create: (context) => TinyVccService()),
           Provider(create: (context) => RequirementsRepository(context)),
           Provider(create: (context) => VccProjectsRepository(context)),
           Provider(create: (context) => VpmPackagesRepository(context)),
