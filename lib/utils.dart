@@ -2,7 +2,38 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:logger/logger.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:sn_progress_dialog/sn_progress_dialog.dart';
+
+import 'utils/file_output.dart';
+
+Future<Logger> createLogger(bool isRelease) async {
+  final appSupport = await getApplicationSupportDirectory();
+  await Directory(p.join(appSupport.path, 'logs')).create();
+  final logFileName =
+      'tiny-vcc_${DateFormat('yyyy-MM-dd_HH-mm-ss.SSS').format(DateTime.now())}.txt';
+  return isRelease
+      ? createReleaseLogger(File(p.join(appSupport.path, 'logs', logFileName)))
+      : createDevelopLogger();
+}
+
+Logger createDevelopLogger() {
+  return Logger();
+}
+
+Logger createReleaseLogger(File file) {
+  return Logger(
+    filter: ProductionFilter(),
+    printer: SimplePrinter(colors: false, printTime: true),
+    output: MultiOutput([
+      ConsoleOutput(),
+      TinyVCCFileOutput(file: file, overrideExisting: true),
+    ]),
+  );
+}
 
 Future<String?> showDirectoryPickerWindow({
   required bool lockParentWindow,

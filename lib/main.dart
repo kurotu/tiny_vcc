@@ -1,10 +1,13 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:github/github.dart';
+import 'package:logger/logger.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:pub_semver/pub_semver.dart';
+import 'package:tiny_vcc/utils.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'globals.dart';
@@ -66,7 +69,14 @@ Future<void> _checkForUpdate() async {
   }
 }
 
-void main() {
+void main() async {
+  if (kReleaseMode) {
+    Logger.level = Level.info;
+  }
+  logger = await createLogger(kReleaseMode);
+  final info = await PackageInfo.fromPlatform();
+  logger.i('Launching ${info.appName} ${info.version}');
+
   Timer.periodic(const Duration(days: 1), ((timer) {
     _checkForUpdate();
   }));
