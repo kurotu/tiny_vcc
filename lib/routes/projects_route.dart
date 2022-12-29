@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:tiny_vcc/routes/requirements_route.dart';
 
 import '../data/exceptions.dart';
 import '../globals.dart';
@@ -13,6 +12,7 @@ import '../utils.dart';
 import 'legacy_project_route.dart';
 import 'new_project_route.dart';
 import 'project_route.dart';
+import 'requirements_route.dart';
 
 class ProjectsRoute extends StatefulWidget {
   const ProjectsRoute({super.key});

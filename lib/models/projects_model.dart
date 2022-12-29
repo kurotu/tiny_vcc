@@ -4,9 +4,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:pub_semver/pub_semver.dart';
-import 'package:tiny_vcc/globals.dart';
 
 import '../data/exceptions.dart';
+import '../globals.dart';
 import '../repos/requirements_repository.dart';
 import '../repos/vcc_projects_repository.dart';
 import '../repos/vcc_settings_repository.dart';
