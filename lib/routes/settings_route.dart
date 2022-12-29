@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -55,7 +57,11 @@ class _SettingsRoute extends State<SettingsRoute> with RouteAware {
 
   Future<void> _didClickEditorFilePicker() async {
     try {
-      final path = await showFilePickerWindow(lockParentWindow: true);
+      final path = await showFilePickerWindow(
+        dialogTitle: Platform.isWindows ? 'Select Unity.exe' : null,
+        lockParentWindow: true,
+        allowedExtensions: Platform.isWindows ? ['exe'] : null,
+      );
       if (path == null) {
         return;
       }

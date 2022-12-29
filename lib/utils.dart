@@ -46,9 +46,18 @@ Future<String?> showDirectoryPickerWindow({
   return _cleanupPath(path);
 }
 
-Future<String?> showFilePickerWindow({required bool lockParentWindow}) async {
-  final result = await FilePicker.platform
-      .pickFiles(allowMultiple: false, lockParentWindow: lockParentWindow);
+Future<String?> showFilePickerWindow({
+  String? dialogTitle,
+  required bool lockParentWindow,
+  List<String>? allowedExtensions,
+}) async {
+  final result = await FilePicker.platform.pickFiles(
+    dialogTitle: dialogTitle,
+    type: allowedExtensions != null ? FileType.custom : FileType.any,
+    allowMultiple: false,
+    lockParentWindow: lockParentWindow,
+    allowedExtensions: allowedExtensions,
+  );
   if (result == null) {
     return null;
   }
