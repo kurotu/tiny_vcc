@@ -11,4 +11,4 @@ PRODUCT_NAME = Tiny VCC
 PRODUCT_BUNDLE_IDENTIFIER = com.github.kurotu.tiny-vcc
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2022 kurotu. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2022 kurotu.
