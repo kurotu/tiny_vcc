@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:developer';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -70,19 +72,46 @@ Future<void> _checkForUpdate() async {
 }
 
 void main() async {
+  FlutterError.onError = (details) {
+    var message = 'Unhandled Flutter error. ${details.exception}';
+    if (details.stack != null) {
+      message += details.stack.toString();
+    }
+    if (logger != null) {
+      logger?.wtf(message);
+    } else {
+      log(message);
+    }
+    if (kReleaseMode) {
+      exit(1);
+    }
+  };
+  PlatformDispatcher.instance.onError = (error, stack) {
+    final message =
+        'Unhandled PlatformDispatcher error. $error\n${stack.toString()}';
+    if (logger != null) {
+      logger?.wtf(message);
+    } else {
+      log(message);
+    }
+    if (kReleaseMode) {
+      exit(1);
+    }
+    return true;
+  };
+
+  runApp(const MyApp());
+
   if (kReleaseMode) {
     Logger.level = Level.info;
   }
   logger = await createLogger(kReleaseMode);
   final info = await PackageInfo.fromPlatform();
-  logger.i('Launching ${info.appName} ${info.version}');
+  logger?.i('Launched ${info.appName} ${info.version}.');
 
   Timer.periodic(const Duration(days: 1), ((timer) {
     _checkForUpdate();
   }));
-
-  runApp(const MyApp());
-
   _checkForUpdate();
 }
 

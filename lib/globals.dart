@@ -8,4 +8,4 @@ final scaffoldKey = GlobalKey<ScaffoldMessengerState>();
 final requiredVpmVersion = Version(0, 1, 13);
 
 /// Logger to output logs.
-late Logger logger;
+Logger? logger;
