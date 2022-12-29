@@ -1,12 +1,18 @@
 # Tiny VCC
-Yet another VRChat Creator Companion.
+<p>
+  <a href="https://github.com/kurotu/tiny_vcc/releases/latest">
+    <img alt="Release" src="https://img.shields.io/github/v/release/kurotu/tiny_vcc">
+  </a>
+</p>
+
+Yet Another VRChat Creator Companion for macOS and Windows.
 
 [ [Download](https://github.com/kurotu/tiny_vcc/releases/latest) ]
 
 [ English | [日本語](./README_JP.md) ]
 
 ## Introduction
-Tiny VCC is an alternative application of VCC which is usable on Windows and macOS.
+Tiny VCC is an alternative application of VCC which is usable on macOS and Windows.
 It behaves as a GUI wrapper of VPM CLI and provides these features of VCC.
 
 - Project and package management

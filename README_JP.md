@@ -1,5 +1,11 @@
 # Tiny VCC
-Yet another VRChat Creator Companion.
+<p>
+  <a href="https://github.com/kurotu/tiny_vcc/releases/latest">
+    <img alt="Release" src="https://img.shields.io/github/v/release/kurotu/tiny_vcc">
+  </a>
+</p>
+
+Yet Another VRChat Creator Companion for macOS and Windows.
 
 [ [ダウンロード](https://github.com/kurotu/tiny_vcc/releases/latest) ]
 
@@ -7,7 +13,7 @@ Yet another VRChat Creator Companion.
 
 ## 概要
 
-Windows/macOS で使用可能な VCC の代替アプリケーションです。
+macOS/Windows で使用可能な VCC の代替アプリケーションです。
 VPM CLI の GUI ラッパーとして動作し、 VCC の機能のうち以下の機能を提供します。
 
 - プロジェクトとパッケージの管理
