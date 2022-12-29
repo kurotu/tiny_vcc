@@ -96,6 +96,10 @@ class VccService {
     _findVpm();
   }
 
+  VccService.withoutContext() : _hub = UnityHubService() {
+    _findVpm();
+  }
+
   /// Use full path to avoid crash.
   /// https://stackoverflow.com/questions/69139808/
   String _vpmPath = '';
@@ -638,8 +642,15 @@ class VccService {
 
   Future<void> addUnityEditor(String path) async {
     final setting = await getSettings();
+    if (setting.unityEditors.contains(path)) {
+      return;
+    }
     setting.unityEditors.add(path);
     await setSettings(unityEditors: setting.unityEditors);
+  }
+
+  Future<void> setUnityEditors(List<String> unityEditors) async {
+    await setSettings(unityEditors: unityEditors);
   }
 
   Future<void> addUserPackageFolder(String path) async {

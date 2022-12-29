@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add logging feature. Logs are written to following folders.
     - Windows: `%USERPROFILE%\AppData\Loaming\kurotu\Tiny VCC\logs`
     - macOS: `~/Library/Application Support/com.github.kurotu.tiny-vcc/logs`
+- Add button to detect installed Unity Editors.
 
 ### Changed
 

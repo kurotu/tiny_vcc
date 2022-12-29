@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ログ機能を追加。ログは以下のフォルダに保存されます。
     - Windows: `%USERPROFILE%\AppData\Loaming\kurotu\Tiny VCC\logs`
     - macOS: `~/Library/Application Support/com.github.kurotu.tiny-vcc/logs`
+- インストールされた Unity を検出するボタンを追加。
 
 ### 変更
 

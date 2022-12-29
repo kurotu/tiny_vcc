@@ -5,7 +5,9 @@ import 'package:path/path.dart' as p;
 import 'package:provider/provider.dart';
 
 import '../data/vcc_data.dart';
+import '../globals.dart';
 import '../repos/vcc_settings_repository.dart';
+import '../services/vcc_service.dart';
 
 class SettingsModel extends ChangeNotifier {
   SettingsModel(BuildContext context) : _settingsRepo = context.read();
@@ -15,6 +17,9 @@ class SettingsModel extends ChangeNotifier {
   VccSettings? _settings;
 
   List<String> get unityEditors => _settings?.unityEditors ?? [];
+
+  bool _isDetectingEditors = false;
+  bool get isDetectingEditors => _isDetectingEditors;
 
   String? get preferredEditor {
     if (_settings?.pathToUnityExe == '') {
@@ -48,6 +53,29 @@ class SettingsModel extends ChangeNotifier {
 
   Future<void> _fetchSettings({bool refresh = false}) async {
     _settings = await _settingsRepo.fetchSettings(refresh: refresh);
+    if (preferredEditor != null && !unityEditors.contains(preferredEditor)) {
+      logger
+          ?.w('pathToUnityExe ($preferredEditor) is missing in unityEditors.');
+      _settings = _settings?.copyWith(pathToUnityExe: '');
+    }
+    notifyListeners();
+  }
+
+  Future<void> refreshEditors() async {
+    _isDetectingEditors = true;
+    notifyListeners();
+
+    final editors = await VccService.withoutContext().listUnity();
+    final newEditors = {
+      ...(_settings?.unityEditors ?? []),
+      ...editors.values,
+    }.toList();
+    newEditors.removeWhere((element) => !File(element).existsSync());
+    newEditors.sort();
+
+    await _settingsRepo.setUnityEditors(newEditors);
+    await _fetchSettings();
+    _isDetectingEditors = false;
     notifyListeners();
   }
 

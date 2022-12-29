@@ -40,6 +40,11 @@ class VccSettingsRepository {
     await fetchSettings(refresh: true);
   }
 
+  Future<void> setUnityEditors(List<String> paths) async {
+    await _vcc.setUnityEditors(paths);
+    await fetchSettings(refresh: true);
+  }
+
   Future<String?> getUnityEditor(String version) async {
     final settings = await fetchSettings();
     final editor = settings.unityEditors.firstWhere(

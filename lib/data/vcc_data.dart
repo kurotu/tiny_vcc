@@ -21,4 +21,29 @@ class VccSettings {
   final List<String> userPackageFolders;
   final bool showPrereleasePackages;
   final List<String> userRepos;
+
+  VccSettings copyWith({
+    String? pathToUnityExe,
+    String? pathToUnityHub,
+    String? projectBackupPath,
+    List<String>? userProjects,
+    List<String>? unityEditors,
+    String? defaultProjectPath,
+    List<String>? userPackageFolders,
+    bool? showPrereleasePackages,
+    List<String>? userRepos,
+  }) {
+    return VccSettings(
+      pathToUnityExe: pathToUnityExe ?? this.pathToUnityExe,
+      pathToUnityHub: pathToUnityHub ?? this.pathToUnityHub,
+      projectBackupPath: projectBackupPath ?? this.projectBackupPath,
+      userProjects: userProjects ?? [...this.userProjects],
+      unityEditors: unityEditors ?? [...this.unityEditors],
+      defaultProjectPath: defaultProjectPath ?? this.defaultProjectPath,
+      userPackageFolders: userPackageFolders ?? [...this.userPackageFolders],
+      showPrereleasePackages:
+          showPrereleasePackages ?? this.showPrereleasePackages,
+      userRepos: userRepos ?? [...this.userRepos],
+    );
+  }
 }

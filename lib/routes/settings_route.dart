@@ -49,6 +49,10 @@ class _SettingsRoute extends State<SettingsRoute> with RouteAware {
     launchUrl(Uri.file(dir.path));
   }
 
+  Future<void> _didClickEditorRefresh() async {
+    await context.read<SettingsModel>().refreshEditors();
+  }
+
   Future<void> _didClickEditorFilePicker() async {
     try {
       final path = await showFilePickerWindow(lockParentWindow: true);
@@ -168,15 +172,28 @@ class _SettingsRoute extends State<SettingsRoute> with RouteAware {
                   builder: ((context, model, child) => DropdownButtonFormField(
                         decoration: InputDecoration(
                             labelText: 'Unity Editors',
-                            suffixIcon: IconButton(
-                                onPressed: _didClickEditorFilePicker,
-                                icon: const Icon(Icons.folder))),
+                            suffixIcon: Wrap(spacing: 8, children: [
+                              model.isDetectingEditors
+                                  ? const IconButton(
+                                      onPressed: null,
+                                      icon: CircularProgressIndicator())
+                                  : IconButton(
+                                      onPressed: _didClickEditorRefresh,
+                                      icon: const Icon(Icons.refresh)),
+                              IconButton(
+                                  onPressed: model.isDetectingEditors
+                                      ? null
+                                      : _didClickEditorFilePicker,
+                                  icon: const Icon(Icons.folder)),
+                            ])),
                         value: model.preferredEditor,
                         items: model.unityEditors
                             .map((e) =>
                                 DropdownMenuItem(value: e, child: Text(e)))
                             .toList(),
-                        onChanged: _didChangePreferredEditor,
+                        onChanged: model.isDetectingEditors
+                            ? null
+                            : _didChangePreferredEditor,
                       )),
                 ),
                 const Padding(padding: EdgeInsets.symmetric(vertical: 8)),
