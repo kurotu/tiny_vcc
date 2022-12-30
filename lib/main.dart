@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' as riverpod;
 import 'package:github/github.dart';
 import 'package:logger/logger.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -101,7 +102,7 @@ void main() async {
     return true;
   };
 
-  runApp(const MyApp());
+  runApp(const riverpod.ProviderScope(child: MyApp()));
 
   if (kReleaseMode) {
     Logger.level = Level.info;

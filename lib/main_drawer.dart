@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:package_info_plus/package_info_plus.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'providers.dart';
 import 'routes/projects_route.dart';
 import 'routes/settings_route.dart';
 
@@ -36,42 +35,26 @@ class MainDrawer extends StatelessWidget {
               }
             },
           ),
-          FutureProvider(
-            create: (context) async {
-              final notice =
-                  await rootBundle.loadString('assets/texts/LICENSE_NOTICE');
-              final packageInfo = await PackageInfo.fromPlatform();
-              return _AboutListTileData(
-                applicationVersion: packageInfo.version,
-                applicationLegalese: notice,
-              );
-            },
-            initialData: null,
-            builder: (context, child) {
-              final info = context.watch<_AboutListTileData?>();
-              return AboutListTile(
-                applicationVersion: info?.applicationVersion,
-                applicationIcon: Image.asset(
-                  'assets/images/app_icon-1024x1024.png',
-                  width: 64,
-                  height: 64,
-                ),
-                applicationLegalese: info?.applicationLegalese,
-              );
-            },
-          ),
+          _AboutListTile(),
         ],
       ),
     );
   }
 }
 
-class _AboutListTileData {
-  _AboutListTileData({
-    required this.applicationVersion,
-    required this.applicationLegalese,
-  });
-
-  final String applicationVersion;
-  final String applicationLegalese;
+class _AboutListTile extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final info = ref.watch(packageInfoProvider);
+    final notice = ref.watch(licenseNoticeProvider);
+    return AboutListTile(
+      applicationVersion: info.value?.version,
+      applicationIcon: Image.asset(
+        'assets/images/app_icon-1024x1024.png',
+        width: 64,
+        height: 64,
+      ),
+      applicationLegalese: notice.value,
+    );
+  }
 }
