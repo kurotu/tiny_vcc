@@ -96,10 +96,7 @@ class _NewProjectRoute extends State<NewProjectRoute> with RouteAware {
                     onPressed: () {
                       _selectLocation().then((path) {
                         if (path != null) {
-                          context
-                              .read<NewProjectModel>()
-                              .locationController
-                              .text = path;
+                          context.read<NewProjectModel>().location = path;
                         }
                       });
                     },

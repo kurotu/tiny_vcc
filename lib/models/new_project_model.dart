@@ -1,13 +1,16 @@
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
+import '../repos/vcc_settings_repository.dart';
 import '../services/vcc_service.dart';
 
 class NewProjectModel extends ChangeNotifier {
   NewProjectModel(BuildContext context)
-      : _vcc = Provider.of(context, listen: false);
+      : _vcc = Provider.of(context, listen: false),
+        _vccSettings = Provider.of(context, listen: false);
 
   final VccService _vcc;
+  final VccSettingsRepository _vccSettings;
 
   List<VpmTemplate> _projectTemplates = [];
   List<VpmTemplate> get projectTemplates => _projectTemplates;
@@ -20,13 +23,17 @@ class NewProjectModel extends ChangeNotifier {
 
   String get projectName => projectNameController.text;
   String get location => locationController.text;
+  set location(String value) {
+    _vccSettings.setDefaultProjectPath(value);
+    locationController.text = value;
+  }
 
   bool _isCreatingProject = false;
   bool get isCreatingProject => _isCreatingProject;
 
   Future<void> fetchInitialData() async {
     await getProjectTemplates();
-    final setting = await _vcc.getSettings();
+    final setting = await _vccSettings.fetchSettings();
     locationController.text = setting.defaultProjectPath;
     notifyListeners();
   }

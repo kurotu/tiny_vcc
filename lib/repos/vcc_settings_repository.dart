@@ -57,6 +57,11 @@ class VccSettingsRepository {
     return editor;
   }
 
+  Future<void> setDefaultProjectPath(String path) async {
+    await _vcc.setSettings(defaultProjectPath: path);
+    await fetchSettings(refresh: true);
+  }
+
   Future<void> addUserPackageFolder(String path) async {
     await _vcc.addUserPackageFolder(path);
     await fetchSettings(refresh: true);

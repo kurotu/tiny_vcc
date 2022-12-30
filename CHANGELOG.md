@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix app crashed when adding AvatarGit or WorldGit project.
 - Fix a case where app may crash even when .NET and VPM CLI are installed.
+- Fix last project location not saved when creating a new project.
 
 ## [0.0.2] - 2022-12-22
 
