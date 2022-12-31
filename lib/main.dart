@@ -13,7 +13,6 @@ import 'package:pub_semver/pub_semver.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'globals.dart';
-import 'models/legacy_project_model.dart';
 import 'models/new_project_model.dart';
 import 'models/project_model.dart';
 import 'repos/requirements_repository.dart';
@@ -172,12 +171,7 @@ class MyApp extends StatelessWidget {
             } else if (settings.name == LegacyProjectRoute.routeName) {
               final args = settings.arguments as LegacyProjectRouteArguments;
               return MaterialPageRoute(
-                builder: ((context) =>
-                    ChangeNotifierProvider<LegacyProjectModel>(
-                      create: ((context) =>
-                          LegacyProjectModel(context, args.project)),
-                      child: const LegacyProjectRoute(),
-                    )),
+                builder: (context) => LegacyProjectRoute(args.project),
               );
             }
             return null;

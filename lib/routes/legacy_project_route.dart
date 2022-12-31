@@ -1,13 +1,50 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../models/legacy_project_model.dart';
+import '../providers.dart';
 import '../services/vcc_service.dart';
 import '../utils.dart';
 import 'project_route.dart';
+
+final _doingTaskProvider =
+    StateNotifierProvider<DoingTaskState, bool>((_) => DoingTaskState());
+final _migrationMessageProvider =
+    StateNotifierProvider<MigrationMessageState, String>(
+        (_) => MigrationMessageState());
+final _errorMessageProvider =
+    StateNotifierProvider<MigrationErrorState, String>(
+        (_) => MigrationErrorState());
+
+class DoingTaskState extends StateNotifier<bool> {
+  DoingTaskState() : super(false);
+
+  bool get isDoingTask => state;
+  set isDoingTask(bool value) {
+    state = value;
+  }
+}
+
+class MigrationMessageState extends StateNotifier<String> {
+  MigrationMessageState() : super('');
+
+  String get message => state;
+  set message(String value) {
+    state = value;
+  }
+}
+
+class MigrationErrorState extends StateNotifier<String> {
+  MigrationErrorState() : super('');
+
+  String get message => state;
+  set message(String value) {
+    state = value;
+  }
+}
 
 class LegacyProjectRouteArguments {
   LegacyProjectRouteArguments({required this.project});
@@ -20,36 +57,47 @@ enum _MigrateAction {
   migrateInPlace,
 }
 
-class LegacyProjectRoute extends StatelessWidget {
+class LegacyProjectRoute extends ConsumerWidget {
   static const routeName = '/legacy_project';
 
-  const LegacyProjectRoute({super.key});
+  const LegacyProjectRoute(this.project, {super.key});
 
-  LegacyProjectModel _model(BuildContext context) {
-    return Provider.of<LegacyProjectModel>(context, listen: false);
-  }
+  final VccProject project;
 
-  Future<void> _didClickMigrate(BuildContext context) async {
+  Future<void> _didClickMigrate(BuildContext context, WidgetRef ref) async {
     final action = await _showMigrationConfirmDialog(context);
     if (action == null) {
       return;
     }
 
-    _showMigrationProgressDialog(context);
+    _showMigrationProgressDialog(context, ref);
 
-    VccProject project;
+    VccProject newProject;
     try {
+      ref.read(_doingTaskProvider.notifier).isDoingTask = true;
+      ref.read(_errorMessageProvider.notifier).message = '';
       switch (action) {
         case _MigrateAction.migrateCopy:
-          project = await _model(context).migrateCopy();
-          break;
         case _MigrateAction.migrateInPlace:
-          project = await _model(context).migrateInPlace();
+          final inPlace = action == _MigrateAction.migrateInPlace;
+          newProject =
+              await ref.read(vccProjectsRepoProvider).migrateProjectWithStream(
+            project,
+            inPlace,
+            onStdout: (output) {
+              ref.read(_migrationMessageProvider.notifier).message += output;
+            },
+            onStderr: (err) {
+              ref.read(_migrationMessageProvider.notifier).message += err;
+            },
+          );
           break;
       }
     } on Exception catch (error) {
-      _model(context).migrationErrorText = '$error';
+      ref.read(_errorMessageProvider.notifier).message = '$error';
       return;
+    } finally {
+      ref.read(_doingTaskProvider.notifier).isDoingTask = true;
     }
 
     await Future.delayed(const Duration(seconds: 1));
@@ -58,7 +106,7 @@ class LegacyProjectRoute extends StatelessWidget {
     Navigator.pushReplacementNamed(
       context,
       ProjectRoute.routeName,
-      arguments: ProjectRouteArguments(project: project),
+      arguments: ProjectRouteArguments(project: newProject),
     );
   }
 
@@ -94,71 +142,26 @@ class LegacyProjectRoute extends StatelessWidget {
     return action;
   }
 
-  Future<void> _showMigrationProgressDialog(BuildContext context) async {
-    final model = context.read<LegacyProjectModel>();
+  Future<void> _showMigrationProgressDialog(
+      BuildContext context, WidgetRef ref) async {
     return showDialog(
       context: context,
-      builder: (context) => ChangeNotifierProvider.value(
-        value: model,
-        builder: (context, child) => Consumer<LegacyProjectModel>(
-          builder: (context, model, child) => AlertDialog(
-            title: Text('Migrating ${model.project.name}'),
-            content: SizedBox(
-              width: MediaQuery.of(context).size.width,
-              height: MediaQuery.of(context).size.height,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Container(
-                      width: double.infinity,
-                      decoration: const BoxDecoration(color: Colors.black87),
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.all(8),
-                        reverse: true,
-                        child: Text(
-                          model.vpmOutput,
-                          style: const TextStyle(color: Colors.white70),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const Padding(padding: EdgeInsets.all(8)),
-                  Text(
-                    model.migrationErrorText ?? '',
-                    style: const TextStyle(color: Colors.red),
-                  ),
-                ],
-              ),
-            ),
-            actions: model.migrationErrorText != null
-                ? [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      child: const Text('OK'),
-                    )
-                  ]
-                : null,
-          ),
-        ),
-      ),
+      builder: (context) => _MigrationProgressDialog(project),
       barrierDismissible: false,
     );
   }
 
-  void _didClickOpenFolder(BuildContext context) {
-    final uri = Uri.file(_model(context).project.path);
+  void _didClickOpenFolder() {
+    final uri = Uri.file(project.path);
     launchUrl(uri);
   }
 
-  void _didClickMakeBackup(BuildContext context) async {
-    final projectName = _model(context).project.name;
+  void _didClickMakeBackup(BuildContext context, WidgetRef ref) async {
+    final projectName = project.name;
     showProgressDialog(context, 'Backing up $projectName');
     File file;
     try {
-      file = await _model(context).backup();
+      file = await compute(ref.read(vccProjectsRepoProvider).backup, project);
     } on Exception catch (error) {
       Navigator.pop(context);
       showAlertDialog(context,
@@ -196,56 +199,103 @@ class LegacyProjectRoute extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isDoingTask = ref.watch(_doingTaskProvider);
     return Scaffold(
-        appBar: AppBar(
-          title: Consumer<LegacyProjectModel>(
-              builder: (context, model, child) => Text(model.project.name)),
+      appBar: AppBar(title: Text(project.name)),
+      body: Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(project.path),
+            const Padding(padding: EdgeInsets.symmetric(vertical: 8)),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                OutlinedButton(
+                  onPressed: isDoingTask
+                      ? null
+                      : () {
+                          _didClickMigrate(context, ref);
+                        },
+                  child: const Text('Migrate'),
+                ),
+                OutlinedButton(
+                  onPressed: isDoingTask
+                      ? null
+                      : () {
+                          _didClickOpenFolder();
+                        },
+                  child: const Text('Open Folder'),
+                ),
+                OutlinedButton(
+                  onPressed: isDoingTask
+                      ? null
+                      : () {
+                          _didClickMakeBackup(context, ref);
+                        },
+                  child: const Text('Make Backup'),
+                ),
+              ],
+            ),
+          ],
         ),
-        body: Container(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Consumer<LegacyProjectModel>(
-                  builder: ((context, model, child) =>
-                      Text(model.project.path))),
-              const Padding(padding: EdgeInsets.symmetric(vertical: 8)),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  Consumer<LegacyProjectModel>(
-                    builder: ((context, value, child) => OutlinedButton(
-                        onPressed: value.isDoingTask
-                            ? null
-                            : () {
-                                _didClickMigrate(context);
-                              },
-                        child: const Text('Migrate'))),
+      ),
+    );
+  }
+}
+
+class _MigrationProgressDialog extends ConsumerWidget {
+  const _MigrationProgressDialog(this.project);
+
+  final VccProject project;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final message = ref.watch(_migrationMessageProvider);
+    final errorMessage = ref.watch(_errorMessageProvider);
+    return AlertDialog(
+      title: Text('Migrating ${project.name}'),
+      content: SizedBox(
+        width: MediaQuery.of(context).size.width,
+        height: MediaQuery.of(context).size.height,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Container(
+                width: double.infinity,
+                decoration: const BoxDecoration(color: Colors.black87),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(8),
+                  reverse: true,
+                  child: Text(
+                    message.trim(),
+                    style: const TextStyle(color: Colors.white70),
                   ),
-                  Consumer<LegacyProjectModel>(
-                    builder: ((context, value, child) => OutlinedButton(
-                        onPressed: value.isDoingTask
-                            ? null
-                            : () {
-                                _didClickOpenFolder(context);
-                              },
-                        child: const Text('Open Folder'))),
-                  ),
-                  Consumer<LegacyProjectModel>(
-                    builder: ((context, value, child) => OutlinedButton(
-                        onPressed: value.isDoingTask
-                            ? null
-                            : () {
-                                _didClickMakeBackup(context);
-                              },
-                        child: const Text('Make Backup'))),
-                  ),
-                ],
+                ),
               ),
-            ],
-          ),
-        ));
+            ),
+            const Padding(padding: EdgeInsets.all(8)),
+            Text(
+              errorMessage,
+              style: const TextStyle(color: Colors.red),
+            ),
+          ],
+        ),
+      ),
+      actions: errorMessage != ''
+          ? [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text('OK'),
+              )
+            ]
+          : null,
+    );
   }
 }
