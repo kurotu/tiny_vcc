@@ -10,6 +10,8 @@ class VccProjectsRepository {
   VccProjectsRepository(BuildContext context)
       : _vcc = Provider.of(context, listen: false);
 
+  VccProjectsRepository.withVcc(this._vcc);
+
   final VccService _vcc;
 
   List<VccProject>? _projects;

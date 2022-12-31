@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import 'repos/vcc_projects_repository.dart';
 import 'repos/vcc_settings_repository.dart';
 import 'services/tiny_vcc_service.dart';
 import 'services/unity_hub_service.dart';
@@ -14,12 +15,15 @@ final licenseNoticeProvider = FutureProvider(
 final unityHubServiceProvider = Provider((ref) => UnityHubService());
 final vccServiceProvider =
     Provider((ref) => VccService.withHub(ref.read(unityHubServiceProvider)));
-final vccSettingsRepoProvider = Provider.autoDispose((ref) {
+final vccSettingsRepoProvider = Provider((ref) {
   final vcc = ref.read(vccServiceProvider);
   return VccSettingsRepository.withoutContext(vcc);
 });
 final vccSettingsProvider = FutureProvider((ref) {
   return ref.read(vccSettingsRepoProvider).fetchSettings(refresh: true);
+});
+final vccProjectsRepoProvider = Provider((ref) {
+  return VccProjectsRepository.withVcc(ref.read(vccServiceProvider));
 });
 
 final tinyVccServiceProvider = Provider((ref) => TinyVccService());

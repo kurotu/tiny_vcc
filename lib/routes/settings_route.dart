@@ -44,7 +44,8 @@ class _SettingsRoute extends ConsumerState<SettingsRoute> with RouteAware {
 
   @override
   void didPush() async {
-    final _ = ref.refresh(vccSettingsProvider);
+    ref.read(vccSettingsProvider).whenData(
+        (value) => backupLocationController.text = value.projectBackupPath);
   }
 
   void _didClickOpenSettingsFolder() {

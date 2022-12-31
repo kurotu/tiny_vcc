@@ -16,7 +16,6 @@ import 'globals.dart';
 import 'models/legacy_project_model.dart';
 import 'models/new_project_model.dart';
 import 'models/project_model.dart';
-import 'models/projects_model.dart';
 import 'repos/requirements_repository.dart';
 import 'repos/vcc_projects_repository.dart';
 import 'repos/vcc_settings_repository.dart';
@@ -149,11 +148,7 @@ class MyApp extends StatelessWidget {
           scaffoldMessengerKey: scaffoldKey,
           initialRoute: ProjectsRoute.routeName,
           routes: {
-            ProjectsRoute.routeName: (context) =>
-                ChangeNotifierProvider<ProjectsModel>(
-                  create: (context) => ProjectsModel(context),
-                  child: const ProjectsRoute(),
-                ),
+            ProjectsRoute.routeName: (context) => const ProjectsRoute(),
             NewProjectRoute.routeName: (context) =>
                 ChangeNotifierProvider<NewProjectModel>(
                   create: (context) => NewProjectModel(context),
