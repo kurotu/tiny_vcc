@@ -1,27 +1,40 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path/path.dart' as p;
 import 'package:url_launcher/url_launcher.dart';
 
 import '../globals.dart';
 import '../main_drawer.dart';
-import '../models/settings_model.dart';
-import '../services/tiny_vcc_service.dart';
-import '../services/vcc_service.dart';
+import '../providers.dart';
 import '../utils.dart';
 
-class SettingsRoute extends StatefulWidget {
+final _editorLoadingProvider =
+    StateNotifierProvider<EditorLoadingController, bool>(
+        (ref) => EditorLoadingController());
+
+class EditorLoadingController extends StateNotifier<bool> {
+  EditorLoadingController() : super(false);
+
+  bool get isLoading => state;
+  set isLoading(value) {
+    state = value;
+  }
+}
+
+class SettingsRoute extends ConsumerStatefulWidget {
   const SettingsRoute({super.key});
 
   static const String routeName = '/settings';
 
   @override
-  State<SettingsRoute> createState() => _SettingsRoute();
+  ConsumerState<SettingsRoute> createState() => _SettingsRoute();
 }
 
-class _SettingsRoute extends State<SettingsRoute> with RouteAware {
+class _SettingsRoute extends ConsumerState<SettingsRoute> with RouteAware {
   final _formKey = GlobalKey<FormState>();
+  final backupLocationController = TextEditingController();
 
   @override
   void didChangeDependencies() {
@@ -31,28 +44,34 @@ class _SettingsRoute extends State<SettingsRoute> with RouteAware {
 
   @override
   void didPush() async {
-    try {
-      await context.read<SettingsModel>().initialize();
-    } on Exception catch (error) {
-      if (mounted) {
-        await showSimpleErrorDialog(
-            context, 'Error occurred when loading settings.', error);
-      }
-    }
+    final _ = ref.refresh(vccSettingsProvider);
   }
 
   void _didClickOpenSettingsFolder() {
-    final dir = context.read<VccService>().getSettingsDirectory();
+    final dir = ref.read(vccServiceProvider).getSettingsDirectory();
     launchUrl(Uri.file(dir.path));
   }
 
   void _didClickOpenLogsFolder() async {
-    final dir = await context.read<TinyVccService>().getLogsDirectory();
+    final dir = await ref.read(tinyVccServiceProvider).getLogsDirectory();
     launchUrl(Uri.file(dir.path));
   }
 
   Future<void> _didClickEditorRefresh() async {
-    await context.read<SettingsModel>().refreshEditors();
+    ref.read(_editorLoadingProvider.notifier).isLoading = true;
+    await ref.read(vccServiceProvider).checkHub();
+    final hub = ref.read(unityHubServiceProvider);
+    final editors = await hub.listInstalledEditors();
+    final settings = ref.read(vccSettingsProvider).requireValue;
+    final newEditors = {
+      ...settings.unityEditors,
+      ...editors.values,
+    }.toList();
+    newEditors.removeWhere((element) => !File(element).existsSync());
+    newEditors.sort();
+    await ref.read(vccSettingsRepoProvider).setUnityEditors(newEditors);
+    ref.read(_editorLoadingProvider.notifier).isLoading = false;
+    ref.refresh(vccSettingsProvider);
   }
 
   Future<void> _didClickEditorFilePicker() async {
@@ -66,7 +85,8 @@ class _SettingsRoute extends State<SettingsRoute> with RouteAware {
         return;
       }
       if (mounted) {
-        await context.read<SettingsModel>().setPreferredEditor(path);
+        await ref.read(vccSettingsRepoProvider).setPreferredEditor(path);
+        final _ = ref.refresh(vccSettingsProvider);
       }
     } on Exception catch (error) {
       if (mounted) {
@@ -82,7 +102,8 @@ class _SettingsRoute extends State<SettingsRoute> with RouteAware {
         return;
       }
       if (mounted) {
-        await context.read<SettingsModel>().setPreferredEditor(editorPath);
+        await ref.read(vccSettingsRepoProvider).setPreferredEditor(editorPath);
+        final _ = ref.refresh(vccSettingsProvider);
       }
     } on Exception catch (error) {
       if (mounted) {
@@ -96,13 +117,15 @@ class _SettingsRoute extends State<SettingsRoute> with RouteAware {
     try {
       final path = await showDirectoryPickerWindow(
         lockParentWindow: true,
-        initialDirectory: context.read<SettingsModel>().backupFolder,
+        initialDirectory:
+            ref.read(vccSettingsProvider).requireValue.projectBackupPath,
       );
       if (path == null) {
         return;
       }
       if (mounted) {
-        context.read<SettingsModel>().setBackupFolder(path);
+        ref.read(vccSettingsRepoProvider).setBackupFolder(path);
+        final _ = ref.refresh(vccSettingsProvider);
       }
     } on Exception catch (error) {
       if (mounted) {
@@ -122,7 +145,12 @@ class _SettingsRoute extends State<SettingsRoute> with RouteAware {
       if (!mounted) {
         return;
       }
-      await context.read<SettingsModel>().addUserPackage(packagePath);
+      if (!await File(p.join(packagePath, 'package.json')).exists()) {
+        throw Exception(
+            '$packagePath is not a package. package.json is missing.');
+      }
+      await ref.read(vccSettingsRepoProvider).addUserPackageFolder(packagePath);
+      final _ = ref.refresh(vccSettingsProvider);
     } on Exception catch (error) {
       await showSimpleErrorDialog(
           context, 'Error occurred when adding a package folder.', error);
@@ -132,7 +160,10 @@ class _SettingsRoute extends State<SettingsRoute> with RouteAware {
   Future<void> _didClickRemoveUserPackage(String userPackage) async {
     try {
       if (mounted) {
-        await context.read<SettingsModel>().deleteUserPackage(userPackage);
+        await ref
+            .read(vccSettingsRepoProvider)
+            .deleteUserPackageFolder(userPackage);
+        final _ = ref.refresh(vccSettingsProvider);
       }
     } on Exception catch (error) {
       await showSimpleErrorDialog(
@@ -142,11 +173,21 @@ class _SettingsRoute extends State<SettingsRoute> with RouteAware {
 
   @override
   Widget build(BuildContext context) {
-    final TextEditingController locationController =
-        TextEditingController(text: context.read<SettingsModel>().backupFolder);
-    Provider.of<SettingsModel>(context).addListener(() {
-      locationController.text = context.read<SettingsModel>().backupFolder;
+    ref.listen(vccSettingsProvider, (previous, next) {
+      next.when(
+        data: (data) {
+          backupLocationController.text = data.projectBackupPath;
+        },
+        error: (error, stack) {
+          showSimpleErrorDialog(
+              context, 'Error occurred when loading settings.', error);
+        },
+        loading: () {},
+      );
     });
+    final settings = ref.watch(vccSettingsProvider);
+    final isLoadingEditors = ref.watch(_editorLoadingProvider);
+
     return Scaffold(
       drawer: const MainDrawer(),
       appBar: AppBar(
@@ -174,47 +215,42 @@ class _SettingsRoute extends State<SettingsRoute> with RouteAware {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Consumer<SettingsModel>(
-                  builder: ((context, model, child) => DropdownButtonFormField(
-                        decoration: InputDecoration(
-                            labelText: 'Unity Editors',
-                            suffixIcon: Wrap(spacing: 8, children: [
-                              model.isDetectingEditors
-                                  ? const IconButton(
-                                      onPressed: null,
-                                      icon: CircularProgressIndicator())
-                                  : IconButton(
-                                      onPressed: _didClickEditorRefresh,
-                                      icon: const Icon(Icons.refresh)),
-                              IconButton(
-                                  onPressed: model.isDetectingEditors
-                                      ? null
-                                      : _didClickEditorFilePicker,
-                                  icon: const Icon(Icons.folder)),
-                            ])),
-                        value: model.preferredEditor,
-                        items: model.unityEditors
-                            .map((e) =>
-                                DropdownMenuItem(value: e, child: Text(e)))
-                            .toList(),
-                        onChanged: model.isDetectingEditors
-                            ? null
-                            : _didChangePreferredEditor,
-                      )),
+                DropdownButtonFormField(
+                  decoration: InputDecoration(
+                      labelText: 'Unity Editors',
+                      suffixIcon: Wrap(spacing: 8, children: [
+                        isLoadingEditors
+                            ? const IconButton(
+                                onPressed: null,
+                                icon: CircularProgressIndicator())
+                            : IconButton(
+                                onPressed: _didClickEditorRefresh,
+                                icon: const Icon(Icons.refresh)),
+                        IconButton(
+                            onPressed: isLoadingEditors
+                                ? null
+                                : _didClickEditorFilePicker,
+                            icon: const Icon(Icons.folder)),
+                      ])),
+                  value: settings.valueOrNull?.pathToUnityExe,
+                  items: settings.valueOrNull?.unityEditors
+                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                      .toList(),
+                  onChanged:
+                      isLoadingEditors ? null : _didChangePreferredEditor,
                 ),
                 const Padding(padding: EdgeInsets.symmetric(vertical: 8)),
-                Consumer<SettingsModel>(
-                  builder: ((context, model, child) => TextFormField(
-                        readOnly: true,
-                        decoration: InputDecoration(
-                          labelText: 'Backups',
-                          suffixIcon: IconButton(
-                            onPressed: _didClickBackupFolderPicker,
-                            icon: const Icon(Icons.folder),
-                          ),
-                        ),
-                        controller: locationController,
-                      )),
+                TextFormField(
+                  readOnly: true,
+                  decoration: InputDecoration(
+                    labelText: 'Backups',
+                    suffixIcon: IconButton(
+                      onPressed:
+                          isLoadingEditors ? null : _didClickBackupFolderPicker,
+                      icon: const Icon(Icons.folder),
+                    ),
+                  ),
+                  controller: backupLocationController,
                 ),
                 const Padding(padding: EdgeInsets.symmetric(vertical: 8)),
                 Row(
@@ -222,26 +258,30 @@ class _SettingsRoute extends State<SettingsRoute> with RouteAware {
                     const Text('User Packages'),
                     const Padding(padding: EdgeInsets.symmetric(horizontal: 4)),
                     OutlinedButton(
-                        onPressed: _didClickAddUserPackage,
+                        onPressed:
+                            isLoadingEditors ? null : _didClickAddUserPackage,
                         child: const Text('Add')),
                   ],
                 ),
                 SizedBox(
                   height: 200,
-                  child: Consumer<SettingsModel>(
-                    builder: (context, model, child) => ListView.builder(
-                      itemBuilder: ((context, index) => ListTile(
-                            title: Text(model.userPackages[index]),
-                            trailing: IconButton(
-                              onPressed: () {
-                                _didClickRemoveUserPackage(
-                                    model.userPackages[index]);
-                              },
-                              icon: const Icon(Icons.delete),
-                            ),
-                          )),
-                      itemCount: model.userPackages.length,
-                    ),
+                  child: ListView.builder(
+                    itemBuilder: ((context, index) => ListTile(
+                          title: Text(
+                              settings.requireValue.userPackageFolders[index]),
+                          trailing: IconButton(
+                            onPressed: isLoadingEditors
+                                ? null
+                                : () {
+                                    _didClickRemoveUserPackage(settings
+                                        .requireValue
+                                        .userPackageFolders[index]);
+                                  },
+                            icon: const Icon(Icons.delete),
+                          ),
+                        )),
+                    itemCount:
+                        settings.valueOrNull?.userPackageFolders.length ?? 0,
                   ),
                 ),
               ],

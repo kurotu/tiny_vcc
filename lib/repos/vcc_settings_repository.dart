@@ -10,6 +10,8 @@ class VccSettingsRepository {
   VccSettingsRepository(BuildContext context)
       : _vcc = Provider.of(context, listen: false);
 
+  VccSettingsRepository.withoutContext(this._vcc);
+
   final VccService _vcc;
 
   final _settingsCache = SimpleCache<VccSettings>();
@@ -63,6 +65,10 @@ class VccSettingsRepository {
   }
 
   Future<void> addUserPackageFolder(String path) async {
+    final settings = await fetchSettings(refresh: false);
+    if (settings.userPackageFolders.contains(path)) {
+      return;
+    }
     await _vcc.addUserPackageFolder(path);
     await fetchSettings(refresh: true);
   }

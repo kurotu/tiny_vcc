@@ -17,7 +17,6 @@ import 'models/legacy_project_model.dart';
 import 'models/new_project_model.dart';
 import 'models/project_model.dart';
 import 'models/projects_model.dart';
-import 'models/settings_model.dart';
 import 'repos/requirements_repository.dart';
 import 'repos/vcc_projects_repository.dart';
 import 'repos/vcc_settings_repository.dart';
@@ -160,11 +159,7 @@ class MyApp extends StatelessWidget {
                   create: (context) => NewProjectModel(context),
                   child: const NewProjectRoute(),
                 ),
-            SettingsRoute.routeName: (context) =>
-                ChangeNotifierProvider<SettingsModel>(
-                  create: (context) => SettingsModel(context),
-                  child: const SettingsRoute(),
-                ),
+            SettingsRoute.routeName: (context) => const SettingsRoute(),
             RequirementsRoute.routeName: (context) => const RequirementsRoute(),
           },
           onGenerateRoute: (settings) {

@@ -100,6 +100,10 @@ class VccService {
     _findVpm();
   }
 
+  VccService.withHub(this._hub) {
+    _findVpm();
+  }
+
   /// Use full path to avoid crash.
   /// https://stackoverflow.com/questions/69139808/
   String _vpmPath = '';
