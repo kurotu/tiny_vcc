@@ -4,6 +4,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 import 'repos/vcc_projects_repository.dart';
 import 'repos/vcc_settings_repository.dart';
+import 'repos/vcc_templates_repository.dart';
 import 'services/tiny_vcc_service.dart';
 import 'services/unity_hub_service.dart';
 import 'services/vcc_service.dart';
@@ -27,3 +28,10 @@ final vccProjectsRepoProvider = Provider((ref) {
 });
 
 final tinyVccServiceProvider = Provider((ref) => TinyVccService());
+
+final vpmTemplatesRepoProvider = Provider((ref) {
+  return VccTemplatesRepository(ref.read(vccServiceProvider));
+});
+final vpmTemplatesProvider = FutureProvider((ref) {
+  return ref.read(vpmTemplatesRepoProvider).fetchTemplates();
+});

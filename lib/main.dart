@@ -13,7 +13,6 @@ import 'package:pub_semver/pub_semver.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'globals.dart';
-import 'models/new_project_model.dart';
 import 'models/project_model.dart';
 import 'repos/requirements_repository.dart';
 import 'repos/vcc_projects_repository.dart';
@@ -148,11 +147,7 @@ class MyApp extends StatelessWidget {
           initialRoute: ProjectsRoute.routeName,
           routes: {
             ProjectsRoute.routeName: (context) => const ProjectsRoute(),
-            NewProjectRoute.routeName: (context) =>
-                ChangeNotifierProvider<NewProjectModel>(
-                  create: (context) => NewProjectModel(context),
-                  child: const NewProjectRoute(),
-                ),
+            NewProjectRoute.routeName: (context) => const NewProjectRoute(),
             SettingsRoute.routeName: (context) => const SettingsRoute(),
             RequirementsRoute.routeName: (context) => const RequirementsRoute(),
           },

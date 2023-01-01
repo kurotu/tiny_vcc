@@ -1,32 +1,56 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../globals.dart';
-import '../models/new_project_model.dart';
+import '../providers.dart';
 import '../utils.dart';
 import 'project_route.dart';
 
-class NewProjectRoute extends StatefulWidget {
+final _selectedTemplatePathProvider =
+    StateNotifierProvider.autoDispose<SelectedTemplatePath, String?>(
+        (ref) => SelectedTemplatePath());
+final _isDoingTaskProvider =
+    StateNotifierProvider.autoDispose<IsDoingTask, bool>(
+        (ref) => IsDoingTask());
+
+class SelectedTemplatePath extends StateNotifier<String?> {
+  SelectedTemplatePath() : super(null);
+
+  String? get path => state;
+  set path(String? value) {
+    state = value;
+  }
+}
+
+class IsDoingTask extends StateNotifier<bool> {
+  IsDoingTask() : super(false);
+
+  bool get isDoingTask => state;
+  set isDoingTask(bool value) {
+    state = value;
+  }
+}
+
+class NewProjectRoute extends ConsumerStatefulWidget {
   static const routeName = '/new_project';
 
   const NewProjectRoute({super.key});
 
   @override
-  State<NewProjectRoute> createState() => _NewProjectRoute();
+  ConsumerState<NewProjectRoute> createState() => _NewProjectRoute();
 }
 
-class _NewProjectRoute extends State<NewProjectRoute> with RouteAware {
+class _NewProjectRoute extends ConsumerState<NewProjectRoute> with RouteAware {
   final _formKey = GlobalKey<FormState>();
+  final _projectNameController = TextEditingController();
+  final _projectLocationController = TextEditingController();
 
   Future<String?> _selectLocation() {
     return showDirectoryPickerWindow(
       lockParentWindow: true,
-      initialDirectory: context.read<NewProjectModel>().location,
+      initialDirectory:
+          ref.read(vccSettingsProvider).valueOrNull?.defaultProjectPath,
     );
-  }
-
-  NewProjectModel _model(BuildContext context) {
-    return Provider.of<NewProjectModel>(context, listen: false);
   }
 
   @override
@@ -43,11 +67,23 @@ class _NewProjectRoute extends State<NewProjectRoute> with RouteAware {
 
   @override
   void didPush() {
-    _model(context).fetchInitialData();
+    final settings = ref.read(vccSettingsProvider);
+    if (settings.hasValue) {
+      _projectLocationController.text =
+          settings.requireValue.defaultProjectPath;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(vccSettingsProvider, (previous, next) {
+      next.whenData((value) =>
+          _projectLocationController.text = value.defaultProjectPath);
+    });
+    final templates = ref.watch(vpmTemplatesProvider);
+    final selectedTemplatePath = ref.watch(_selectedTemplatePathProvider);
+    final isDoingTask = ref.watch(_isDoingTaskProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('New Project'),
@@ -59,23 +95,21 @@ class _NewProjectRoute extends State<NewProjectRoute> with RouteAware {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Consumer<NewProjectModel>(
-                builder: (context, model, child) => DropdownButtonFormField(
-                  decoration:
-                      const InputDecoration(labelText: 'Project Template'),
-                  value: model.template?.path,
-                  items: model.projectTemplates
-                      .map((e) => DropdownMenuItem(
-                            value: e.path,
-                            child: Text(e.name),
-                          ))
-                      .toList(),
-                  validator: (value) =>
-                      value == null ? 'Please select project template.' : null,
-                  onChanged: (value) {
-                    model.selectTemplate(value!);
-                  },
-                ),
+              DropdownButtonFormField(
+                decoration:
+                    const InputDecoration(labelText: 'Project Template'),
+                value: selectedTemplatePath,
+                items: templates.valueOrNull
+                    ?.map((e) => DropdownMenuItem(
+                          value: e.path,
+                          child: Text(e.name),
+                        ))
+                    .toList(),
+                validator: (value) =>
+                    value == null ? 'Please select project template.' : null,
+                onChanged: (value) {
+                  ref.read(_selectedTemplatePathProvider.notifier).path = value;
+                },
               ),
               TextFormField(
                 decoration: const InputDecoration(labelText: 'Project Name'),
@@ -85,20 +119,21 @@ class _NewProjectRoute extends State<NewProjectRoute> with RouteAware {
                   }
                   return null;
                 },
-                controller:
-                    context.read<NewProjectModel>().projectNameController,
+                controller: _projectNameController,
               ),
               TextFormField(
                 readOnly: true,
                 decoration: InputDecoration(
                   labelText: 'Location',
                   suffixIcon: IconButton(
-                    onPressed: () {
-                      _selectLocation().then((path) {
-                        if (path != null) {
-                          context.read<NewProjectModel>().location = path;
-                        }
-                      });
+                    onPressed: () async {
+                      final path = await _selectLocation();
+                      if (path != null) {
+                        await ref
+                            .read(vccSettingsRepoProvider)
+                            .setDefaultProjectPath(path);
+                        ref.refresh(vccSettingsProvider);
+                      }
                     },
                     icon: const Icon(Icons.folder),
                   ),
@@ -109,34 +144,43 @@ class _NewProjectRoute extends State<NewProjectRoute> with RouteAware {
                   }
                   return null;
                 },
-                controller: context.read<NewProjectModel>().locationController,
+                controller: _projectLocationController,
               ),
               const Padding(padding: EdgeInsets.symmetric(vertical: 8)),
-              Consumer<NewProjectModel>(
-                builder: (context, model, child) => ElevatedButton(
-                  onPressed: model.isCreatingProject
-                      ? null
-                      : () {
-                          if (_formKey.currentState!.validate()) {
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                              content: Text(
-                                  'Creating ${model.template?.name} project, "${model.projectName}" at ${model.location}'),
-                            ));
-                            model.createProject().then((project) {
-                              Navigator.pushReplacementNamed(
-                                context,
-                                ProjectRoute.routeName,
-                                arguments:
-                                    ProjectRouteArguments(project: project),
-                              );
-                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                  content: Text(
-                                      '${model.template?.name} project, "${project.name}" has been created at ${project.path}')));
-                            });
-                          }
-                        },
-                  child: const Text('Create'),
-                ),
+              ElevatedButton(
+                onPressed: isDoingTask
+                    ? null
+                    : () async {
+                        if (!_formKey.currentState!.validate()) {
+                          return;
+                        }
+                        ref.read(_isDoingTaskProvider.notifier).isDoingTask =
+                            true;
+                        final selected = templates.requireValue
+                            .firstWhere((t) => t.path == selectedTemplatePath);
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text(
+                              'Creating ${selected.name} project, "${_projectNameController.text}" at ${_projectLocationController.text}'),
+                        ));
+                        final newProject = await ref
+                            .read(vccProjectsRepoProvider)
+                            .createVccProject(
+                                selected,
+                                _projectNameController.text,
+                                _projectLocationController.text);
+                        if (!mounted) {
+                          return;
+                        }
+                        Navigator.pushReplacementNamed(
+                          context,
+                          ProjectRoute.routeName,
+                          arguments: ProjectRouteArguments(project: newProject),
+                        );
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text(
+                                '${selected.name} project, "${newProject.name}" has been created at ${newProject.path}')));
+                      },
+                child: const Text('Create'),
               ),
             ],
           ),
