@@ -40,17 +40,12 @@ final _readyToUseProvider = FutureProvider((ref) async {
   return true;
 });
 
-class ProjectsRoute extends ConsumerStatefulWidget {
+class ProjectsRoute extends ConsumerWidget {
   const ProjectsRoute({super.key});
 
   static const String routeName = '/projects';
 
-  @override
-  ConsumerState<ProjectsRoute> createState() => _ProjectsRoute();
-}
-
-class _ProjectsRoute extends ConsumerState<ProjectsRoute> with RouteAware {
-  void _addProject() async {
+  void _addProject(BuildContext context, WidgetRef ref) async {
     final path = await showDirectoryPickerWindow(lockParentWindow: true);
     if (path == null) {
       return;
@@ -81,36 +76,30 @@ class _ProjectsRoute extends ConsumerState<ProjectsRoute> with RouteAware {
           throw VccProjectTypeException('Unknown Unity project type.', type);
       }
       await repo.addVccProject(VccProject(path));
-      _refreshProjects();
+      _refreshProjects(ref);
     } on VccProjectTypeException catch (error) {
-      if (mounted) {
-        await showSimpleErrorDialog(
-            context, 'Project "$path" is not supported.', error);
-      }
+      await showSimpleErrorDialog(
+          context, 'Project "$path" is not supported.', error);
     } on Exception catch (error) {
-      if (mounted) {
-        await showSimpleErrorDialog(
-            context, 'Error occurred when adding a project.', error);
-      }
+      await showSimpleErrorDialog(
+          context, 'Error occurred when adding a project.', error);
     }
   }
 
-  void _refreshProjects() {
+  void _refreshProjects(WidgetRef ref) {
     ref.refresh(vccSettingsProvider);
   }
 
-  Future<void> _didSelectProject(VccProject project) async {
+  Future<void> _didSelectProject(
+      BuildContext context, WidgetRef ref, VccProject project) async {
     if (!await Directory(project.path).exists()) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      scaffoldKey.currentState?.showSnackBar(SnackBar(
         content: Text('${project.path} does not exist.'),
       ));
       return;
     }
     final type =
         await ref.read(vccProjectsRepoProvider).checkProjectType(project);
-    if (!mounted) {
-      return;
-    }
     switch (type) {
       case VccProjectType.avatarVpm:
       case VccProjectType.worldVpm:
@@ -155,27 +144,7 @@ class _ProjectsRoute extends ConsumerState<ProjectsRoute> with RouteAware {
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
-  }
-
-  @override
-  void dispose() {
-    routeObserver.unsubscribe(this);
-    super.dispose();
-  }
-
-  @override
-  void didPush() {}
-
-  @override
-  void didPopNext() {
-//    _refreshProjects();
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     ref.listen(_readyToUseProvider, (previous, next) {
       if (next.valueOrNull == false) {
         Navigator.of(context).pushReplacementNamed(RequirementsRoute.routeName);
@@ -195,7 +164,7 @@ class _ProjectsRoute extends ConsumerState<ProjectsRoute> with RouteAware {
           TextButton(
             style: style,
             onPressed: () {
-              _addProject();
+              _addProject(context, ref);
             },
             child: const Text('Add'),
           ),
@@ -208,11 +177,12 @@ class _ProjectsRoute extends ConsumerState<ProjectsRoute> with RouteAware {
           ),
         ],
       ),
-      body: Column(children: buildColumn(settings)),
+      body: Column(children: buildColumn(context, ref, settings)),
     );
   }
 
-  List<Widget> buildColumn(AsyncValue<VccSettings> settings) {
+  List<Widget> buildColumn(
+      BuildContext context, WidgetRef ref, AsyncValue<VccSettings> settings) {
     final List<Widget> list = [];
     list.add(
       Expanded(
@@ -224,7 +194,7 @@ class _ProjectsRoute extends ConsumerState<ProjectsRoute> with RouteAware {
             return ListTile(
               title: Text(project.name),
               onTap: () {
-                _didSelectProject(project);
+                _didSelectProject(context, ref, project);
               },
               subtitle: Text(project.path),
               trailing: IconButton(
@@ -233,7 +203,7 @@ class _ProjectsRoute extends ConsumerState<ProjectsRoute> with RouteAware {
                   await ref
                       .read(vccProjectsRepoProvider)
                       .deleteVccProject(project);
-                  _refreshProjects();
+                  _refreshProjects(ref);
                 },
               ),
             );
