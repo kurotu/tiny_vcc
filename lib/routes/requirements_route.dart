@@ -67,75 +67,52 @@ final _unityStateProvider = _createProvider(_unityHubStateProvider, () async {
   return _vcc.checkUnity();
 });
 
-class RequirementsRoute extends ConsumerStatefulWidget {
+class RequirementsRoute extends ConsumerWidget {
   static const routeName = '/requirements';
 
   const RequirementsRoute({super.key});
 
   @override
-  ConsumerState<RequirementsRoute> createState() => _RequirementsRoute();
-}
-
-class _RequirementsRoute extends ConsumerState<RequirementsRoute>
-    with RouteAware {
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
-  }
-
-  @override
-  void dispose() {
-    routeObserver.unsubscribe(this);
-    super.dispose();
-  }
-
-  @override
-  void didPush() {
-    Future.delayed(const Duration(), _checkRequirements);
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     ref.listen(_dotNetCommandStateProvider, (previous, next) {
       next.whenData((value) {
         if (value == RequirementState.ng) {
-          _showDotNetBanner();
+          _showDotNetBanner(ref);
         }
       });
     });
     ref.listen(_dotNet6SdkStateProviver, (previous, next) {
       next.whenData((value) {
         if (value == RequirementState.ng) {
-          _showDotNetBanner();
+          _showDotNetBanner(ref);
         }
       });
     });
     ref.listen(_vpmCommandStateProvider, (previous, next) {
       next.whenData((value) {
         if (value == RequirementState.ng) {
-          _showVpmInstallBanner();
+          _showVpmInstallBanner(context, ref);
         }
       });
     });
     ref.listen(_vpmVersionStateProvider, (previous, next) {
       next.whenData((value) {
         if (value == RequirementState.ng) {
-          _showVpmUpdateBanner();
+          _showVpmUpdateBanner(context, ref);
         }
       });
     });
     ref.listen(_unityHubStateProvider, (previous, next) {
       next.whenData((value) {
         if (value == RequirementState.ng) {
-          _showUnityHubBanner();
+          _showUnityHubBanner(ref);
         }
       });
     });
     ref.listen(_unityStateProvider, ((previous, next) {
       next.whenData((value) {
         if (value == RequirementState.ng) {
-          _showUnityBanner();
+          _showUnityBanner(ref);
         }
         if (value == RequirementState.ok) {
           Navigator.pushReplacementNamed(context, ProjectsRoute.routeName);
@@ -163,11 +140,11 @@ class _RequirementsRoute extends ConsumerState<RequirementsRoute>
     );
   }
 
-  void _checkRequirements() {
+  void _checkRequirements(WidgetRef ref) {
     final _ = ref.refresh(_dotNetCommandStateProvider);
   }
 
-  void _showDotNetBanner() {
+  void _showDotNetBanner(WidgetRef ref) {
     ScaffoldFeatureController<MaterialBanner, MaterialBannerClosedReason>?
         controller;
     final banner = MaterialBanner(
@@ -184,7 +161,7 @@ class _RequirementsRoute extends ConsumerState<RequirementsRoute>
         TextButton(
           onPressed: () {
             controller?.close();
-            _checkRequirements();
+            _checkRequirements(ref);
           },
           child: const Text('Check again'),
         ),
@@ -193,7 +170,7 @@ class _RequirementsRoute extends ConsumerState<RequirementsRoute>
     controller = scaffoldKey.currentState?.showMaterialBanner(banner);
   }
 
-  void _showVpmInstallBanner() {
+  void _showVpmInstallBanner(BuildContext context, WidgetRef ref) {
     ScaffoldFeatureController<MaterialBanner, MaterialBannerClosedReason>?
         controller;
     final banner = MaterialBanner(
@@ -207,16 +184,14 @@ class _RequirementsRoute extends ConsumerState<RequirementsRoute>
             await _dotnet.installGlobalTool(
                 vpmPackageId, requiredVpmVersion.toString());
             dialog.close();
-            if (mounted) {
-              _checkRequirements();
-            }
+            _checkRequirements(ref);
           },
           child: const Text('Install'),
         ),
         TextButton(
           onPressed: () {
             controller?.close();
-            _checkRequirements();
+            _checkRequirements(ref);
           },
           child: const Text('Check again'),
         ),
@@ -225,7 +200,7 @@ class _RequirementsRoute extends ConsumerState<RequirementsRoute>
     controller = scaffoldKey.currentState?.showMaterialBanner(banner);
   }
 
-  void _showVpmUpdateBanner() {
+  void _showVpmUpdateBanner(BuildContext context, WidgetRef ref) {
     ScaffoldFeatureController<MaterialBanner, MaterialBannerClosedReason>?
         controller;
     final banner = MaterialBanner(
@@ -239,16 +214,14 @@ class _RequirementsRoute extends ConsumerState<RequirementsRoute>
             await _dotnet.updateGlobalTool(
                 vpmPackageId, requiredVpmVersion.toString());
             dialog.close();
-            if (mounted) {
-              _checkRequirements();
-            }
+            _checkRequirements(ref);
           },
           child: const Text('Update'),
         ),
         TextButton(
           onPressed: () {
             controller?.close();
-            _checkRequirements();
+            _checkRequirements(ref);
           },
           child: const Text('Check again'),
         ),
@@ -257,7 +230,7 @@ class _RequirementsRoute extends ConsumerState<RequirementsRoute>
     controller = scaffoldKey.currentState?.showMaterialBanner(banner);
   }
 
-  void _showUnityHubBanner() {
+  void _showUnityHubBanner(WidgetRef ref) {
     ScaffoldFeatureController<MaterialBanner, MaterialBannerClosedReason>?
         controller;
     final banner = MaterialBanner(
@@ -272,7 +245,7 @@ class _RequirementsRoute extends ConsumerState<RequirementsRoute>
         TextButton(
           onPressed: () {
             controller?.close();
-            _checkRequirements();
+            _checkRequirements(ref);
           },
           child: const Text('Check again'),
         ),
@@ -281,7 +254,7 @@ class _RequirementsRoute extends ConsumerState<RequirementsRoute>
     controller = scaffoldKey.currentState?.showMaterialBanner(banner);
   }
 
-  void _showUnityBanner() {
+  void _showUnityBanner(WidgetRef ref) {
     ScaffoldFeatureController<MaterialBanner, MaterialBannerClosedReason>?
         controller;
     final banner = MaterialBanner(
@@ -297,7 +270,8 @@ class _RequirementsRoute extends ConsumerState<RequirementsRoute>
         TextButton(
           onPressed: () {
             controller?.close();
-            _checkRequirements();
+            controller = null;
+            _checkRequirements(ref);
           },
           child: const Text('Check again'),
         ),
