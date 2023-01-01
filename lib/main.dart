@@ -13,7 +13,6 @@ import 'package:pub_semver/pub_semver.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'globals.dart';
-import 'models/project_model.dart';
 import 'repos/requirements_repository.dart';
 import 'repos/vcc_projects_repository.dart';
 import 'repos/vcc_settings_repository.dart';
@@ -155,13 +154,7 @@ class MyApp extends StatelessWidget {
             if (settings.name == ProjectRoute.routeName) {
               final args = settings.arguments as ProjectRouteArguments;
               return MaterialPageRoute(
-                builder: ((context) => ChangeNotifierProvider<ProjectModel>(
-                      create: (context) => ProjectModel(
-                        context,
-                        args.project,
-                      ),
-                      child: const ProjectRoute(),
-                    )),
+                builder: ((context) => ProjectRoute(args.project)),
               );
             } else if (settings.name == LegacyProjectRoute.routeName) {
               final args = settings.arguments as LegacyProjectRouteArguments;

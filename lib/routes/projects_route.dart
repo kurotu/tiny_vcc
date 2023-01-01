@@ -171,7 +171,7 @@ class _ProjectsRoute extends ConsumerState<ProjectsRoute> with RouteAware {
 
   @override
   void didPopNext() {
-    _refreshProjects();
+//    _refreshProjects();
   }
 
   @override

@@ -8,6 +8,8 @@ class VpmPackagesRepository {
   VpmPackagesRepository(BuildContext context)
       : _vcc = Provider.of(context, listen: false);
 
+  VpmPackagesRepository.withVcc(this._vcc);
+
   final VccService _vcc;
 
   List<VpmPackage>? _packages;

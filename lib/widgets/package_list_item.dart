@@ -1,8 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:pub_semver/pub_semver.dart';
 
-import '../models/project_model.dart';
 import '../services/vcc_service.dart';
+
+class PackageItem {
+  PackageItem({
+    required this.name,
+    required this.displayName,
+    required this.description,
+    this.installedVersion,
+    this.selectedVersion,
+    required this.versions,
+    required this.repoType,
+  });
+
+  final String name;
+  final String displayName;
+  final String description;
+  final Version? installedVersion;
+  final Version? selectedVersion;
+  final List<VpmPackage> versions;
+  final RepositoryType repoType;
+}
 
 class PackageListItem extends StatelessWidget {
   const PackageListItem({

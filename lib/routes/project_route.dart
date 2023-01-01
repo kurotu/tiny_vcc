@@ -1,14 +1,108 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pub_semver/pub_semver.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../globals.dart';
-import '../models/project_model.dart';
+import '../providers.dart';
 import '../services/vcc_service.dart';
 import '../utils.dart';
 import '../widgets/package_list_item.dart';
+
+final _lockedDependenciesProvider = FutureProvider.autoDispose
+    .family<List<VpmDependency>, VccProject>(
+        (ref, project) => project.getLockedDependencies());
+
+final _packageItemListProvider = FutureProvider.autoDispose
+    .family<List<PackageItem>, VccProject>((ref, project) async {
+  final List<PackageItem> list = [];
+  final settings = ref.watch(vccSettingsProvider);
+  final selectedVersion = ref.watch(_selectedVersionProvider);
+  final packages = ref.watch(vpmPackagesProvider);
+  final lockedDeps = ref.watch(_lockedDependenciesProvider(project));
+
+  if (packages.value == null) {
+    return [];
+  }
+
+  if (!lockedDeps.hasValue) {
+    return [];
+  }
+
+  final showPrerelease = settings.requireValue.showPrereleasePackages;
+  final locked = lockedDeps.requireValue
+      .where((element) =>
+          ref
+              .read(vpmPackagesRepoProvider)
+              .getLatest(element.name, element.version, showPrerelease) !=
+          null)
+      .map((e) {
+    final latest = ref
+        .read(vpmPackagesRepoProvider)
+        .getLatest(e.name, e.version, showPrerelease);
+    return PackageItem(
+      name: e.name,
+      displayName: latest!.displayName,
+      description: latest.description,
+      versions: ref
+          .read(vpmPackagesRepoProvider)
+          .getVersions(e.name, e.version, showPrerelease),
+      installedVersion: e.version,
+      selectedVersion: selectedVersion[e.name] ?? latest.version,
+      repoType: latest.repoType,
+    );
+  });
+  list.addAll(locked);
+
+  if (!lockedDeps.hasValue) {
+    return [];
+  }
+
+  final not = packages.value
+      ?.where(
+          (p) => lockedDeps.requireValue.where((e) => e.name == p.name).isEmpty)
+      .map((e) => e.name)
+      .toSet();
+  if (not != null) {
+    list.addAll(not.map((name) {
+      final latest = ref
+          .read(vpmPackagesRepoProvider)
+          .getLatest(name, null, showPrerelease);
+      return PackageItem(
+        name: name,
+        displayName: latest!.displayName,
+        description: latest.description,
+        selectedVersion: selectedVersion[latest.name] ?? latest.version,
+        versions: ref
+            .read(vpmPackagesRepoProvider)
+            .getVersions(name, null, showPrerelease),
+        repoType: latest.repoType,
+      );
+    }));
+  }
+
+  return list;
+});
+
+final _selectedVersionProvider =
+    StateNotifierProvider.autoDispose<SelectedVersion, Map<String, Version>>(
+        (ref) => SelectedVersion());
+
+class SelectedVersion extends StateNotifier<Map<String, Version>> {
+  SelectedVersion() : super({});
+
+  void select(String name, Version version) {
+    final Map<String, Version> map = Map.from(state);
+    map[name] = version;
+    state = map;
+  }
+
+  Version? getSelectedVersion(String name) {
+    return state[name];
+  }
+}
 
 class ProjectRouteArguments {
   ProjectRouteArguments({required this.project});
@@ -16,21 +110,22 @@ class ProjectRouteArguments {
   final VccProject project;
 }
 
-class ProjectRoute extends StatefulWidget {
-  const ProjectRoute({super.key});
-
+class ProjectRoute extends ConsumerStatefulWidget {
   static const String routeName = '/project';
 
+  const ProjectRoute(this.project, {super.key});
+
+  final VccProject project;
+
   @override
-  State<ProjectRoute> createState() => _ProjectRoute();
+  ConsumerState<ProjectRoute> createState() => _ProjectRoute();
 }
 
-class _ProjectRoute extends State<ProjectRoute> with RouteAware {
+class _ProjectRoute extends ConsumerState<ProjectRoute> with RouteAware {
   ScaffoldFeatureController? _unityBannerController;
 
   void _refreshLockedDependencies() {
-    final model = Provider.of<ProjectModel>(context, listen: false);
-    model.getLockedDependencies();
+    ref.refresh(_lockedDependenciesProvider(widget.project));
   }
 
   @override
@@ -47,24 +142,31 @@ class _ProjectRoute extends State<ProjectRoute> with RouteAware {
 
   @override
   void didPush() {
-    _refreshLockedDependencies();
+//    _refreshLockedDependencies();
   }
 
-  ProjectModel _model(BuildContext context) {
-    return Provider.of<ProjectModel>(context, listen: false);
+  Future<void> _didClickOpenProject() async {
+    var editorVersion = await widget.project.getUnityEditorVersion();
+    final editor =
+        await ref.read(vccSettingsRepoProvider).getUnityEditor(editorVersion);
+    if (editor == null) {
+      throw Exception('Unity $editorVersion not found in VCC settings.');
+    }
+    await Process.start(editor, ['-projectPath', widget.project.path],
+        mode: ProcessStartMode.detached);
   }
 
-  void _didClickOpenFolder(BuildContext context) {
-    final uri = Uri.file(_model(context).project.path);
+  void _didClickOpenFolder() {
+    final uri = Uri.file(widget.project.path);
     launchUrl(uri);
   }
 
-  void _didClickMakeBackup(BuildContext context) async {
-    final projectName = _model(context).project.name;
+  void _didClickMakeBackup() async {
+    final projectName = widget.project.name;
     showProgressDialog(context, 'Backing up $projectName');
     File file;
     try {
-      file = await _model(context).backup();
+      file = await ref.read(vccProjectsRepoProvider).backup(widget.project);
     } on Exception catch (error) {
       Navigator.pop(context);
       showAlertDialog(context,
@@ -124,10 +226,10 @@ class _ProjectRoute extends State<ProjectRoute> with RouteAware {
 
   @override
   Widget build(BuildContext context) {
+    final packagesList = ref.watch(_packageItemListProvider(widget.project));
     return Scaffold(
       appBar: AppBar(
-        title: Consumer<ProjectModel>(
-            builder: (context, model, child) => Text(model.project.name)),
+        title: Text(widget.project.name),
       ),
       body: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Container(
@@ -135,39 +237,24 @@ class _ProjectRoute extends State<ProjectRoute> with RouteAware {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Consumer<ProjectModel>(
-                  builder: (context, model, child) => Text(model.project.path)),
+              Text(widget.project.path),
               const Padding(padding: EdgeInsets.symmetric(vertical: 8)),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  Consumer<ProjectModel>(
-                    builder: ((context, value, child) => OutlinedButton(
-                        onPressed: value.isDoingTask
-                            ? null
-                            : () {
-                                value.openProject();
-                              },
-                        child: const Text('Open Project'))),
+                  OutlinedButton(
+                      onPressed: _didClickOpenProject,
+                      child: const Text('Open Project')),
+                  OutlinedButton(
+                    onPressed: _didClickOpenFolder,
+                    child: const Text('Open Folder'),
                   ),
-                  Consumer<ProjectModel>(
-                    builder: ((context, value, child) => OutlinedButton(
-                        onPressed: value.isDoingTask
-                            ? null
-                            : () {
-                                _didClickOpenFolder(context);
-                              },
-                        child: const Text('Open Folder'))),
-                  ),
-                  Consumer<ProjectModel>(
-                    builder: ((context, value, child) => OutlinedButton(
-                        onPressed: value.isDoingTask
-                            ? null
-                            : () {
-                                _didClickMakeBackup(context);
-                              },
-                        child: const Text('Make Backup'))),
+                  OutlinedButton(
+                    onPressed: _didClickMakeBackup,
+                    child: const Text(
+                      'Make Backup',
+                    ),
                   ),
                 ],
               ),
@@ -175,34 +262,42 @@ class _ProjectRoute extends State<ProjectRoute> with RouteAware {
           ),
         ),
         Expanded(
-          child: Consumer<ProjectModel>(
-            builder: (context, model, child) => _buildList(model),
-          ),
+          child: _buildList(packagesList),
         ),
       ]),
     );
   }
 
-  Widget _buildList(ProjectModel model) {
+  Widget _buildList(AsyncValue<List<PackageItem>> items) {
+    if (!items.hasValue) {
+      return const SizedBox.shrink();
+    }
     return ListView.builder(
-      itemCount: model.packages.length,
+      itemCount: items.requireValue.length,
       itemBuilder: (context, index) {
-        final dep = model.packages[index];
+        final dep = items.requireValue[index];
         return PackageListItem(
           item: dep,
           onSelect: (name, version) {
-            model.selectVersion(name, version);
+            ref.read(_selectedVersionProvider.notifier).select(name, version);
           },
-          onClickAdd: (name) {
-            model.addPackage(name, dep.selectedVersion!);
+          onClickAdd: (name) async {
+            await ref.read(vccServiceProvider).addPackage(
+                widget.project.path, name, dep.selectedVersion!.toString());
             _showMessageToCloseUnity();
           },
-          onClickRemove: (name) {
-            model.removePackage(name);
+          onClickRemove: (name) async {
+            await ref
+                .read(vccServiceProvider)
+                .removePackage(widget.project.path, name);
+            _refreshLockedDependencies();
             _showMessageToCloseUnity();
           },
-          onClickUpdate: ((name) {
-            model.updatePackage(name, dep.selectedVersion!);
+          onClickUpdate: ((name) async {
+            await ref
+                .read(vccServiceProvider)
+                .updatePackage(widget.project.path, name, dep.selectedVersion!);
+            _refreshLockedDependencies();
             _showMessageToCloseUnity();
           }),
         );
