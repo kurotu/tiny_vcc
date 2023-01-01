@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../globals.dart';
 import '../providers.dart';
 import '../utils.dart';
 import 'project_route.dart';
@@ -12,6 +11,14 @@ final _selectedTemplatePathProvider =
 final _isDoingTaskProvider =
     StateNotifierProvider.autoDispose<IsDoingTask, bool>(
         (ref) => IsDoingTask());
+final _projectNameControllerProvider =
+    Provider.autoDispose((ref) => TextEditingController());
+final _projectLocationControllerProvider = Provider.autoDispose((ref) {
+  final location =
+      ref.read(vccSettingsProvider).requireValue.defaultProjectPath;
+  return TextEditingController(text: location);
+});
+final _formKeyProvider = Provider.autoDispose((ref) => GlobalKey<FormState>());
 
 class SelectedTemplatePath extends StateNotifier<String?> {
   SelectedTemplatePath() : super(null);
@@ -31,21 +38,12 @@ class IsDoingTask extends StateNotifier<bool> {
   }
 }
 
-class NewProjectRoute extends ConsumerStatefulWidget {
+class NewProjectRoute extends ConsumerWidget {
   static const routeName = '/new_project';
 
   const NewProjectRoute({super.key});
 
-  @override
-  ConsumerState<NewProjectRoute> createState() => _NewProjectRoute();
-}
-
-class _NewProjectRoute extends ConsumerState<NewProjectRoute> with RouteAware {
-  final _formKey = GlobalKey<FormState>();
-  final _projectNameController = TextEditingController();
-  final _projectLocationController = TextEditingController();
-
-  Future<String?> _selectLocation() {
+  Future<String?> _selectLocation(WidgetRef ref) {
     return showDirectoryPickerWindow(
       lockParentWindow: true,
       initialDirectory:
@@ -54,35 +52,19 @@ class _NewProjectRoute extends ConsumerState<NewProjectRoute> with RouteAware {
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
-  }
-
-  @override
-  void dispose() {
-    routeObserver.unsubscribe(this);
-    super.dispose();
-  }
-
-  @override
-  void didPush() {
-    final settings = ref.read(vccSettingsProvider);
-    if (settings.hasValue) {
-      _projectLocationController.text =
-          settings.requireValue.defaultProjectPath;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     ref.listen(vccSettingsProvider, (previous, next) {
-      next.whenData((value) =>
-          _projectLocationController.text = value.defaultProjectPath);
+      next.whenData((value) => ref
+          .read(_projectLocationControllerProvider)
+          .text = value.defaultProjectPath);
     });
     final templates = ref.watch(vpmTemplatesProvider);
     final selectedTemplatePath = ref.watch(_selectedTemplatePathProvider);
     final isDoingTask = ref.watch(_isDoingTaskProvider);
+    final formKey = ref.watch(_formKeyProvider);
+    final projectNameController = ref.watch(_projectNameControllerProvider);
+    final projectLocationController =
+        ref.watch(_projectLocationControllerProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -91,7 +73,7 @@ class _NewProjectRoute extends ConsumerState<NewProjectRoute> with RouteAware {
       body: Container(
         padding: const EdgeInsets.all(15),
         child: Form(
-          key: _formKey,
+          key: formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -119,7 +101,7 @@ class _NewProjectRoute extends ConsumerState<NewProjectRoute> with RouteAware {
                   }
                   return null;
                 },
-                controller: _projectNameController,
+                controller: projectNameController,
               ),
               TextFormField(
                 readOnly: true,
@@ -127,7 +109,7 @@ class _NewProjectRoute extends ConsumerState<NewProjectRoute> with RouteAware {
                   labelText: 'Location',
                   suffixIcon: IconButton(
                     onPressed: () async {
-                      final path = await _selectLocation();
+                      final path = await _selectLocation(ref);
                       if (path != null) {
                         await ref
                             .read(vccSettingsRepoProvider)
@@ -144,14 +126,14 @@ class _NewProjectRoute extends ConsumerState<NewProjectRoute> with RouteAware {
                   }
                   return null;
                 },
-                controller: _projectLocationController,
+                controller: projectLocationController,
               ),
               const Padding(padding: EdgeInsets.symmetric(vertical: 8)),
               ElevatedButton(
                 onPressed: isDoingTask
                     ? null
                     : () async {
-                        if (!_formKey.currentState!.validate()) {
+                        if (!formKey.currentState!.validate()) {
                           return;
                         }
                         ref.read(_isDoingTaskProvider.notifier).isDoingTask =
@@ -160,17 +142,16 @@ class _NewProjectRoute extends ConsumerState<NewProjectRoute> with RouteAware {
                             .firstWhere((t) => t.path == selectedTemplatePath);
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                           content: Text(
-                              'Creating ${selected.name} project, "${_projectNameController.text}" at ${_projectLocationController.text}'),
+                              'Creating ${selected.name} project, "${projectLocationController.text}" at ${projectLocationController.text}'),
                         ));
                         final newProject = await ref
                             .read(vccProjectsRepoProvider)
                             .createVccProject(
-                                selected,
-                                _projectNameController.text,
-                                _projectLocationController.text);
-                        if (!mounted) {
-                          return;
-                        }
+                              selected,
+                              projectNameController.text,
+                              projectLocationController.text,
+                            );
+                        ref.refresh(vccSettingsProvider);
                         Navigator.pushReplacementNamed(
                           context,
                           ProjectRoute.routeName,
