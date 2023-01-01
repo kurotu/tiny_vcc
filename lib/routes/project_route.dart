@@ -11,6 +11,9 @@ import '../services/vcc_service.dart';
 import '../utils.dart';
 import '../widgets/package_list_item.dart';
 
+final _needsToShowUnityBannerProvider =
+    StateProvider.autoDispose((ref) => false);
+
 final _lockedDependenciesProvider = FutureProvider.autoDispose
     .family<List<VpmDependency>, VccProject>(
         (ref, project) => project.getLockedDependencies());
@@ -110,63 +113,39 @@ class ProjectRouteArguments {
   final VccProject project;
 }
 
-class ProjectRoute extends ConsumerStatefulWidget {
+class ProjectRoute extends ConsumerWidget {
   static const String routeName = '/project';
 
   const ProjectRoute(this.project, {super.key});
 
   final VccProject project;
 
-  @override
-  ConsumerState<ProjectRoute> createState() => _ProjectRoute();
-}
-
-class _ProjectRoute extends ConsumerState<ProjectRoute> with RouteAware {
-  ScaffoldFeatureController? _unityBannerController;
-
-  void _refreshLockedDependencies() {
-    ref.refresh(_lockedDependenciesProvider(widget.project));
+  void _refreshLockedDependencies(WidgetRef ref) {
+    ref.refresh(_lockedDependenciesProvider(project));
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
-  }
-
-  @override
-  void dispose() {
-    routeObserver.unsubscribe(this);
-    super.dispose();
-  }
-
-  @override
-  void didPush() {
-//    _refreshLockedDependencies();
-  }
-
-  Future<void> _didClickOpenProject() async {
-    var editorVersion = await widget.project.getUnityEditorVersion();
+  Future<void> _didClickOpenProject(WidgetRef ref) async {
+    var editorVersion = await project.getUnityEditorVersion();
     final editor =
         await ref.read(vccSettingsRepoProvider).getUnityEditor(editorVersion);
     if (editor == null) {
       throw Exception('Unity $editorVersion not found in VCC settings.');
     }
-    await Process.start(editor, ['-projectPath', widget.project.path],
+    await Process.start(editor, ['-projectPath', project.path],
         mode: ProcessStartMode.detached);
   }
 
   void _didClickOpenFolder() {
-    final uri = Uri.file(widget.project.path);
+    final uri = Uri.file(project.path);
     launchUrl(uri);
   }
 
-  void _didClickMakeBackup() async {
-    final projectName = widget.project.name;
+  void _didClickMakeBackup(BuildContext context, WidgetRef ref) async {
+    final projectName = project.name;
     showProgressDialog(context, 'Backing up $projectName');
     File file;
     try {
-      file = await ref.read(vccProjectsRepoProvider).backup(widget.project);
+      file = await ref.read(vccProjectsRepoProvider).backup(project);
     } on Exception catch (error) {
       Navigator.pop(context);
       showAlertDialog(context,
@@ -174,9 +153,7 @@ class _ProjectRoute extends ConsumerState<ProjectRoute> with RouteAware {
           message: 'Failed to back up $projectName.\n\n$error');
       return;
     }
-    if (!mounted) {
-      return;
-    }
+
     Navigator.pop(context);
 
     final showFile = await showDialog(
@@ -205,19 +182,18 @@ class _ProjectRoute extends ConsumerState<ProjectRoute> with RouteAware {
     }
   }
 
-  void _showMessageToCloseUnity() {
-    if (_unityBannerController != null) {
-      return;
-    }
-    _unityBannerController =
-        scaffoldKey.currentState?.showMaterialBanner(MaterialBanner(
+  void _showMessageToCloseUnity(WidgetRef ref) {
+    ScaffoldFeatureController? controller;
+
+    controller = scaffoldKey.currentState?.showMaterialBanner(MaterialBanner(
       content: const Text(
           'Packages have been changed. Close and reopen Unity project to apply changes.'),
       actions: [
         TextButton(
             onPressed: () {
-              _unityBannerController?.close();
-              _unityBannerController = null;
+              controller?.close();
+              controller = null;
+              ref.read(_needsToShowUnityBannerProvider.notifier).state = false;
             },
             child: const Text('Dismiss')),
       ],
@@ -225,11 +201,16 @@ class _ProjectRoute extends ConsumerState<ProjectRoute> with RouteAware {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final packagesList = ref.watch(_packageItemListProvider(widget.project));
+  Widget build(BuildContext context, WidgetRef ref) {
+    final packagesList = ref.watch(_packageItemListProvider(project));
+    ref.listen(_needsToShowUnityBannerProvider, (previous, next) {
+      if (next == true) {
+        _showMessageToCloseUnity(ref);
+      }
+    });
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.project.name),
+        title: Text(project.name),
       ),
       body: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Container(
@@ -237,21 +218,25 @@ class _ProjectRoute extends ConsumerState<ProjectRoute> with RouteAware {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(widget.project.path),
+              Text(project.path),
               const Padding(padding: EdgeInsets.symmetric(vertical: 8)),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
                 children: [
                   OutlinedButton(
-                      onPressed: _didClickOpenProject,
+                      onPressed: () {
+                        _didClickOpenProject(ref);
+                      },
                       child: const Text('Open Project')),
                   OutlinedButton(
                     onPressed: _didClickOpenFolder,
                     child: const Text('Open Folder'),
                   ),
                   OutlinedButton(
-                    onPressed: _didClickMakeBackup,
+                    onPressed: () {
+                      _didClickMakeBackup(context, ref);
+                    },
                     child: const Text(
                       'Make Backup',
                     ),
@@ -262,13 +247,13 @@ class _ProjectRoute extends ConsumerState<ProjectRoute> with RouteAware {
           ),
         ),
         Expanded(
-          child: _buildList(packagesList),
+          child: _buildList(ref, packagesList),
         ),
       ]),
     );
   }
 
-  Widget _buildList(AsyncValue<List<PackageItem>> items) {
+  Widget _buildList(WidgetRef ref, AsyncValue<List<PackageItem>> items) {
     if (!items.hasValue) {
       return const SizedBox.shrink();
     }
@@ -283,22 +268,22 @@ class _ProjectRoute extends ConsumerState<ProjectRoute> with RouteAware {
           },
           onClickAdd: (name) async {
             await ref.read(vccServiceProvider).addPackage(
-                widget.project.path, name, dep.selectedVersion!.toString());
-            _showMessageToCloseUnity();
+                project.path, name, dep.selectedVersion!.toString());
+            ref.read(_needsToShowUnityBannerProvider.notifier).state = true;
           },
           onClickRemove: (name) async {
             await ref
                 .read(vccServiceProvider)
-                .removePackage(widget.project.path, name);
-            _refreshLockedDependencies();
-            _showMessageToCloseUnity();
+                .removePackage(project.path, name);
+            _refreshLockedDependencies(ref);
+            ref.read(_needsToShowUnityBannerProvider.notifier).state = true;
           },
           onClickUpdate: ((name) async {
             await ref
                 .read(vccServiceProvider)
-                .updatePackage(widget.project.path, name, dep.selectedVersion!);
-            _refreshLockedDependencies();
-            _showMessageToCloseUnity();
+                .updatePackage(project.path, name, dep.selectedVersion!);
+            _refreshLockedDependencies(ref);
+            ref.read(_needsToShowUnityBannerProvider.notifier).state = true;
           }),
         );
       },
