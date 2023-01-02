@@ -13,6 +13,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'globals.dart';
 import 'routes/legacy_project_route.dart';
+import 'routes/main_route.dart';
 import 'routes/new_project_route.dart';
 import 'routes/project_route.dart';
 import 'routes/projects_route.dart';
@@ -123,12 +124,13 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       scaffoldMessengerKey: scaffoldKey,
-      initialRoute: ProjectsRoute.routeName,
+      initialRoute: MainRoute.routeName,
       routes: {
         ProjectsRoute.routeName: (context) => const ProjectsRoute(),
         NewProjectRoute.routeName: (context) => const NewProjectRoute(),
         SettingsRoute.routeName: (context) => const SettingsRoute(),
         RequirementsRoute.routeName: (context) => const RequirementsRoute(),
+        MainRoute.routeName: (context) => const MainRoute(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == ProjectRoute.routeName) {

@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import 'package:url_launcher/url_launcher.dart';
 
-import '../main_drawer.dart';
 import '../providers.dart';
 import '../utils.dart';
 
@@ -32,12 +31,12 @@ class SettingsRoute extends ConsumerWidget {
 
   static const String routeName = '/settings';
 
-  void _didClickOpenSettingsFolder(WidgetRef ref) {
+  static void didClickOpenSettingsFolder(WidgetRef ref) {
     final dir = ref.read(vccServiceProvider).getSettingsDirectory();
     launchUrl(Uri.file(dir.path));
   }
 
-  void _didClickOpenLogsFolder(WidgetRef ref) async {
+  static void didClickOpenLogsFolder(WidgetRef ref) async {
     final dir = await ref.read(tinyVccServiceProvider).getLogsDirectory();
     launchUrl(Uri.file(dir.path));
   }
@@ -166,8 +165,9 @@ class SettingsRoute extends ConsumerWidget {
         ref.watch(_backupLocationControllerProvider);
 
     return Scaffold(
-      drawer: const MainDrawer(),
-      appBar: AppBar(
+//      drawer: const MainDrawer(),
+/*
+        appBar: AppBar(
         title: const Text('Settings'),
         actions: [
           PopupMenuButton(
@@ -188,6 +188,7 @@ class SettingsRoute extends ConsumerWidget {
           ),
         ],
       ),
+*/
       body: SingleChildScrollView(
         child: Container(
           padding: const EdgeInsets.all(15),
