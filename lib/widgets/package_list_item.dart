@@ -49,7 +49,7 @@ class PackageListItem extends StatelessWidget {
           _buildTitle(context),
           Text(
             item.description,
-            style: const TextStyle(color: Colors.black54),
+            style: Theme.of(context).textTheme.caption?.copyWith(fontSize: 14),
           ),
           _ActionRow(
             canRemove: item.name != 'com.vrchat.base' &&

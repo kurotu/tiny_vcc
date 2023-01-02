@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import 'repos/tiny_vcc_settings_repository.dart';
 import 'repos/vcc_projects_repository.dart';
 import 'repos/vcc_settings_repository.dart';
 import 'repos/vcc_templates_repository.dart';
@@ -31,6 +32,10 @@ final vccProjectsRepoProvider = Provider((ref) {
 });
 
 final tinyVccServiceProvider = Provider((ref) => TinyVccService());
+final tinyVccSettingsRepositoryProvider = Provider(
+    (ref) => TinyVccSettingsRepository(ref.read(tinyVccServiceProvider)));
+final tinyVccSettingsProvider = FutureProvider(
+    (ref) => ref.read(tinyVccSettingsRepositoryProvider).fetchSettings());
 
 final vpmTemplatesRepoProvider = Provider((ref) {
   return VccTemplatesRepository(ref.read(vccServiceProvider));

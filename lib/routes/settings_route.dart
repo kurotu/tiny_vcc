@@ -2,9 +2,11 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import 'package:url_launcher/url_launcher.dart';
 
+import '../data/tiny_vcc_data.dart';
 import '../providers.dart';
 import '../utils.dart';
 
@@ -163,6 +165,7 @@ class SettingsRoute extends ConsumerWidget {
     final formKey = ref.watch(_formKeyProvider);
     final backupLocationController =
         ref.watch(_backupLocationControllerProvider);
+    final tinyVccSettings = ref.watch(tinyVccSettingsProvider);
 
     return Scaffold(
 //      drawer: const MainDrawer(),
@@ -197,6 +200,25 @@ class SettingsRoute extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                DropdownButtonFormField(
+                  decoration: const InputDecoration(labelText: 'Theme'),
+                  value: tinyVccSettings.valueOrNull?.themeMode,
+                  items: TinyVccThemeMode.values
+                      .map((mode) => DropdownMenuItem(
+                            value: mode,
+                            child: Text(toBeginningOfSentenceCase(mode.name)!),
+                          ))
+                      .toList(),
+                  onChanged: (value) async {
+                    if (value != null) {
+                      await ref
+                          .read(tinyVccSettingsRepositoryProvider)
+                          .setThemeMode(value);
+                      ref.refresh(tinyVccSettingsProvider);
+                    }
+                  },
+                ),
+                const Divider(),
                 DropdownButtonFormField(
                   decoration: InputDecoration(
                       labelText: 'Unity Editors',
