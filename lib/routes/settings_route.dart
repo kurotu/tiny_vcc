@@ -5,14 +5,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import 'package:url_launcher/url_launcher.dart';
 
-import '../globals.dart';
 import '../main_drawer.dart';
 import '../providers.dart';
 import '../utils.dart';
 
+final _formKeyProvider = Provider.autoDispose((ref) => GlobalKey<FormState>());
 final _editorLoadingProvider =
     StateNotifierProvider<EditorLoadingController, bool>(
         (ref) => EditorLoadingController());
+final _backupLocationControllerProvider = Provider.autoDispose((ref) {
+  final path = ref.read(vccSettingsProvider).requireValue.projectBackupPath;
+  return TextEditingController(text: path);
+});
 
 class EditorLoadingController extends StateNotifier<bool> {
   EditorLoadingController() : super(false);
@@ -23,42 +27,22 @@ class EditorLoadingController extends StateNotifier<bool> {
   }
 }
 
-class SettingsRoute extends ConsumerStatefulWidget {
+class SettingsRoute extends ConsumerWidget {
   const SettingsRoute({super.key});
 
   static const String routeName = '/settings';
 
-  @override
-  ConsumerState<SettingsRoute> createState() => _SettingsRoute();
-}
-
-class _SettingsRoute extends ConsumerState<SettingsRoute> with RouteAware {
-  final _formKey = GlobalKey<FormState>();
-  final backupLocationController = TextEditingController();
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
-  }
-
-  @override
-  void didPush() async {
-    ref.read(vccSettingsProvider).whenData(
-        (value) => backupLocationController.text = value.projectBackupPath);
-  }
-
-  void _didClickOpenSettingsFolder() {
+  void _didClickOpenSettingsFolder(WidgetRef ref) {
     final dir = ref.read(vccServiceProvider).getSettingsDirectory();
     launchUrl(Uri.file(dir.path));
   }
 
-  void _didClickOpenLogsFolder() async {
+  void _didClickOpenLogsFolder(WidgetRef ref) async {
     final dir = await ref.read(tinyVccServiceProvider).getLogsDirectory();
     launchUrl(Uri.file(dir.path));
   }
 
-  Future<void> _didClickEditorRefresh() async {
+  Future<void> _didClickEditorRefresh(WidgetRef ref) async {
     ref.read(_editorLoadingProvider.notifier).isLoading = true;
     await ref.read(vccServiceProvider).checkHub();
     final hub = ref.read(unityHubServiceProvider);
@@ -75,7 +59,8 @@ class _SettingsRoute extends ConsumerState<SettingsRoute> with RouteAware {
     ref.refresh(vccSettingsProvider);
   }
 
-  Future<void> _didClickEditorFilePicker() async {
+  Future<void> _didClickEditorFilePicker(
+      BuildContext context, WidgetRef ref) async {
     try {
       final path = await showFilePickerWindow(
         dialogTitle: Platform.isWindows ? 'Select Unity.exe' : null,
@@ -85,36 +70,30 @@ class _SettingsRoute extends ConsumerState<SettingsRoute> with RouteAware {
       if (path == null) {
         return;
       }
-      if (mounted) {
-        await ref.read(vccSettingsRepoProvider).setPreferredEditor(path);
-        final _ = ref.refresh(vccSettingsProvider);
-      }
+      await ref.read(vccSettingsRepoProvider).setPreferredEditor(path);
+      final _ = ref.refresh(vccSettingsProvider);
     } on Exception catch (error) {
-      if (mounted) {
-        await showSimpleErrorDialog(context,
-            'Error occurred when setting preferred Unity editor.', error);
-      }
+      await showSimpleErrorDialog(context,
+          'Error occurred when setting preferred Unity editor.', error);
     }
   }
 
-  Future<void> _didChangePreferredEditor(String? editorPath) async {
+  Future<void> _didChangePreferredEditor(
+      BuildContext context, WidgetRef ref, String? editorPath) async {
     try {
       if (editorPath == null) {
         return;
       }
-      if (mounted) {
-        await ref.read(vccSettingsRepoProvider).setPreferredEditor(editorPath);
-        final _ = ref.refresh(vccSettingsProvider);
-      }
+      await ref.read(vccSettingsRepoProvider).setPreferredEditor(editorPath);
+      final _ = ref.refresh(vccSettingsProvider);
     } on Exception catch (error) {
-      if (mounted) {
-        await showSimpleErrorDialog(context,
-            'Error occurred when changing preferred Unity editor.', error);
-      }
+      await showSimpleErrorDialog(context,
+          'Error occurred when changing preferred Unity editor.', error);
     }
   }
 
-  Future<void> _didClickBackupFolderPicker() async {
+  Future<void> _didClickBackupFolderPicker(
+      BuildContext context, WidgetRef ref) async {
     try {
       final path = await showDirectoryPickerWindow(
         lockParentWindow: true,
@@ -124,26 +103,20 @@ class _SettingsRoute extends ConsumerState<SettingsRoute> with RouteAware {
       if (path == null) {
         return;
       }
-      if (mounted) {
-        ref.read(vccSettingsRepoProvider).setBackupFolder(path);
-        final _ = ref.refresh(vccSettingsProvider);
-      }
+      await ref.read(vccSettingsRepoProvider).setBackupFolder(path);
+      final _ = ref.refresh(vccSettingsProvider);
     } on Exception catch (error) {
-      if (mounted) {
-        await showSimpleErrorDialog(
-            context, 'Error occurred when setting backup folder.', error);
-      }
+      await showSimpleErrorDialog(
+          context, 'Error occurred when setting backup folder.', error);
     }
   }
 
-  Future<void> _didClickAddUserPackage() async {
+  Future<void> _didClickAddUserPackage(
+      BuildContext context, WidgetRef ref) async {
     try {
       final packagePath =
           await showDirectoryPickerWindow(lockParentWindow: true);
       if (packagePath == null) {
-        return;
-      }
-      if (!mounted) {
         return;
       }
       if (!await File(p.join(packagePath, 'package.json')).exists()) {
@@ -158,14 +131,13 @@ class _SettingsRoute extends ConsumerState<SettingsRoute> with RouteAware {
     }
   }
 
-  Future<void> _didClickRemoveUserPackage(String userPackage) async {
+  Future<void> _didClickRemoveUserPackage(
+      BuildContext context, WidgetRef ref, String userPackage) async {
     try {
-      if (mounted) {
-        await ref
-            .read(vccSettingsRepoProvider)
-            .deleteUserPackageFolder(userPackage);
-        final _ = ref.refresh(vccSettingsProvider);
-      }
+      await ref
+          .read(vccSettingsRepoProvider)
+          .deleteUserPackageFolder(userPackage);
+      final _ = ref.refresh(vccSettingsProvider);
     } on Exception catch (error) {
       await showSimpleErrorDialog(
           context, 'Error occurred when removing a package folder.', error);
@@ -173,11 +145,12 @@ class _SettingsRoute extends ConsumerState<SettingsRoute> with RouteAware {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     ref.listen(vccSettingsProvider, (previous, next) {
       next.when(
         data: (data) {
-          backupLocationController.text = data.projectBackupPath;
+          ref.read(_backupLocationControllerProvider).text =
+              data.projectBackupPath;
         },
         error: (error, stack) {
           showSimpleErrorDialog(
@@ -188,6 +161,9 @@ class _SettingsRoute extends ConsumerState<SettingsRoute> with RouteAware {
     });
     final settings = ref.watch(vccSettingsProvider);
     final isLoadingEditors = ref.watch(_editorLoadingProvider);
+    final formKey = ref.watch(_formKeyProvider);
+    final backupLocationController =
+        ref.watch(_backupLocationControllerProvider);
 
     return Scaffold(
       drawer: const MainDrawer(),
@@ -197,11 +173,15 @@ class _SettingsRoute extends ConsumerState<SettingsRoute> with RouteAware {
           PopupMenuButton(
             itemBuilder: (context) => [
               PopupMenuItem(
-                onTap: _didClickOpenSettingsFolder,
+                onTap: () {
+                  _didClickOpenSettingsFolder(ref);
+                },
                 child: const Text('Open VCC Settings Folder'),
               ),
               PopupMenuItem(
-                onTap: _didClickOpenLogsFolder,
+                onTap: () {
+                  _didClickOpenLogsFolder(ref);
+                },
                 child: const Text('Open Logs Folder'),
               ),
             ],
@@ -212,7 +192,7 @@ class _SettingsRoute extends ConsumerState<SettingsRoute> with RouteAware {
         child: Container(
           padding: const EdgeInsets.all(15),
           child: Form(
-            key: _formKey,
+            key: formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -225,20 +205,27 @@ class _SettingsRoute extends ConsumerState<SettingsRoute> with RouteAware {
                                 onPressed: null,
                                 icon: CircularProgressIndicator())
                             : IconButton(
-                                onPressed: _didClickEditorRefresh,
+                                onPressed: () {
+                                  _didClickEditorRefresh(ref);
+                                },
                                 icon: const Icon(Icons.refresh)),
                         IconButton(
                             onPressed: isLoadingEditors
                                 ? null
-                                : _didClickEditorFilePicker,
+                                : () {
+                                    _didClickEditorFilePicker(context, ref);
+                                  },
                             icon: const Icon(Icons.folder)),
                       ])),
                   value: settings.valueOrNull?.pathToUnityExe,
                   items: settings.valueOrNull?.unityEditors
                       .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                       .toList(),
-                  onChanged:
-                      isLoadingEditors ? null : _didChangePreferredEditor,
+                  onChanged: isLoadingEditors
+                      ? null
+                      : (String? value) {
+                          _didChangePreferredEditor(context, ref, value);
+                        },
                 ),
                 const Padding(padding: EdgeInsets.symmetric(vertical: 8)),
                 TextFormField(
@@ -246,8 +233,11 @@ class _SettingsRoute extends ConsumerState<SettingsRoute> with RouteAware {
                   decoration: InputDecoration(
                     labelText: 'Backups',
                     suffixIcon: IconButton(
-                      onPressed:
-                          isLoadingEditors ? null : _didClickBackupFolderPicker,
+                      onPressed: isLoadingEditors
+                          ? null
+                          : () {
+                              _didClickBackupFolderPicker(context, ref);
+                            },
                       icon: const Icon(Icons.folder),
                     ),
                   ),
@@ -259,8 +249,11 @@ class _SettingsRoute extends ConsumerState<SettingsRoute> with RouteAware {
                     const Text('User Packages'),
                     const Padding(padding: EdgeInsets.symmetric(horizontal: 4)),
                     OutlinedButton(
-                        onPressed:
-                            isLoadingEditors ? null : _didClickAddUserPackage,
+                        onPressed: isLoadingEditors
+                            ? null
+                            : () {
+                                _didClickAddUserPackage(context, ref);
+                              },
                         child: const Text('Add')),
                   ],
                 ),
@@ -274,9 +267,11 @@ class _SettingsRoute extends ConsumerState<SettingsRoute> with RouteAware {
                             onPressed: isLoadingEditors
                                 ? null
                                 : () {
-                                    _didClickRemoveUserPackage(settings
-                                        .requireValue
-                                        .userPackageFolders[index]);
+                                    _didClickRemoveUserPackage(
+                                        context,
+                                        ref,
+                                        settings.requireValue
+                                            .userPackageFolders[index]);
                                   },
                             icon: const Icon(Icons.delete),
                           ),
