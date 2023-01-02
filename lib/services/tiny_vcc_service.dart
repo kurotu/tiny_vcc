@@ -19,6 +19,7 @@ class TinyVccService {
   Future<TinyVccSettings> loadSettings() async {
     final file = await _getSettingsFile();
     if (!await file.exists()) {
+      await file.writeAsString('{}');
       final defaultValue = TinyVccSettings.defaultValues();
       await writeSettings(themeMode: defaultValue.themeMode);
     }
