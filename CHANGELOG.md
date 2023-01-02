@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add dark mode.
 - Add new layouts for wide window size.
 
+### Changed
+
+- Change internal state management to improve app responses.
+
 ## [0.1.0] - 2022-12-31
 
 ### Added

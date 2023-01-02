@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ダークモードを追加。
 - ウィンドウの幅が広い場合のレイアウトを追加。
 
+### 変更
+
+- 内部の状態管理を変更し、アプリの応答を改善。
+
 ## [0.1.0] - 2022-12-31
 
 ### 追加
@@ -29,7 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 修正
 
-- AvatarGitまたはWorldGitプロジェクトを追加するとアプリがクラッシュする問題を修正。
+- AvatarGit または WorldGit プロジェクトを追加するとアプリがクラッシュする問題を修正。
 - .NET や VPM CLI がインストールされていてもアプリがクラッシュすることがある問題を修正。
 - プロジェクトを作成するとき最後のプロジェクト保存場所が保存されていない問題を修正。
 
@@ -43,4 +47,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.1] - 2022-12-21
 
-- Initial release.
+- 初版。
