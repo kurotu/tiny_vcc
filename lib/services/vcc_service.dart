@@ -5,7 +5,6 @@ import 'package:archive/archive_io.dart';
 import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
-import 'package:provider/provider.dart';
 import 'package:pub_semver/pub_semver.dart';
 import 'package:yaml/yaml.dart';
 
@@ -91,16 +90,7 @@ class VpmTemplate {
 }
 
 class VccService {
-  VccService(BuildContext context)
-      : _hub = Provider.of(context, listen: false) {
-    _findVpm();
-  }
-
-  VccService.withoutContext() : _hub = UnityHubService() {
-    _findVpm();
-  }
-
-  VccService.withHub(this._hub) {
+  VccService(UnityHubService hub) : _hub = hub {
     _findVpm();
   }
 

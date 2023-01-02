@@ -5,19 +5,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../globals.dart';
-import '../services/dotnet_service.dart';
-import '../services/vcc_service.dart';
+import '../providers.dart';
 import '../utils.dart';
 import 'projects_route.dart';
-
-final _dotnet = DotNetService();
-final _vcc = VccService.withoutContext();
 
 enum RequirementState { ok, ng, notChecked }
 
 FutureProvider<RequirementState> _createProvider(
   FutureProvider<RequirementState> dependency,
-  FutureOr<bool> Function() isOk,
+  FutureOr<bool> Function(Ref ref) isOk,
 ) {
   return FutureProvider((ref) async {
     final depend = ref.watch(dependency);
@@ -30,17 +26,19 @@ FutureProvider<RequirementState> _createProvider(
       case RequirementState.ng:
         return RequirementState.notChecked;
       case RequirementState.ok:
-        return await isOk() ? RequirementState.ok : RequirementState.ng;
+        return await isOk(ref) ? RequirementState.ok : RequirementState.ng;
     }
   });
 }
 
 final _dotNetCommandStateProvider = FutureProvider((ref) async =>
-    await _dotnet.isInstalled() ? RequirementState.ok : RequirementState.ng);
+    await ref.read(dotNetServiceProvider).isInstalled()
+        ? RequirementState.ok
+        : RequirementState.ng);
 
 final _dotNet6SdkStateProviver =
-    _createProvider(_dotNetCommandStateProvider, () async {
-  final sdks = await _dotnet.listSdks();
+    _createProvider(_dotNetCommandStateProvider, (ref) async {
+  final sdks = await ref.read(dotNetServiceProvider).listSdks();
   const missingVersion = 'MISSING';
   final sdk6Version = sdks.keys
       .firstWhere((v) => v.startsWith('6.'), orElse: () => missingVersion);
@@ -48,23 +46,24 @@ final _dotNet6SdkStateProviver =
 });
 
 final _vpmCommandStateProvider =
-    _createProvider(_dotNet6SdkStateProviver, () async {
-  return _vcc.isInstalled();
+    _createProvider(_dotNet6SdkStateProviver, (ref) async {
+  return ref.read(vccServiceProvider).isInstalled();
 });
 
 final _vpmVersionStateProvider =
-    _createProvider(_vpmCommandStateProvider, () async {
-  final version = await _vcc.getCliVersion();
+    _createProvider(_vpmCommandStateProvider, (ref) async {
+  final version = await ref.read(vccServiceProvider).getCliVersion();
   return version >= requiredVpmVersion;
 });
 
 final _unityHubStateProvider =
-    _createProvider(_vpmVersionStateProvider, () async {
-  return _vcc.checkHub();
+    _createProvider(_vpmVersionStateProvider, (ref) async {
+  return ref.read(vccServiceProvider).checkHub();
 });
 
-final _unityStateProvider = _createProvider(_unityHubStateProvider, () async {
-  return _vcc.checkUnity();
+final _unityStateProvider =
+    _createProvider(_unityHubStateProvider, (ref) async {
+  return ref.read(vccServiceProvider).checkUnity();
 });
 
 class RequirementsRoute extends ConsumerWidget {
@@ -181,8 +180,9 @@ class RequirementsRoute extends ConsumerWidget {
             controller?.close();
             final dialog =
                 showProgressDialog(context, 'Installing vrchat.vpm.cli');
-            await _dotnet.installGlobalTool(
-                vpmPackageId, requiredVpmVersion.toString());
+            await ref
+                .read(dotNetServiceProvider)
+                .installGlobalTool(vpmPackageId, requiredVpmVersion.toString());
             dialog.close();
             _checkRequirements(ref);
           },
@@ -211,8 +211,9 @@ class RequirementsRoute extends ConsumerWidget {
             controller?.close();
             final dialog = showProgressDialog(
                 context, 'Updating vrchat.vpm.cli to $requiredVpmVersion');
-            await _dotnet.updateGlobalTool(
-                vpmPackageId, requiredVpmVersion.toString());
+            await ref
+                .read(dotNetServiceProvider)
+                .updateGlobalTool(vpmPackageId, requiredVpmVersion.toString());
             dialog.close();
             _checkRequirements(ref);
           },

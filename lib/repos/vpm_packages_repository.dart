@@ -1,14 +1,9 @@
-import 'package:flutter/widgets.dart';
-import 'package:provider/provider.dart';
 import 'package:pub_semver/pub_semver.dart';
 
 import '../services/vcc_service.dart';
 
 class VpmPackagesRepository {
-  VpmPackagesRepository(BuildContext context)
-      : _vcc = Provider.of(context, listen: false);
-
-  VpmPackagesRepository.withVcc(this._vcc);
+  VpmPackagesRepository(VccService vcc) : _vcc = vcc;
 
   final VccService _vcc;
 

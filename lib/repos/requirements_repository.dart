@@ -1,16 +1,14 @@
 import 'dart:io';
 
-import 'package:flutter/widgets.dart';
-import 'package:provider/provider.dart';
 import 'package:pub_semver/pub_semver.dart';
 
 import '../services/dotnet_service.dart';
 import '../services/vcc_service.dart';
 
 class RequirementsRepository {
-  RequirementsRepository(BuildContext context)
-      : _dotnet = Provider.of(context, listen: false),
-        _vcc = Provider.of(context, listen: false);
+  RequirementsRepository(DotNetService dotnet, VccService vcc)
+      : _dotnet = dotnet,
+        _vcc = vcc;
 
   final DotNetService _dotnet;
   final VccService _vcc;
