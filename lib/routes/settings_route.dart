@@ -2,10 +2,11 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import 'package:url_launcher/url_launcher.dart';
 
-import '../main_drawer.dart';
+import '../data/tiny_vcc_data.dart';
 import '../providers.dart';
 import '../utils.dart';
 
@@ -32,12 +33,12 @@ class SettingsRoute extends ConsumerWidget {
 
   static const String routeName = '/settings';
 
-  void _didClickOpenSettingsFolder(WidgetRef ref) {
+  static void didClickOpenSettingsFolder(WidgetRef ref) {
     final dir = ref.read(vccServiceProvider).getSettingsDirectory();
     launchUrl(Uri.file(dir.path));
   }
 
-  void _didClickOpenLogsFolder(WidgetRef ref) async {
+  static void didClickOpenLogsFolder(WidgetRef ref) async {
     final dir = await ref.read(tinyVccServiceProvider).getLogsDirectory();
     launchUrl(Uri.file(dir.path));
   }
@@ -164,10 +165,12 @@ class SettingsRoute extends ConsumerWidget {
     final formKey = ref.watch(_formKeyProvider);
     final backupLocationController =
         ref.watch(_backupLocationControllerProvider);
+    final tinyVccSettings = ref.watch(tinyVccSettingsProvider);
 
     return Scaffold(
-      drawer: const MainDrawer(),
-      appBar: AppBar(
+//      drawer: const MainDrawer(),
+/*
+        appBar: AppBar(
         title: const Text('Settings'),
         actions: [
           PopupMenuButton(
@@ -188,6 +191,7 @@ class SettingsRoute extends ConsumerWidget {
           ),
         ],
       ),
+*/
       body: SingleChildScrollView(
         child: Container(
           padding: const EdgeInsets.all(15),
@@ -196,6 +200,25 @@ class SettingsRoute extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                DropdownButtonFormField(
+                  decoration: const InputDecoration(labelText: 'Theme'),
+                  value: tinyVccSettings.valueOrNull?.themeMode,
+                  items: TinyVccThemeMode.values
+                      .map((mode) => DropdownMenuItem(
+                            value: mode,
+                            child: Text(toBeginningOfSentenceCase(mode.name)!),
+                          ))
+                      .toList(),
+                  onChanged: (value) async {
+                    if (value != null) {
+                      await ref
+                          .read(tinyVccSettingsRepositoryProvider)
+                          .setThemeMode(value);
+                      ref.refresh(tinyVccSettingsProvider);
+                    }
+                  },
+                ),
+                const Divider(),
                 DropdownButtonFormField(
                   decoration: InputDecoration(
                       labelText: 'Unity Editors',

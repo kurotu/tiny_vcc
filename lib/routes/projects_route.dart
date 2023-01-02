@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/exceptions.dart';
 import '../data/vcc_data.dart';
 import '../globals.dart';
-import '../main_drawer.dart';
 import '../providers.dart';
 import '../services/vcc_service.dart';
 import '../utils.dart';
@@ -45,7 +44,7 @@ class ProjectsRoute extends ConsumerWidget {
 
   static const String routeName = '/projects';
 
-  void _addProject(BuildContext context, WidgetRef ref) async {
+  static void addProject(BuildContext context, WidgetRef ref) async {
     final path = await showDirectoryPickerWindow(lockParentWindow: true);
     if (path == null) {
       return;
@@ -86,7 +85,7 @@ class ProjectsRoute extends ConsumerWidget {
     }
   }
 
-  void _refreshProjects(WidgetRef ref) {
+  static void _refreshProjects(WidgetRef ref) {
     ref.refresh(vccSettingsProvider);
   }
 
@@ -157,14 +156,15 @@ class ProjectsRoute extends ConsumerWidget {
     );
 
     return Scaffold(
-      drawer: const MainDrawer(),
+//      drawer: const MainDrawer(),
+/*
       appBar: AppBar(
         title: const Text('Projects'),
         actions: [
           TextButton(
             style: style,
             onPressed: () {
-              _addProject(context, ref);
+              addProject(context, ref);
             },
             child: const Text('Add'),
           ),
@@ -177,6 +177,7 @@ class ProjectsRoute extends ConsumerWidget {
           ),
         ],
       ),
+*/
       body: Column(children: buildColumn(context, ref, settings)),
     );
   }

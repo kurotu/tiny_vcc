@@ -7,7 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../globals.dart';
 import '../providers.dart';
 import '../utils.dart';
-import 'projects_route.dart';
+import 'main_route.dart';
 
 enum RequirementState { ok, ng, notChecked }
 
@@ -114,7 +114,7 @@ class RequirementsRoute extends ConsumerWidget {
           _showUnityBanner(ref);
         }
         if (value == RequirementState.ok) {
-          Navigator.pushReplacementNamed(context, ProjectsRoute.routeName);
+          Navigator.pushReplacementNamed(context, MainRoute.routeName);
         }
       });
     }));

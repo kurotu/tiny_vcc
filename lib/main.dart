@@ -4,15 +4,18 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart' as riverpod;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:github/github.dart';
 import 'package:logger/logger.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:pub_semver/pub_semver.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'data/tiny_vcc_data.dart';
 import 'globals.dart';
+import 'providers.dart';
 import 'routes/legacy_project_route.dart';
+import 'routes/main_route.dart';
 import 'routes/new_project_route.dart';
 import 'routes/project_route.dart';
 import 'routes/projects_route.dart';
@@ -87,7 +90,7 @@ void main() async {
     return true;
   };
 
-  runApp(const riverpod.ProviderScope(child: MyApp()));
+  runApp(const ProviderScope(child: MyApp()));
 
   if (kReleaseMode) {
     Logger.level = Level.info;
@@ -102,14 +105,27 @@ void main() async {
   _checkForUpdate();
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
   // This widget is the root of your application.
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themeMode = ref.watch(tinyVccSettingsProvider.select((value) {
+      switch (value.valueOrNull?.themeMode) {
+        case TinyVccThemeMode.light:
+          return ThemeMode.light;
+        case TinyVccThemeMode.dark:
+          return ThemeMode.dark;
+        case TinyVccThemeMode.system:
+          return ThemeMode.system;
+        case null:
+          return ThemeMode.dark;
+      }
+    }));
     return MaterialApp(
       title: 'Tiny VCC',
+      darkTheme: ThemeData.dark(),
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -122,13 +138,15 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
+      themeMode: themeMode,
       scaffoldMessengerKey: scaffoldKey,
-      initialRoute: ProjectsRoute.routeName,
+      initialRoute: MainRoute.routeName,
       routes: {
         ProjectsRoute.routeName: (context) => const ProjectsRoute(),
         NewProjectRoute.routeName: (context) => const NewProjectRoute(),
         SettingsRoute.routeName: (context) => const SettingsRoute(),
         RequirementsRoute.routeName: (context) => const RequirementsRoute(),
+        MainRoute.routeName: (context) => const MainRoute(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == ProjectRoute.routeName) {
