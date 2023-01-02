@@ -41,6 +41,7 @@ class VccProject {
 enum VccProjectType {
   avatarVpm,
   worldVpm,
+  starterVpm,
   avatarGit,
   worldGit,
   legacySdk3Avatar,
@@ -298,6 +299,9 @@ class VccService {
     }
     if (str.contains('WorldVPM')) {
       return VccProjectType.worldVpm;
+    }
+    if (str.contains('StarterVPM')) {
+      return VccProjectType.starterVpm;
     }
     if (str.contains('AvatarGit')) {
       return VccProjectType.avatarGit;

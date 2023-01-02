@@ -55,6 +55,7 @@ class ProjectsRoute extends ConsumerWidget {
       switch (type) {
         case VccProjectType.avatarVpm:
         case VccProjectType.worldVpm:
+        case VccProjectType.starterVpm:
         case VccProjectType.legacySdk3Avatar:
         case VccProjectType.legacySdk3World:
           break;
@@ -102,6 +103,7 @@ class ProjectsRoute extends ConsumerWidget {
     switch (type) {
       case VccProjectType.avatarVpm:
       case VccProjectType.worldVpm:
+      case VccProjectType.starterVpm:
         Navigator.pushNamed(
           context,
           ProjectRoute.routeName,

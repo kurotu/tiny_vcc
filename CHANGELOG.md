@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Change internal state management to improve app responses.
 
+### Fixed
+
+- Fix app couldn't add StarterVPM project.
+
 ## [0.1.0] - 2022-12-31
 
 ### Added
