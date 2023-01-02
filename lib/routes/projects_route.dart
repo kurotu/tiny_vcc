@@ -1,12 +1,13 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/exceptions.dart';
+import '../data/vcc_data.dart';
 import '../globals.dart';
 import '../main_drawer.dart';
-import '../models/projects_model.dart';
+import '../providers.dart';
 import '../services/vcc_service.dart';
 import '../utils.dart';
 import 'legacy_project_route.dart';
@@ -14,57 +15,91 @@ import 'new_project_route.dart';
 import 'project_route.dart';
 import 'requirements_route.dart';
 
-class ProjectsRoute extends StatefulWidget {
+final _readyToUseProvider = FutureProvider.autoDispose((ref) async {
+  // Quick check for startup.
+  final settings = ref.watch(vccSettingsProvider);
+  if (!settings.hasValue) {
+    return true;
+  }
+
+  final vcc = ref.read(vccServiceProvider);
+  if (!vcc.isInstalled()) {
+    return false;
+  }
+
+  if (await vcc.getCliVersion() < requiredVpmVersion) {
+    return false;
+  }
+
+  if (!await (File(settings.requireValue.pathToUnityHub).exists())) {
+    return false;
+  }
+  if (!await (File(settings.requireValue.pathToUnityExe).exists())) {
+    return false;
+  }
+  return true;
+});
+
+class ProjectsRoute extends ConsumerWidget {
   const ProjectsRoute({super.key});
 
   static const String routeName = '/projects';
 
-  @override
-  State<ProjectsRoute> createState() => _ProjectsRoute();
-}
-
-class _ProjectsRoute extends State<ProjectsRoute> with RouteAware {
-  void _addProject(ProjectsModel model) async {
+  void _addProject(BuildContext context, WidgetRef ref) async {
     final path = await showDirectoryPickerWindow(lockParentWindow: true);
-    try {
-      await model.addProject(path);
-    } on VccProjectTypeException catch (error) {
-      if (mounted) {
-        await showSimpleErrorDialog(
-            context, 'Project "$path" is not supported.', error);
-      }
-    } on Exception catch (error) {
-      if (mounted) {
-        await showSimpleErrorDialog(
-            context, 'Error occurred when adding a project.', error);
-      }
-    }
-  }
-
-  Future<void> _refreshProjects() async {
-    if (!mounted) {
+    if (path == null) {
       return;
     }
-    final model = context.read<ProjectsModel>();
     try {
-      await model.getProjects();
-      await model.getPackages();
+      final repo = ref.read(vccProjectsRepoProvider);
+      final type = await repo.checkProjectType(VccProject(path));
+      switch (type) {
+        case VccProjectType.avatarVpm:
+        case VccProjectType.worldVpm:
+        case VccProjectType.legacySdk3Avatar:
+        case VccProjectType.legacySdk3World:
+          break;
+        case VccProjectType.avatarGit:
+          throw VccProjectTypeException(
+              'Avatar Git project type is not supported in Tiny VCC. Migrate with the official VCC.',
+              type);
+        case VccProjectType.worldGit:
+          throw VccProjectTypeException(
+              'World Git project type is not supported in Tiny VCC. Migrate with the official VCC.',
+              type);
+        case VccProjectType.legacySdk2:
+          throw VccProjectTypeException(
+              'VRCSDK2 project is not supported.', type);
+        case VccProjectType.invalid:
+          throw VccProjectTypeException('Invalid Unity project.', type);
+        case VccProjectType.unknown:
+          throw VccProjectTypeException('Unknown Unity project type.', type);
+      }
+      await repo.addVccProject(VccProject(path));
+      _refreshProjects(ref);
+    } on VccProjectTypeException catch (error) {
+      await showSimpleErrorDialog(
+          context, 'Project "$path" is not supported.', error);
     } on Exception catch (error) {
-      print(error);
+      await showSimpleErrorDialog(
+          context, 'Error occurred when adding a project.', error);
     }
   }
 
-  Future<void> _didSelectProject(VccProject project) async {
+  void _refreshProjects(WidgetRef ref) {
+    ref.refresh(vccSettingsProvider);
+  }
+
+  Future<void> _didSelectProject(
+      BuildContext context, WidgetRef ref, VccProject project) async {
     if (!await Directory(project.path).exists()) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      scaffoldKey.currentState?.showSnackBar(SnackBar(
         content: Text('${project.path} does not exist.'),
       ));
       return;
     }
-    final type = await _model(context).checkProjectType(project);
-    if (!mounted) {
-      return;
-    }
+    final type =
+        await ref.read(vccProjectsRepoProvider).checkProjectType(project);
     switch (type) {
       case VccProjectType.avatarVpm:
       case VccProjectType.worldVpm:
@@ -109,38 +144,14 @@ class _ProjectsRoute extends State<ProjectsRoute> with RouteAware {
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
-  }
-
-  @override
-  void dispose() {
-    routeObserver.unsubscribe(this);
-    super.dispose();
-  }
-
-  @override
-  void didPush() {
-    _model(context).checkReadyToUse().then((value) {
-      if (!value) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.listen(_readyToUseProvider, (previous, next) {
+      if (next.valueOrNull == false) {
         Navigator.of(context).pushReplacementNamed(RequirementsRoute.routeName);
       }
     });
-    _refreshProjects();
-  }
+    final settings = ref.watch(vccSettingsProvider);
 
-  @override
-  void didPopNext() {
-    _refreshProjects();
-  }
-
-  ProjectsModel _model(BuildContext context) {
-    return Provider.of<ProjectsModel>(context, listen: false);
-  }
-
-  @override
-  Widget build(BuildContext context) {
     final ButtonStyle style = TextButton.styleFrom(
       foregroundColor: Theme.of(context).colorScheme.onPrimary,
     );
@@ -150,53 +161,53 @@ class _ProjectsRoute extends State<ProjectsRoute> with RouteAware {
       appBar: AppBar(
         title: const Text('Projects'),
         actions: [
-          Consumer<ProjectsModel>(
-            builder: ((context, model, child) => TextButton(
-                  style: style,
-                  onPressed: () {
-                    _addProject(_model(context));
-                  },
-                  child: const Text('Add'),
-                )),
+          TextButton(
+            style: style,
+            onPressed: () {
+              _addProject(context, ref);
+            },
+            child: const Text('Add'),
           ),
-          Consumer<ProjectsModel>(
-            builder: ((context, model, child) => TextButton(
-                  style: style,
-                  onPressed: () {
-                    Navigator.pushNamed(context, NewProjectRoute.routeName);
-                  },
-                  child: const Text('New'),
-                )),
+          TextButton(
+            style: style,
+            onPressed: () {
+              Navigator.pushNamed(context, NewProjectRoute.routeName);
+            },
+            child: const Text('New'),
           ),
         ],
       ),
-      body: Consumer<ProjectsModel>(
-        builder: ((context, model, child) =>
-            Column(children: buildColumn(model))),
-      ),
+      body: Column(children: buildColumn(context, ref, settings)),
     );
   }
 
-  List<Widget> buildColumn(ProjectsModel model) {
+  List<Widget> buildColumn(
+      BuildContext context, WidgetRef ref, AsyncValue<VccSettings> settings) {
     final List<Widget> list = [];
     list.add(
       Expanded(
         child: ListView.builder(
-          itemCount: model.projects.length,
-          itemBuilder: (context, index) => ListTile(
-            title: Text(model.projects[index].name),
-            onTap: () {
-              var project = model.projects[index];
-              _didSelectProject(project);
-            },
-            subtitle: Text(model.projects[index].path),
-            trailing: IconButton(
-              icon: const Icon(Icons.delete),
-              onPressed: () {
-                model.deleteProject(model.projects[index]);
+          itemCount: settings.valueOrNull?.userProjects.length ?? 0,
+          itemBuilder: (context, index) {
+            final project =
+                VccProject(settings.requireValue.userProjects[index]);
+            return ListTile(
+              title: Text(project.name),
+              onTap: () {
+                _didSelectProject(context, ref, project);
               },
-            ),
-          ),
+              subtitle: Text(project.path),
+              trailing: IconButton(
+                icon: const Icon(Icons.delete),
+                onPressed: () async {
+                  await ref
+                      .read(vccProjectsRepoProvider)
+                      .deleteVccProject(project);
+                  _refreshProjects(ref);
+                },
+              ),
+            );
+          },
         ),
       ),
     );

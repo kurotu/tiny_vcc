@@ -1,5 +1,3 @@
-import 'package:flutter/widgets.dart';
-import 'package:provider/provider.dart';
 import 'package:pub_semver/pub_semver.dart';
 
 import '../caches/simple_cache.dart';
@@ -7,8 +5,7 @@ import '../data/vcc_data.dart';
 import '../services/vcc_service.dart';
 
 class VccSettingsRepository {
-  VccSettingsRepository(BuildContext context)
-      : _vcc = Provider.of(context, listen: false);
+  VccSettingsRepository(VccService vcc) : _vcc = vcc;
 
   final VccService _vcc;
 
@@ -63,6 +60,10 @@ class VccSettingsRepository {
   }
 
   Future<void> addUserPackageFolder(String path) async {
+    final settings = await fetchSettings(refresh: false);
+    if (settings.userPackageFolders.contains(path)) {
+      return;
+    }
     await _vcc.addUserPackageFolder(path);
     await fetchSettings(refresh: true);
   }

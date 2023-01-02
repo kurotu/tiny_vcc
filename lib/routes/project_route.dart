@@ -1,14 +1,111 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pub_semver/pub_semver.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../globals.dart';
-import '../models/project_model.dart';
+import '../providers.dart';
 import '../services/vcc_service.dart';
 import '../utils.dart';
 import '../widgets/package_list_item.dart';
+
+final _needsToShowUnityBannerProvider =
+    StateProvider.autoDispose((ref) => false);
+
+final _lockedDependenciesProvider = FutureProvider.autoDispose
+    .family<List<VpmDependency>, VccProject>(
+        (ref, project) => project.getLockedDependencies());
+
+final _packageItemListProvider = FutureProvider.autoDispose
+    .family<List<PackageItem>, VccProject>((ref, project) async {
+  final List<PackageItem> list = [];
+  final settings = ref.watch(vccSettingsProvider);
+  final selectedVersion = ref.watch(_selectedVersionProvider);
+  final packages = ref.watch(vpmPackagesProvider);
+  final lockedDeps = ref.watch(_lockedDependenciesProvider(project));
+
+  if (packages.value == null) {
+    return [];
+  }
+
+  if (!lockedDeps.hasValue) {
+    return [];
+  }
+
+  final showPrerelease = settings.requireValue.showPrereleasePackages;
+  final locked = lockedDeps.requireValue
+      .where((element) =>
+          ref
+              .read(vpmPackagesRepoProvider)
+              .getLatest(element.name, element.version, showPrerelease) !=
+          null)
+      .map((e) {
+    final latest = ref
+        .read(vpmPackagesRepoProvider)
+        .getLatest(e.name, e.version, showPrerelease);
+    return PackageItem(
+      name: e.name,
+      displayName: latest!.displayName,
+      description: latest.description,
+      versions: ref
+          .read(vpmPackagesRepoProvider)
+          .getVersions(e.name, e.version, showPrerelease),
+      installedVersion: e.version,
+      selectedVersion: selectedVersion[e.name] ?? latest.version,
+      repoType: latest.repoType,
+    );
+  });
+  list.addAll(locked);
+
+  if (!lockedDeps.hasValue) {
+    return [];
+  }
+
+  final not = packages.value
+      ?.where(
+          (p) => lockedDeps.requireValue.where((e) => e.name == p.name).isEmpty)
+      .map((e) => e.name)
+      .toSet();
+  if (not != null) {
+    list.addAll(not.map((name) {
+      final latest = ref
+          .read(vpmPackagesRepoProvider)
+          .getLatest(name, null, showPrerelease);
+      return PackageItem(
+        name: name,
+        displayName: latest!.displayName,
+        description: latest.description,
+        selectedVersion: selectedVersion[latest.name] ?? latest.version,
+        versions: ref
+            .read(vpmPackagesRepoProvider)
+            .getVersions(name, null, showPrerelease),
+        repoType: latest.repoType,
+      );
+    }));
+  }
+
+  return list;
+});
+
+final _selectedVersionProvider =
+    StateNotifierProvider.autoDispose<SelectedVersion, Map<String, Version>>(
+        (ref) => SelectedVersion());
+
+class SelectedVersion extends StateNotifier<Map<String, Version>> {
+  SelectedVersion() : super({});
+
+  void select(String name, Version version) {
+    final Map<String, Version> map = Map.from(state);
+    map[name] = version;
+    state = map;
+  }
+
+  Version? getSelectedVersion(String name) {
+    return state[name];
+  }
+}
 
 class ProjectRouteArguments {
   ProjectRouteArguments({required this.project});
@@ -16,55 +113,39 @@ class ProjectRouteArguments {
   final VccProject project;
 }
 
-class ProjectRoute extends StatefulWidget {
-  const ProjectRoute({super.key});
-
+class ProjectRoute extends ConsumerWidget {
   static const String routeName = '/project';
 
-  @override
-  State<ProjectRoute> createState() => _ProjectRoute();
-}
+  const ProjectRoute(this.project, {super.key});
 
-class _ProjectRoute extends State<ProjectRoute> with RouteAware {
-  ScaffoldFeatureController? _unityBannerController;
+  final VccProject project;
 
-  void _refreshLockedDependencies() {
-    final model = Provider.of<ProjectModel>(context, listen: false);
-    model.getLockedDependencies();
+  void _refreshLockedDependencies(WidgetRef ref) {
+    ref.refresh(_lockedDependenciesProvider(project));
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
+  Future<void> _didClickOpenProject(WidgetRef ref) async {
+    var editorVersion = await project.getUnityEditorVersion();
+    final editor =
+        await ref.read(vccSettingsRepoProvider).getUnityEditor(editorVersion);
+    if (editor == null) {
+      throw Exception('Unity $editorVersion not found in VCC settings.');
+    }
+    await Process.start(editor, ['-projectPath', project.path],
+        mode: ProcessStartMode.detached);
   }
 
-  @override
-  void dispose() {
-    routeObserver.unsubscribe(this);
-    super.dispose();
-  }
-
-  @override
-  void didPush() {
-    _refreshLockedDependencies();
-  }
-
-  ProjectModel _model(BuildContext context) {
-    return Provider.of<ProjectModel>(context, listen: false);
-  }
-
-  void _didClickOpenFolder(BuildContext context) {
-    final uri = Uri.file(_model(context).project.path);
+  void _didClickOpenFolder() {
+    final uri = Uri.file(project.path);
     launchUrl(uri);
   }
 
-  void _didClickMakeBackup(BuildContext context) async {
-    final projectName = _model(context).project.name;
+  void _didClickMakeBackup(BuildContext context, WidgetRef ref) async {
+    final projectName = project.name;
     showProgressDialog(context, 'Backing up $projectName');
     File file;
     try {
-      file = await _model(context).backup();
+      file = await ref.read(vccProjectsRepoProvider).backup(project);
     } on Exception catch (error) {
       Navigator.pop(context);
       showAlertDialog(context,
@@ -72,9 +153,7 @@ class _ProjectRoute extends State<ProjectRoute> with RouteAware {
           message: 'Failed to back up $projectName.\n\n$error');
       return;
     }
-    if (!mounted) {
-      return;
-    }
+
     Navigator.pop(context);
 
     final showFile = await showDialog(
@@ -103,19 +182,18 @@ class _ProjectRoute extends State<ProjectRoute> with RouteAware {
     }
   }
 
-  void _showMessageToCloseUnity() {
-    if (_unityBannerController != null) {
-      return;
-    }
-    _unityBannerController =
-        scaffoldKey.currentState?.showMaterialBanner(MaterialBanner(
+  void _showMessageToCloseUnity(WidgetRef ref) {
+    ScaffoldFeatureController? controller;
+
+    controller = scaffoldKey.currentState?.showMaterialBanner(MaterialBanner(
       content: const Text(
           'Packages have been changed. Close and reopen Unity project to apply changes.'),
       actions: [
         TextButton(
             onPressed: () {
-              _unityBannerController?.close();
-              _unityBannerController = null;
+              controller?.close();
+              controller = null;
+              ref.read(_needsToShowUnityBannerProvider.notifier).state = false;
             },
             child: const Text('Dismiss')),
       ],
@@ -123,11 +201,16 @@ class _ProjectRoute extends State<ProjectRoute> with RouteAware {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final packagesList = ref.watch(_packageItemListProvider(project));
+    ref.listen(_needsToShowUnityBannerProvider, (previous, next) {
+      if (next == true) {
+        _showMessageToCloseUnity(ref);
+      }
+    });
     return Scaffold(
       appBar: AppBar(
-        title: Consumer<ProjectModel>(
-            builder: (context, model, child) => Text(model.project.name)),
+        title: Text(project.name),
       ),
       body: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Container(
@@ -135,39 +218,28 @@ class _ProjectRoute extends State<ProjectRoute> with RouteAware {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Consumer<ProjectModel>(
-                  builder: (context, model, child) => Text(model.project.path)),
+              Text(project.path),
               const Padding(padding: EdgeInsets.symmetric(vertical: 8)),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  Consumer<ProjectModel>(
-                    builder: ((context, value, child) => OutlinedButton(
-                        onPressed: value.isDoingTask
-                            ? null
-                            : () {
-                                value.openProject();
-                              },
-                        child: const Text('Open Project'))),
+                  OutlinedButton(
+                      onPressed: () {
+                        _didClickOpenProject(ref);
+                      },
+                      child: const Text('Open Project')),
+                  OutlinedButton(
+                    onPressed: _didClickOpenFolder,
+                    child: const Text('Open Folder'),
                   ),
-                  Consumer<ProjectModel>(
-                    builder: ((context, value, child) => OutlinedButton(
-                        onPressed: value.isDoingTask
-                            ? null
-                            : () {
-                                _didClickOpenFolder(context);
-                              },
-                        child: const Text('Open Folder'))),
-                  ),
-                  Consumer<ProjectModel>(
-                    builder: ((context, value, child) => OutlinedButton(
-                        onPressed: value.isDoingTask
-                            ? null
-                            : () {
-                                _didClickMakeBackup(context);
-                              },
-                        child: const Text('Make Backup'))),
+                  OutlinedButton(
+                    onPressed: () {
+                      _didClickMakeBackup(context, ref);
+                    },
+                    child: const Text(
+                      'Make Backup',
+                    ),
                   ),
                 ],
               ),
@@ -175,35 +247,43 @@ class _ProjectRoute extends State<ProjectRoute> with RouteAware {
           ),
         ),
         Expanded(
-          child: Consumer<ProjectModel>(
-            builder: (context, model, child) => _buildList(model),
-          ),
+          child: _buildList(ref, packagesList),
         ),
       ]),
     );
   }
 
-  Widget _buildList(ProjectModel model) {
+  Widget _buildList(WidgetRef ref, AsyncValue<List<PackageItem>> items) {
+    if (!items.hasValue) {
+      return const SizedBox.shrink();
+    }
     return ListView.builder(
-      itemCount: model.packages.length,
+      itemCount: items.requireValue.length,
       itemBuilder: (context, index) {
-        final dep = model.packages[index];
+        final dep = items.requireValue[index];
         return PackageListItem(
           item: dep,
           onSelect: (name, version) {
-            model.selectVersion(name, version);
+            ref.read(_selectedVersionProvider.notifier).select(name, version);
           },
-          onClickAdd: (name) {
-            model.addPackage(name, dep.selectedVersion!);
-            _showMessageToCloseUnity();
+          onClickAdd: (name) async {
+            await ref.read(vccServiceProvider).addPackage(
+                project.path, name, dep.selectedVersion!.toString());
+            ref.read(_needsToShowUnityBannerProvider.notifier).state = true;
           },
-          onClickRemove: (name) {
-            model.removePackage(name);
-            _showMessageToCloseUnity();
+          onClickRemove: (name) async {
+            await ref
+                .read(vccServiceProvider)
+                .removePackage(project.path, name);
+            _refreshLockedDependencies(ref);
+            ref.read(_needsToShowUnityBannerProvider.notifier).state = true;
           },
-          onClickUpdate: ((name) {
-            model.updatePackage(name, dep.selectedVersion!);
-            _showMessageToCloseUnity();
+          onClickUpdate: ((name) async {
+            await ref
+                .read(vccServiceProvider)
+                .updatePackage(project.path, name, dep.selectedVersion!);
+            _refreshLockedDependencies(ref);
+            ref.read(_needsToShowUnityBannerProvider.notifier).state = true;
           }),
         );
       },

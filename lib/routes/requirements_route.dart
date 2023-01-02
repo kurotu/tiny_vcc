@@ -1,41 +1,124 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../globals.dart';
-import '../models/requirements_model.dart';
+import '../providers.dart';
 import '../utils.dart';
 import 'projects_route.dart';
 
-class RequirementsRoute extends StatefulWidget {
+enum RequirementState { ok, ng, notChecked }
+
+FutureProvider<RequirementState> _createProvider(
+  FutureProvider<RequirementState> dependency,
+  FutureOr<bool> Function(Ref ref) isOk,
+) {
+  return FutureProvider((ref) async {
+    final depend = ref.watch(dependency);
+    if (depend.isLoading) {
+      return RequirementState.notChecked;
+    }
+    switch (depend.valueOrNull) {
+      case null:
+      case RequirementState.notChecked:
+      case RequirementState.ng:
+        return RequirementState.notChecked;
+      case RequirementState.ok:
+        return await isOk(ref) ? RequirementState.ok : RequirementState.ng;
+    }
+  });
+}
+
+final _dotNetCommandStateProvider = FutureProvider((ref) async =>
+    await ref.read(dotNetServiceProvider).isInstalled()
+        ? RequirementState.ok
+        : RequirementState.ng);
+
+final _dotNet6SdkStateProviver =
+    _createProvider(_dotNetCommandStateProvider, (ref) async {
+  final sdks = await ref.read(dotNetServiceProvider).listSdks();
+  const missingVersion = 'MISSING';
+  final sdk6Version = sdks.keys
+      .firstWhere((v) => v.startsWith('6.'), orElse: () => missingVersion);
+  return sdk6Version != missingVersion;
+});
+
+final _vpmCommandStateProvider =
+    _createProvider(_dotNet6SdkStateProviver, (ref) async {
+  return ref.read(vccServiceProvider).isInstalled();
+});
+
+final _vpmVersionStateProvider =
+    _createProvider(_vpmCommandStateProvider, (ref) async {
+  final version = await ref.read(vccServiceProvider).getCliVersion();
+  return version >= requiredVpmVersion;
+});
+
+final _unityHubStateProvider =
+    _createProvider(_vpmVersionStateProvider, (ref) async {
+  return ref.read(vccServiceProvider).checkHub();
+});
+
+final _unityStateProvider =
+    _createProvider(_unityHubStateProvider, (ref) async {
+  return ref.read(vccServiceProvider).checkUnity();
+});
+
+class RequirementsRoute extends ConsumerWidget {
   static const routeName = '/requirements';
 
   const RequirementsRoute({super.key});
 
   @override
-  State<RequirementsRoute> createState() => _RequirementsRoute();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.listen(_dotNetCommandStateProvider, (previous, next) {
+      next.whenData((value) {
+        if (value == RequirementState.ng) {
+          _showDotNetBanner(ref);
+        }
+      });
+    });
+    ref.listen(_dotNet6SdkStateProviver, (previous, next) {
+      next.whenData((value) {
+        if (value == RequirementState.ng) {
+          _showDotNetBanner(ref);
+        }
+      });
+    });
+    ref.listen(_vpmCommandStateProvider, (previous, next) {
+      next.whenData((value) {
+        if (value == RequirementState.ng) {
+          _showVpmInstallBanner(context, ref);
+        }
+      });
+    });
+    ref.listen(_vpmVersionStateProvider, (previous, next) {
+      next.whenData((value) {
+        if (value == RequirementState.ng) {
+          _showVpmUpdateBanner(context, ref);
+        }
+      });
+    });
+    ref.listen(_unityHubStateProvider, (previous, next) {
+      next.whenData((value) {
+        if (value == RequirementState.ng) {
+          _showUnityHubBanner(ref);
+        }
+      });
+    });
+    ref.listen(_unityStateProvider, ((previous, next) {
+      next.whenData((value) {
+        if (value == RequirementState.ng) {
+          _showUnityBanner(ref);
+        }
+        if (value == RequirementState.ok) {
+          Navigator.pushReplacementNamed(context, ProjectsRoute.routeName);
+        }
+      });
+    }));
 
-class _RequirementsRoute extends State<RequirementsRoute> with RouteAware {
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
-  }
-
-  @override
-  void dispose() {
-    routeObserver.unsubscribe(this);
-    super.dispose();
-  }
-
-  @override
-  void didPush() {
-    Future.delayed(const Duration(), _checkRequirements);
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Requirements')),
       body: Center(
@@ -44,70 +127,23 @@ class _RequirementsRoute extends State<RequirementsRoute> with RouteAware {
           crossAxisAlignment: WrapCrossAlignment.start,
           spacing: 8,
           children: [
-            Consumer<RequirementsModel>(
-              builder: ((context, model, child) => _RequirementItem(
-                    state: model.hasDotNet6,
-                    title: '.NET 6.0 SDK',
-                  )),
-            ),
-            Consumer<RequirementsModel>(
-              builder: ((context, model, child) => _RequirementItem(
-                    state: model.hasVpm,
-                    title: 'VPM CLI $requiredVpmVersion',
-                  )),
-            ),
-            Consumer<RequirementsModel>(
-              builder: ((context, model, child) => _RequirementItem(
-                    state: model.hasUnityHub,
-                    title: 'Unity Hub',
-                  )),
-            ),
-            Consumer<RequirementsModel>(
-              builder: ((context, model, child) => _RequirementItem(
-                    state: model.hasUnity,
-                    title: 'Unity',
-                  )),
-            ),
+            _RequirementItem(_dotNetCommandStateProvider, 'dotnet command'),
+            _RequirementItem(_dotNet6SdkStateProviver, '.NET 6.0 SDK'),
+            _RequirementItem(_vpmCommandStateProvider, 'vpm command'),
+            _RequirementItem(_vpmVersionStateProvider, 'VPM CLI version'),
+            _RequirementItem(_vpmVersionStateProvider, 'Unity Hub'),
+            _RequirementItem(_vpmVersionStateProvider, 'Unity'),
           ],
         ),
       ),
     );
   }
 
-  RequirementsModel _model(BuildContext context) {
-    return context.read<RequirementsModel>();
+  void _checkRequirements(WidgetRef ref) {
+    final _ = ref.refresh(_dotNetCommandStateProvider);
   }
 
-  Future<void> _checkRequirements() async {
-    await context.read<RequirementsModel>().fetchRequirements();
-    if (mounted) {
-      if (context.read<RequirementsModel>().isReadyToUse) {
-        Navigator.pushReplacementNamed(context, ProjectsRoute.routeName);
-      } else {
-        _showBannerForMissingRequirements();
-      }
-    }
-  }
-
-  void _showBannerForMissingRequirements() {
-    final model = _model(context);
-    if (model.hasDotNetCommand == RequirementState.ng ||
-        model.hasDotNet6Sdk == RequirementState.ng) {
-      _showDotNetBanner();
-    } else if (model.hasVpm == RequirementState.ng) {
-      _showVpmInstallBanner();
-    } else if (model.hasCorrectVpm == RequirementState.ng) {
-      _showVpmUpdateBanner();
-    } else if (model.hasUnityHub == RequirementState.ng) {
-      _showUnityHubBanner();
-    } else if (model.hasUnity == RequirementState.ng) {
-      _showUnityBanner();
-    } else {
-      throw Error();
-    }
-  }
-
-  void _showDotNetBanner() {
+  void _showDotNetBanner(WidgetRef ref) {
     ScaffoldFeatureController<MaterialBanner, MaterialBannerClosedReason>?
         controller;
     final banner = MaterialBanner(
@@ -124,7 +160,7 @@ class _RequirementsRoute extends State<RequirementsRoute> with RouteAware {
         TextButton(
           onPressed: () {
             controller?.close();
-            _checkRequirements();
+            _checkRequirements(ref);
           },
           child: const Text('Check again'),
         ),
@@ -133,7 +169,7 @@ class _RequirementsRoute extends State<RequirementsRoute> with RouteAware {
     controller = scaffoldKey.currentState?.showMaterialBanner(banner);
   }
 
-  void _showVpmInstallBanner() {
+  void _showVpmInstallBanner(BuildContext context, WidgetRef ref) {
     ScaffoldFeatureController<MaterialBanner, MaterialBannerClosedReason>?
         controller;
     final banner = MaterialBanner(
@@ -144,18 +180,18 @@ class _RequirementsRoute extends State<RequirementsRoute> with RouteAware {
             controller?.close();
             final dialog =
                 showProgressDialog(context, 'Installing vrchat.vpm.cli');
-            await _model(context).installVpmCli();
+            await ref
+                .read(dotNetServiceProvider)
+                .installGlobalTool(vpmPackageId, requiredVpmVersion.toString());
             dialog.close();
-            if (mounted) {
-              await _checkRequirements();
-            }
+            _checkRequirements(ref);
           },
           child: const Text('Install'),
         ),
         TextButton(
           onPressed: () {
             controller?.close();
-            _checkRequirements();
+            _checkRequirements(ref);
           },
           child: const Text('Check again'),
         ),
@@ -164,7 +200,7 @@ class _RequirementsRoute extends State<RequirementsRoute> with RouteAware {
     controller = scaffoldKey.currentState?.showMaterialBanner(banner);
   }
 
-  void _showVpmUpdateBanner() {
+  void _showVpmUpdateBanner(BuildContext context, WidgetRef ref) {
     ScaffoldFeatureController<MaterialBanner, MaterialBannerClosedReason>?
         controller;
     final banner = MaterialBanner(
@@ -175,18 +211,18 @@ class _RequirementsRoute extends State<RequirementsRoute> with RouteAware {
             controller?.close();
             final dialog = showProgressDialog(
                 context, 'Updating vrchat.vpm.cli to $requiredVpmVersion');
-            await _model(context).updateVpmCli();
+            await ref
+                .read(dotNetServiceProvider)
+                .updateGlobalTool(vpmPackageId, requiredVpmVersion.toString());
             dialog.close();
-            if (mounted) {
-              await _checkRequirements();
-            }
+            _checkRequirements(ref);
           },
           child: const Text('Update'),
         ),
         TextButton(
           onPressed: () {
             controller?.close();
-            _checkRequirements();
+            _checkRequirements(ref);
           },
           child: const Text('Check again'),
         ),
@@ -195,7 +231,7 @@ class _RequirementsRoute extends State<RequirementsRoute> with RouteAware {
     controller = scaffoldKey.currentState?.showMaterialBanner(banner);
   }
 
-  void _showUnityHubBanner() {
+  void _showUnityHubBanner(WidgetRef ref) {
     ScaffoldFeatureController<MaterialBanner, MaterialBannerClosedReason>?
         controller;
     final banner = MaterialBanner(
@@ -210,7 +246,7 @@ class _RequirementsRoute extends State<RequirementsRoute> with RouteAware {
         TextButton(
           onPressed: () {
             controller?.close();
-            _checkRequirements();
+            _checkRequirements(ref);
           },
           child: const Text('Check again'),
         ),
@@ -219,7 +255,7 @@ class _RequirementsRoute extends State<RequirementsRoute> with RouteAware {
     controller = scaffoldKey.currentState?.showMaterialBanner(banner);
   }
 
-  void _showUnityBanner() {
+  void _showUnityBanner(WidgetRef ref) {
     ScaffoldFeatureController<MaterialBanner, MaterialBannerClosedReason>?
         controller;
     final banner = MaterialBanner(
@@ -235,7 +271,8 @@ class _RequirementsRoute extends State<RequirementsRoute> with RouteAware {
         TextButton(
           onPressed: () {
             controller?.close();
-            _checkRequirements();
+            controller = null;
+            _checkRequirements(ref);
           },
           child: const Text('Check again'),
         ),
@@ -245,46 +282,51 @@ class _RequirementsRoute extends State<RequirementsRoute> with RouteAware {
   }
 }
 
-class _RequirementItem extends StatelessWidget {
-  const _RequirementItem({
-    required this.state,
-    required this.title,
-  });
+class _RequirementItem<T> extends ConsumerWidget {
+  const _RequirementItem(this.provider, this.title);
 
-  final RequirementState state;
+  final FutureProvider<RequirementState> provider;
   final String title;
 
   static const _iconSize = 16.0;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(provider);
     return Wrap(
       spacing: 8,
       children: [
-        (() {
-          switch (state) {
-            case RequirementState.checking:
-              return const SizedBox.square(
-                  dimension: _iconSize,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                  ));
-            case RequirementState.ng:
-              return const Icon(
-                Icons.clear,
-                size: _iconSize,
-                color: Colors.red,
-              );
-            case RequirementState.ok:
-              return const Icon(
-                Icons.check,
-                size: _iconSize,
-                color: Colors.green,
-              );
-            case RequirementState.notChecked:
-              return const SizedBox.square(dimension: _iconSize);
-          }
-        })(),
+        state.when(
+          data: (data) {
+            switch (data) {
+              case RequirementState.ng:
+                return const Icon(
+                  Icons.clear,
+                  size: _iconSize,
+                  color: Colors.red,
+                );
+              case RequirementState.ok:
+                return const Icon(
+                  Icons.check,
+                  size: _iconSize,
+                  color: Colors.green,
+                );
+              case RequirementState.notChecked:
+                return const SizedBox.square(dimension: _iconSize);
+            }
+          },
+          loading: () => const SizedBox.square(
+            dimension: _iconSize,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          error: ((error, stackTrace) {
+            return const Icon(
+              Icons.clear,
+              size: _iconSize,
+              color: Colors.red,
+            );
+          }),
+        ),
         Text(title),
       ],
     );
