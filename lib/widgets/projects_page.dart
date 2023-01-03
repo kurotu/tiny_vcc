@@ -9,10 +9,9 @@ import '../globals.dart';
 import '../providers.dart';
 import '../services/vcc_service.dart';
 import '../utils.dart';
-import 'legacy_project_route.dart';
-import 'new_project_route.dart';
-import 'project_route.dart';
-import 'requirements_route.dart';
+import '../routes/legacy_project_route.dart';
+import '../routes/project_route.dart';
+import '../routes/requirements_route.dart';
 
 final _readyToUseProvider = FutureProvider.autoDispose((ref) async {
   // Quick check for startup.
@@ -39,10 +38,8 @@ final _readyToUseProvider = FutureProvider.autoDispose((ref) async {
   return true;
 });
 
-class ProjectsRoute extends ConsumerWidget {
-  const ProjectsRoute({super.key});
-
-  static const String routeName = '/projects';
+class ProjectsPage extends ConsumerWidget {
+  const ProjectsPage({super.key});
 
   static void addProject(BuildContext context, WidgetRef ref) async {
     final path = await showDirectoryPickerWindow(lockParentWindow: true);
@@ -157,31 +154,7 @@ class ProjectsRoute extends ConsumerWidget {
       foregroundColor: Theme.of(context).colorScheme.onPrimary,
     );
 
-    return Scaffold(
-//      drawer: const MainDrawer(),
-/*
-      appBar: AppBar(
-        title: const Text('Projects'),
-        actions: [
-          TextButton(
-            style: style,
-            onPressed: () {
-              addProject(context, ref);
-            },
-            child: const Text('Add'),
-          ),
-          TextButton(
-            style: style,
-            onPressed: () {
-              Navigator.pushNamed(context, NewProjectRoute.routeName);
-            },
-            child: const Text('New'),
-          ),
-        ],
-      ),
-*/
-      body: Column(children: buildColumn(context, ref, settings)),
-    );
+    return Column(children: buildColumn(context, ref, settings));
   }
 
   List<Widget> buildColumn(

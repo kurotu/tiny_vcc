@@ -5,9 +5,9 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../main_drawer.dart';
 import '../providers.dart';
 import '../widgets/navigation_scaffold.dart';
+import '../widgets/projects_page.dart';
 import 'new_project_route.dart';
-import 'projects_route.dart';
-import 'settings_route.dart';
+import '../widgets/settings_page.dart';
 
 final _selectedIndexProvider = StateProvider.autoDispose((ref) => 0);
 
@@ -46,7 +46,7 @@ class MainRoute extends ConsumerWidget {
   }
 
   void _didClickAddProject(BuildContext context, WidgetRef ref) {
-    ProjectsRoute.addProject(context, ref);
+    ProjectsPage.addProject(context, ref);
   }
 
   void _didClickNewProject(BuildContext context) {
@@ -54,11 +54,11 @@ class MainRoute extends ConsumerWidget {
   }
 
   void _didClickOpenSettingsFolder(WidgetRef ref) {
-    SettingsRoute.didClickOpenSettingsFolder(ref);
+    SettingsPage.didClickOpenSettingsFolder(ref);
   }
 
   void _didClickOpenLogsFolder(WidgetRef ref) {
-    SettingsRoute.didClickOpenLogsFolder(ref);
+    SettingsPage.didClickOpenLogsFolder(ref);
   }
 
   @override
@@ -159,9 +159,9 @@ class MainRoute extends ConsumerWidget {
   Widget buildBody(BuildContext context, int selectedIndex) {
     switch (selectedIndex) {
       case 0:
-        return const ProjectsRoute();
+        return const ProjectsPage();
       case 1:
-        return const SettingsRoute();
+        return const SettingsPage();
       default:
         throw Error();
     }

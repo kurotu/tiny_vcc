@@ -28,10 +28,8 @@ class EditorLoadingController extends StateNotifier<bool> {
   }
 }
 
-class SettingsRoute extends ConsumerWidget {
-  const SettingsRoute({super.key});
-
-  static const String routeName = '/settings';
+class SettingsPage extends ConsumerWidget {
+  const SettingsPage({super.key});
 
   static void didClickOpenSettingsFolder(WidgetRef ref) {
     final dir = ref.read(vccServiceProvider).getSettingsDirectory();

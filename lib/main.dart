@@ -18,9 +18,7 @@ import 'routes/legacy_project_route.dart';
 import 'routes/main_route.dart';
 import 'routes/new_project_route.dart';
 import 'routes/project_route.dart';
-import 'routes/projects_route.dart';
 import 'routes/requirements_route.dart';
-import 'routes/settings_route.dart';
 import 'services/updater_service.dart';
 import 'utils.dart';
 
@@ -142,9 +140,7 @@ class MyApp extends ConsumerWidget {
       scaffoldMessengerKey: scaffoldKey,
       initialRoute: MainRoute.routeName,
       routes: {
-        ProjectsRoute.routeName: (context) => const ProjectsRoute(),
         NewProjectRoute.routeName: (context) => const NewProjectRoute(),
-        SettingsRoute.routeName: (context) => const SettingsRoute(),
         RequirementsRoute.routeName: (context) => const RequirementsRoute(),
         MainRoute.routeName: (context) => const MainRoute(),
       },
