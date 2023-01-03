@@ -41,7 +41,7 @@ Future<String?> showDirectoryPickerWindow({
 }) async {
   final path = await FilePicker.platform.getDirectoryPath(
     lockParentWindow: lockParentWindow,
-    initialDirectory: initialDirectory,
+    // initialDirectory: initialDirectory, // on macOS, dialog isn't opened.
   );
   return _cleanupPath(path);
 }
