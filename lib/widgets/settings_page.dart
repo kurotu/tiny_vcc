@@ -198,6 +198,10 @@ class SettingsPage extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Text(
+                  'Tiny VCC Preferences',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
                 DropdownButtonFormField(
                   decoration: const InputDecoration(labelText: 'Theme'),
                   value: tinyVccSettings.valueOrNull?.themeMode,
@@ -217,6 +221,10 @@ class SettingsPage extends ConsumerWidget {
                   },
                 ),
                 const Divider(),
+                Text(
+                  'VCC Settings',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
                 DropdownButtonFormField(
                   decoration: InputDecoration(
                       labelText: 'Unity Editors',
