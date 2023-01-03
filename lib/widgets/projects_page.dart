@@ -4,14 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/exceptions.dart';
-import '../data/vcc_data.dart';
 import '../globals.dart';
 import '../providers.dart';
-import '../services/vcc_service.dart';
-import '../utils.dart';
 import '../routes/legacy_project_route.dart';
 import '../routes/project_route.dart';
 import '../routes/requirements_route.dart';
+import '../services/vcc_service.dart';
+import '../utils.dart';
+import '../utils/platform_feature.dart';
 
 final _readyToUseProvider = FutureProvider.autoDispose((ref) async {
   // Quick check for startup.
@@ -180,28 +180,27 @@ class ProjectsPage extends ConsumerWidget {
                     builder: ((context) => AlertDialog(
                           title: Text('Remove ${project.name}'),
                           content: Text(
-                              'Would you really want to remove ${project.path} from disk?'),
+                              'Are you sure you want to move ${project.path} to the ${Platform.isWindows ? 'Recycle Bin' : 'Trash'}?'),
                           actions: [
                             TextButton(
                               onPressed: () {
                                 Navigator.pop(context, false);
                               },
-                              child: const Text('Cancel'),
+                              child: const Text('No'),
                             ),
                             ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red),
                               onPressed: () {
                                 Navigator.pop(context, true);
                               },
-                              child: const Text('Remove'),
+                              child: const Text('Yes'),
                             ),
                           ],
                         )),
                   );
                   if (result == true) {
                     try {
-                      await Directory(project.path).delete(recursive: true);
+                      await PlatformFeature.moveToTrash(
+                          Directory(project.path));
                       await ref
                           .read(vccProjectsRepoProvider)
                           .deleteVccProject(project);
@@ -212,7 +211,9 @@ class ProjectsPage extends ConsumerWidget {
                     }
                   }
                 },
-                child: const Text('Remove from disk'),
+                child: Platform.isWindows
+                    ? const Text('Move to Recycle Bin')
+                    : const Text('Move to Trash'),
               ),
             ],
           ),
