@@ -7,6 +7,7 @@ class NavigationScaffold extends Scaffold {
     required Widget drawer,
     required NavigationRail navigationRail,
     required Widget body,
+    Widget? floatingActionButton,
     super.key,
   }) : super(
           appBar: appBar,
@@ -18,5 +19,6 @@ class NavigationScaffold extends Scaffold {
                   Expanded(child: body),
                 ])
               : body,
+          floatingActionButton: floatingActionButton,
         );
 }

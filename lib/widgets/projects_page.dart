@@ -150,43 +150,26 @@ class ProjectsPage extends ConsumerWidget {
     });
     final settings = ref.watch(vccSettingsProvider);
 
-    final ButtonStyle style = TextButton.styleFrom(
-      foregroundColor: Theme.of(context).colorScheme.onPrimary,
-    );
-
-    return Column(children: buildColumn(context, ref, settings));
-  }
-
-  List<Widget> buildColumn(
-      BuildContext context, WidgetRef ref, AsyncValue<VccSettings> settings) {
-    final List<Widget> list = [];
-    list.add(
-      Expanded(
-        child: ListView.builder(
-          itemCount: settings.valueOrNull?.userProjects.length ?? 0,
-          itemBuilder: (context, index) {
-            final project =
-                VccProject(settings.requireValue.userProjects[index]);
-            return ListTile(
-              title: Text(project.name),
-              onTap: () {
-                _didSelectProject(context, ref, project);
-              },
-              subtitle: Text(project.path),
-              trailing: IconButton(
-                icon: const Icon(Icons.delete),
-                onPressed: () async {
-                  await ref
-                      .read(vccProjectsRepoProvider)
-                      .deleteVccProject(project);
-                  _refreshProjects(ref);
-                },
-              ),
-            );
+    return ListView.builder(
+      padding: const EdgeInsets.only(bottom: kFloatingActionButtonMargin + 64),
+      itemCount: settings.valueOrNull?.userProjects.length ?? 0,
+      itemBuilder: (context, index) {
+        final project = VccProject(settings.requireValue.userProjects[index]);
+        return ListTile(
+          title: Text(project.name),
+          onTap: () {
+            _didSelectProject(context, ref, project);
           },
-        ),
-      ),
+          subtitle: Text(project.path),
+          trailing: IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: () async {
+              await ref.read(vccProjectsRepoProvider).deleteVccProject(project);
+              _refreshProjects(ref);
+            },
+          ),
+        );
+      },
     );
-    return list;
   }
 }

@@ -9,7 +9,19 @@ import '../widgets/projects_page.dart';
 import 'new_project_route.dart';
 import '../widgets/settings_page.dart';
 
-final _selectedIndexProvider = StateProvider.autoDispose((ref) => 0);
+final _selectedIndexProvider =
+    StateProvider.autoDispose((ref) => _PageIndex.projects);
+
+enum _PageIndex {
+  projects,
+  settings,
+  about,
+}
+
+const _titles = {
+  _PageIndex.projects: 'Projects',
+  _PageIndex.settings: 'Settings',
+};
 
 enum ScreenSize { small, normal, large }
 
@@ -19,8 +31,6 @@ ScreenSize getSize(BuildContext context) {
   if (deviceWidth < 900) return ScreenSize.normal;
   return ScreenSize.large;
 }
-
-const _titles = ['Projects', 'Settings'];
 
 class MainRoute extends ConsumerWidget {
   static const routeName = '/main';
@@ -42,7 +52,8 @@ class MainRoute extends ConsumerWidget {
   }
 
   void _didSelectNavItem(WidgetRef ref, int selectedIndex) {
-    ref.read(_selectedIndexProvider.notifier).state = selectedIndex;
+    ref.read(_selectedIndexProvider.notifier).state =
+        _PageIndex.values[selectedIndex];
   }
 
   void _didClickAddProject(BuildContext context, WidgetRef ref) {
@@ -70,12 +81,12 @@ class MainRoute extends ConsumerWidget {
 
     return NavigationScaffold(
       appBar: AppBar(
-        title: Text(_titles[selectedIndex]),
-        actions: buildActions(context, ref, selectedIndex),
+        title: Text(_titles[selectedIndex] ?? ''),
+        actions: _buildActions(context, ref, selectedIndex),
       ),
       useNavigationRail: size != ScreenSize.small,
       drawer: MainDrawer(
-        selectedIndex: selectedIndex,
+        selectedIndex: selectedIndex.index,
         onItemSelected: (index) {
           _didSelectNavItem(ref, index);
         },
@@ -98,7 +109,7 @@ class MainRoute extends ConsumerWidget {
             label: Text('About'),
           ),
         ],
-        selectedIndex: selectedIndex,
+        selectedIndex: selectedIndex.index,
         onDestinationSelected: (value) {
           if (value == 2) {
             _didSelectAbout(
@@ -108,14 +119,15 @@ class MainRoute extends ConsumerWidget {
           }
         },
       ),
-      body: buildBody(context, selectedIndex),
+      body: _buildBody(context, selectedIndex),
+      floatingActionButton: _buildFAB(context, selectedIndex),
     );
   }
 
-  List<Widget>? buildActions(
-      BuildContext context, WidgetRef ref, int selectedIndex) {
+  List<Widget>? _buildActions(
+      BuildContext context, WidgetRef ref, _PageIndex selectedIndex) {
     switch (selectedIndex) {
-      case 0:
+      case _PageIndex.projects:
         return [
           IconButton(
             onPressed: () {
@@ -124,15 +136,8 @@ class MainRoute extends ConsumerWidget {
             tooltip: 'Add existing project',
             icon: const Icon(Icons.create_new_folder),
           ),
-          IconButton(
-            onPressed: () {
-              _didClickNewProject(context);
-            },
-            tooltip: 'Create new project',
-            icon: const Icon(Icons.add),
-          ),
         ];
-      case 1:
+      case _PageIndex.settings:
         return [
           PopupMenuButton(
             itemBuilder: (context) => [
@@ -156,14 +161,30 @@ class MainRoute extends ConsumerWidget {
     }
   }
 
-  Widget buildBody(BuildContext context, int selectedIndex) {
+  Widget _buildBody(BuildContext context, _PageIndex selectedIndex) {
     switch (selectedIndex) {
-      case 0:
+      case _PageIndex.projects:
         return const ProjectsPage();
-      case 1:
+      case _PageIndex.settings:
         return const SettingsPage();
-      default:
+      case _PageIndex.about:
         throw Error();
+    }
+  }
+
+  Widget? _buildFAB(BuildContext context, _PageIndex selectedIndex) {
+    switch (selectedIndex) {
+      case _PageIndex.projects:
+        return FloatingActionButton(
+          tooltip: 'Create new project',
+          child: const Icon(Icons.add),
+          onPressed: () {
+            _didClickNewProject(context);
+          },
+        );
+      case _PageIndex.settings:
+      case _PageIndex.about:
+        return null;
     }
   }
 }
