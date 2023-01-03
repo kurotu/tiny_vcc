@@ -161,12 +161,60 @@ class ProjectsPage extends ConsumerWidget {
             _didSelectProject(context, ref, project);
           },
           subtitle: Text(project.path),
-          trailing: IconButton(
-            icon: const Icon(Icons.delete),
-            onPressed: () async {
-              await ref.read(vccProjectsRepoProvider).deleteVccProject(project);
-              _refreshProjects(ref);
-            },
+          trailing: PopupMenuButton(
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                onTap: () async {
+                  await ref
+                      .read(vccProjectsRepoProvider)
+                      .deleteVccProject(project);
+                  _refreshProjects(ref);
+                },
+                child: const Text('Remove from list'),
+              ),
+              PopupMenuItem(
+                onTap: () async {
+                  await Future.delayed(const Duration());
+                  final result = await showDialog<bool>(
+                    context: context,
+                    builder: ((context) => AlertDialog(
+                          title: Text('Remove ${project.name}'),
+                          content: Text(
+                              'Would you really want to remove ${project.path} from disk?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context, false);
+                              },
+                              child: const Text('Cancel'),
+                            ),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.red),
+                              onPressed: () {
+                                Navigator.pop(context, true);
+                              },
+                              child: const Text('Remove'),
+                            ),
+                          ],
+                        )),
+                  );
+                  if (result == true) {
+                    try {
+                      await Directory(project.path).delete(recursive: true);
+                      await ref
+                          .read(vccProjectsRepoProvider)
+                          .deleteVccProject(project);
+                      _refreshProjects(ref);
+                    } on Exception catch (error) {
+                      await showSimpleErrorDialog(
+                          context, 'Failed to remove ${project.path}.', error);
+                    }
+                  }
+                },
+                child: const Text('Remove from disk'),
+              ),
+            ],
           ),
         );
       },

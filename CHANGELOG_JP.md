@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - ダークモードを追加。
 - ウィンドウの幅が広い場合のレイアウトを追加。
+- プロジェクトをディスクから削除するメニューを追加。
 
 ### 変更
 
