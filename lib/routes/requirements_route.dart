@@ -11,11 +11,11 @@ import 'main_route.dart';
 
 enum RequirementState { ok, ng, notChecked }
 
-FutureProvider<RequirementState> _createProvider(
-  FutureProvider<RequirementState> dependency,
+AutoDisposeFutureProvider<RequirementState> _createProvider(
+  AutoDisposeFutureProvider<RequirementState> dependency,
   FutureOr<bool> Function(Ref ref) isOk,
 ) {
-  return FutureProvider((ref) async {
+  return FutureProvider.autoDispose((ref) async {
     final depend = ref.watch(dependency);
     if (depend.isLoading) {
       return RequirementState.notChecked;
@@ -31,7 +31,7 @@ FutureProvider<RequirementState> _createProvider(
   });
 }
 
-final _dotNetCommandStateProvider = FutureProvider((ref) async =>
+final _dotNetCommandStateProvider = FutureProvider.autoDispose((ref) async =>
     await ref.read(dotNetServiceProvider).isInstalled()
         ? RequirementState.ok
         : RequirementState.ng);
@@ -114,6 +114,7 @@ class RequirementsRoute extends ConsumerWidget {
           _showUnityBanner(ref);
         }
         if (value == RequirementState.ok) {
+          ref.refresh(vccSettingsProvider);
           Navigator.pushReplacementNamed(context, MainRoute.routeName);
         }
       });
@@ -285,7 +286,7 @@ class RequirementsRoute extends ConsumerWidget {
 class _RequirementItem<T> extends ConsumerWidget {
   const _RequirementItem(this.provider, this.title);
 
-  final FutureProvider<RequirementState> provider;
+  final AutoDisposeFutureProvider<RequirementState> provider;
   final String title;
 
   static const _iconSize = 16.0;
