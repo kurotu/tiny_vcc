@@ -4,14 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/exceptions.dart';
-import '../data/vcc_data.dart';
 import '../globals.dart';
 import '../providers.dart';
-import '../services/vcc_service.dart';
-import '../utils.dart';
 import '../routes/legacy_project_route.dart';
 import '../routes/project_route.dart';
 import '../routes/requirements_route.dart';
+import '../services/vcc_service.dart';
+import '../utils.dart';
+import '../utils/platform_feature.dart';
 
 final _readyToUseProvider = FutureProvider.autoDispose((ref) async {
   // Quick check for startup.
@@ -161,12 +161,61 @@ class ProjectsPage extends ConsumerWidget {
             _didSelectProject(context, ref, project);
           },
           subtitle: Text(project.path),
-          trailing: IconButton(
-            icon: const Icon(Icons.delete),
-            onPressed: () async {
-              await ref.read(vccProjectsRepoProvider).deleteVccProject(project);
-              _refreshProjects(ref);
-            },
+          trailing: PopupMenuButton(
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                onTap: () async {
+                  await ref
+                      .read(vccProjectsRepoProvider)
+                      .deleteVccProject(project);
+                  _refreshProjects(ref);
+                },
+                child: const Text('Remove from list'),
+              ),
+              PopupMenuItem(
+                onTap: () async {
+                  await Future.delayed(const Duration());
+                  final result = await showDialog<bool>(
+                    context: context,
+                    builder: ((context) => AlertDialog(
+                          title: Text('Remove ${project.name}'),
+                          content: Text(
+                              'Are you sure you want to move ${project.path} to the ${Platform.isWindows ? 'Recycle Bin' : 'Trash'}?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context, false);
+                              },
+                              child: const Text('No'),
+                            ),
+                            ElevatedButton(
+                              onPressed: () {
+                                Navigator.pop(context, true);
+                              },
+                              child: const Text('Yes'),
+                            ),
+                          ],
+                        )),
+                  );
+                  if (result == true) {
+                    try {
+                      await PlatformFeature.moveToTrash(
+                          Directory(project.path));
+                      await ref
+                          .read(vccProjectsRepoProvider)
+                          .deleteVccProject(project);
+                      _refreshProjects(ref);
+                    } on Exception catch (error) {
+                      await showSimpleErrorDialog(
+                          context, 'Failed to remove ${project.path}.', error);
+                    }
+                  }
+                },
+                child: Platform.isWindows
+                    ? const Text('Move to Recycle Bin')
+                    : const Text('Move to Trash'),
+              ),
+            ],
           ),
         );
       },
