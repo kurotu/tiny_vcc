@@ -16,8 +16,11 @@ import '../routes/requirements_route.dart';
 final _readyToUseProvider = FutureProvider.autoDispose((ref) async {
   // Quick check for startup.
   final settings = ref.watch(vccSettingsProvider);
-  if (!settings.hasValue) {
+  if (settings.isLoading) {
     return true;
+  }
+  if (settings.hasError) {
+    return false;
   }
 
   final vcc = ref.read(vccServiceProvider);
