@@ -30,6 +30,9 @@ Install these software before.
   - Android Build Support (to upload for Quest)
   - Windows Build Support (to upload with macOS)
 
+#### Windows
+Install [Microsoft Visual C++ 2015-2022 Redistributable](https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist?view=msvc-170).
+
 ### Tiny VCC
 
 #### Windows

@@ -14,7 +14,7 @@ Yet Another VRChat Creator Companion for macOS and Windows.
 ## 概要
 
 macOS/Windows で使用可能な VCC の代替アプリケーションです。
-VPM CLI の GUI ラッパーとして動作し、 VCC の機能のうち以下の機能を提供します。
+VPM CLI の GUI ラッパーとして動作し、 VCC のコア機能のうち以下の機能を提供します。
 
 - プロジェクトとパッケージの管理
 - レガシープロジェクトから VCC 対応プロジェクトへの移行
@@ -30,6 +30,9 @@ VPM CLI の GUI ラッパーとして動作し、 VCC の機能のうち以下�
 - Unity ([VRChat で指定されているバージョン](https://docs.vrchat.com/docs/current-unity-version))
   - Android Build Support (Quest 用にアップロードする場合)
   - Windows Build Support (macOS でアップロードする場合)
+
+#### Windows
+[Microsoft Visual C++ 2015-2022 再頒布可能パッケージ](https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist?view=msvc-170) をインストールしてください。
 
 ### Tiny VCC
 
