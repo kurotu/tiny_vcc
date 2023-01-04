@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add dark mode.
 - Add new layouts for wide window size.
-- Add menu to remove project from disk.
+- Add menu to move project to the Recycle Bin or Trash.
 
 ### Changed
 
