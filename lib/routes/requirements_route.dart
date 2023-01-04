@@ -171,6 +171,7 @@ class RequirementsRoute extends ConsumerWidget {
   }
 
   void _showVpmInstallBanner(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
     ScaffoldFeatureController<MaterialBanner, MaterialBannerClosedReason>?
         controller;
     final banner = MaterialBanner(
@@ -180,7 +181,7 @@ class RequirementsRoute extends ConsumerWidget {
           onPressed: () async {
             controller?.close();
             final dialog =
-                showProgressDialog(context, 'Installing vrchat.vpm.cli');
+                showProgressDialog(context, theme, 'Installing vrchat.vpm.cli');
             await ref
                 .read(dotNetServiceProvider)
                 .installGlobalTool(vpmPackageId, requiredVpmVersion.toString());
@@ -202,6 +203,7 @@ class RequirementsRoute extends ConsumerWidget {
   }
 
   void _showVpmUpdateBanner(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
     ScaffoldFeatureController<MaterialBanner, MaterialBannerClosedReason>?
         controller;
     final banner = MaterialBanner(
@@ -210,8 +212,8 @@ class RequirementsRoute extends ConsumerWidget {
         TextButton(
           onPressed: () async {
             controller?.close();
-            final dialog = showProgressDialog(
-                context, 'Updating vrchat.vpm.cli to $requiredVpmVersion');
+            final dialog = showProgressDialog(context, theme,
+                'Updating vrchat.vpm.cli to $requiredVpmVersion');
             await ref
                 .read(dotNetServiceProvider)
                 .updateGlobalTool(vpmPackageId, requiredVpmVersion.toString());

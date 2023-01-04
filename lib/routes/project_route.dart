@@ -142,7 +142,7 @@ class ProjectRoute extends ConsumerWidget {
 
   void _didClickMakeBackup(BuildContext context, WidgetRef ref) async {
     final projectName = project.name;
-    showProgressDialog(context, 'Backing up $projectName');
+    showProgressDialog(context, Theme.of(context), 'Backing up $projectName');
     File file;
     try {
       file = await ref.read(vccProjectsRepoProvider).backup(project);

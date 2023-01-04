@@ -109,11 +109,14 @@ Future<T?> showSimpleErrorDialog<T>(
   );
 }
 
-ProgressDialog showProgressDialog(BuildContext context, String message) {
+ProgressDialog showProgressDialog(
+    BuildContext context, ThemeData theme, String message) {
   final pd = ProgressDialog(context: context);
   pd.show(
     msg: message,
-    msgFontWeight: FontWeight.normal,
+    msgColor: theme.textTheme.bodyMedium!.color!,
+    msgFontWeight: theme.textTheme.bodyMedium!.fontWeight!,
+    backgroundColor: theme.dialogBackgroundColor,
     max: 100,
     hideValue: true,
     barrierColor: Colors.black54,
