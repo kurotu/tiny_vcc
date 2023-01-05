@@ -71,7 +71,7 @@ void main() async {
       log(message);
     }
     if (kReleaseMode) {
-      exit(1);
+//      exit(1);
     }
   };
   PlatformDispatcher.instance.onError = (error, stack) {
@@ -83,7 +83,7 @@ void main() async {
       log(message);
     }
     if (kReleaseMode) {
-      exit(1);
+//      exit(1);
     }
     return true;
   };
