@@ -1,6 +1,10 @@
+import 'dart:async';
 import 'dart:io';
 
+import 'package:http/http.dart' as http;
+
 import '../data/exceptions.dart';
+import '../utils/system_info.dart';
 
 class DotNetService {
   DotNetService() {
@@ -10,6 +14,8 @@ class DotNetService {
   /// Use full path to avoid crash.
   /// https://stackoverflow.com/questions/69139808/
   String _dotnetCommand = '';
+
+  static const _feed = 'https://dotnetcli.azureedge.net';
 
   String? _findDotNet() {
     if (Platform.isWindows) {
@@ -53,6 +59,21 @@ class DotNetService {
     final dotnet = _findDotNet();
     _dotnetCommand = dotnet ?? 'dotnet';
     return dotnet != null;
+  }
+
+  Future<String> getLatestVersion() async {
+    final versionUri = Uri.parse('$_feed/dotnet/Sdk/6.0/latest.version');
+    return (await http.read(versionUri)).trim();
+  }
+
+  Uri getWindowsInstallerUri(String version, Architecture arch) {
+    return Uri.parse(
+        '$_feed/dotnet/Sdk/$version/dotnet-sdk-$version-win-${arch.name}.exe');
+  }
+
+  Uri getMacInstallerUri(String version, Architecture arch) {
+    return Uri.parse(
+        '$_feed/dotnet/Sdk/$version/dotnet-sdk-$version-osx-${arch.name}.pkg');
   }
 
   Future<Map<String, String>> listSdks() async {
