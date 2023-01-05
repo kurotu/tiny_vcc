@@ -141,7 +141,7 @@ class MyApp extends ConsumerWidget {
       initialRoute: MainRoute.routeName,
       routes: {
         NewProjectRoute.routeName: (context) => const NewProjectRoute(),
-        RequirementsRoute.routeName: (context) => const RequirementsRoute(),
+        RequirementsRoute.routeName: (context) => RequirementsRoute(),
         MainRoute.routeName: (context) => const MainRoute(),
       },
       onGenerateRoute: (settings) {
