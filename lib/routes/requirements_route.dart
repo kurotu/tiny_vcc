@@ -13,6 +13,7 @@ import '../globals.dart';
 import '../providers.dart';
 import '../utils.dart';
 import '../utils/system_info.dart';
+import '../widgets/copyable_text.dart';
 
 enum RequirementState { ok, ng, notChecked }
 
@@ -78,6 +79,8 @@ class RequirementsRoute extends ConsumerWidget {
 
   final _dotnetDownloadPageUri =
       Uri.parse('https://dotnet.microsoft.com/download/dotnet/6.0');
+  final _vpmCliDocsUri =
+      Uri.parse('https://vcc.docs.vrchat.com/vpm/cli/#installation--updating');
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -137,7 +140,28 @@ class RequirementsRoute extends ConsumerWidget {
             title: const Text('VPM CLI'),
             content: Container(
               alignment: Alignment.centerLeft,
-              child: Text('Install VPM CLI.'),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                      'Install VPM CLI. You can also install with following command.'),
+                  Container(
+                    margin: const EdgeInsets.symmetric(vertical: 16),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                        color: Colors.black12,
+                        borderRadius: BorderRadius.circular(4)),
+                    child: CopyableText(
+                        'dotnet tool install --global vrchat.vpm.cli --version ${requiredVpmVersion.toString()}'),
+                  ),
+                  Link(
+                    uri: _vpmCliDocsUri,
+                    builder: (context, followLink) => TextButton(
+                        onPressed: followLink,
+                        child: Text(_vpmCliDocsUri.toString())),
+                  ),
+                ],
+              ),
             ),
             state: _stepState(vpmState),
           ),
@@ -216,11 +240,12 @@ class RequirementsRoute extends ConsumerWidget {
         _refresh(ref);
         break;
       case _StepIndex.vpm:
-        print('TODO: Handle this case.');
-        final dialog = showProgressDialog(
-            context, Theme.of(context), 'Installing VPM CLI.');
-        await Future.delayed(const Duration(seconds: 5));
-        dialog.close();
+        try {
+          await _installVpmCli(context, ref);
+        } on Exception catch (error) {
+          await showSimpleErrorDialog(
+              context, 'Failed to install VPM CLI', error);
+        }
         _refresh(ref);
         break;
       case _StepIndex.unityHub:
@@ -297,5 +322,42 @@ class RequirementsRoute extends ConsumerWidget {
       dialog.close();
       await Future.delayed(const Duration());
     }
+  }
+
+  static Future<bool> _installVpmCli(
+      BuildContext context, WidgetRef ref) async {
+    final dialog = showProgressDialog(context, Theme.of(context),
+        'Installing VPM CLI ${requiredVpmVersion.toString()}');
+    try {
+      final dotnet = ref.read(dotNetServiceProvider);
+      final vcc = ref.read(vccServiceProvider);
+
+      if (vcc.isInstalled()) {
+        final version = await vcc.getCliVersion();
+        if (version >= requiredVpmVersion) {
+          return true;
+        }
+        logger?.i('Updating VPM CLI.');
+        await dotnet.updateGlobalTool(
+            vpmPackageId, requiredVpmVersion.toString());
+      } else {
+        logger?.i('Installing VPM CLI.');
+        await dotnet.installGlobalTool(
+            vpmPackageId, requiredVpmVersion.toString());
+      }
+      if (!vcc.isInstalled()) {
+        return false;
+      }
+
+      logger?.i('Installing VPM templates.');
+      await vcc.installTemplates();
+    } on Exception catch (error) {
+      logger?.e(error.toString());
+      rethrow;
+    } finally {
+      dialog.close();
+      await Future.delayed(const Duration());
+    }
+    return true;
   }
 }
