@@ -17,6 +17,7 @@ import '../utils.dart';
 import '../utils/system_info.dart';
 import '../widgets/console_dialog.dart';
 import '../widgets/copyable_text.dart';
+import 'main_route.dart';
 
 enum _StepIndex {
   dotnet,
@@ -72,6 +73,11 @@ class RequirementsRoute extends ConsumerWidget {
     ref.listen(unityStateProvider, (previous, next) {
       if (!next.isLoading && next.valueOrNull == RequirementState.ng) {
         ref.read(_stepProvider.notifier).state = _StepIndex.unity;
+      }
+    });
+    ref.listen(readyToUseProvider, (previous, next) {
+      if (!next.isLoading && next.valueOrNull == true) {
+        Navigator.of(context).pushReplacementNamed(MainRoute.routeName);
       }
     });
 
