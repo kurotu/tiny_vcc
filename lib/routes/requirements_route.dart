@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:system_info2/system_info2.dart';
+import 'package:tiny_vcc/widgets/console_dialog.dart';
 import 'package:url_launcher/link.dart';
 
 import '../globals.dart';
@@ -271,7 +272,13 @@ class RequirementsRoute extends ConsumerWidget {
         _refresh(ref);
         break;
       case _StepIndex.unity:
-        print('TODO: Handle this case.');
+        try {
+          await _installUnity(context, ref);
+        } on Exception catch (error) {
+          await showSimpleErrorDialog(
+              context, 'Failed to install Unity', error);
+        }
+        _refresh(ref);
         break;
       case _StepIndex.complete:
         print('TODO: Handle this case.');
@@ -433,5 +440,25 @@ class RequirementsRoute extends ConsumerWidget {
       throw UnimplementedError("_installUnityHub is not implemented for Linux");
     }
     throw Error();
+  }
+
+  static Future<bool> _installUnity(BuildContext context, WidgetRef ref) async {
+    final stdoutBuilder = StateProvider((ref) => '');
+
+    showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: ((context) => ConsoleDialog(
+            title: 'Install Unity', consoleOutputProvider: stdoutBuilder)));
+
+    final vcc = ref.read(vccServiceProvider);
+    final result = await vcc.installUnity(
+        onStdout: (event) {
+          ref.read(stdoutBuilder.notifier).state += event;
+        },
+        onStderr: (event) {});
+
+    Navigator.of(context).pop();
+    return result;
   }
 }
