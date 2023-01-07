@@ -15,11 +15,6 @@ import '../utils/platform_feature.dart';
 
 final _readyToUseProvider = FutureProvider.autoDispose((ref) async {
   // Quick check for startup.
-  final settings = ref.watch(vccSettingsProvider);
-  if (settings.hasError) {
-    return false;
-  }
-
   final vcc = ref.read(vccServiceProvider);
   if (!vcc.isInstalled()) {
     return false;
@@ -27,6 +22,14 @@ final _readyToUseProvider = FutureProvider.autoDispose((ref) async {
 
   if (await vcc.getCliVersion() < requiredVpmVersion) {
     return false;
+  }
+
+  final settings = ref.watch(vccSettingsProvider);
+  if (settings.hasError) {
+    return false;
+  }
+  if (settings.isLoading) {
+    return true;
   }
 
   if (!await (File(settings.requireValue.pathToUnityHub).exists())) {
