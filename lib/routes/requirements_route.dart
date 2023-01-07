@@ -10,14 +10,13 @@ import 'package:path_provider/path_provider.dart';
 import 'package:system_info2/system_info2.dart';
 import 'package:url_launcher/link.dart';
 
+import '../data/tiny_vcc_data.dart';
 import '../globals.dart';
 import '../providers.dart';
 import '../utils.dart';
 import '../utils/system_info.dart';
 import '../widgets/console_dialog.dart';
 import '../widgets/copyable_text.dart';
-
-enum RequirementState { ok, ng, notChecked }
 
 enum _StepIndex {
   dotnet,
@@ -29,50 +28,6 @@ enum _StepIndex {
 
 final _stepProvider =
     StateProvider.autoDispose<_StepIndex>((ref) => _StepIndex.dotnet);
-
-final _dotNetStateProvider = FutureProvider.autoDispose((ref) async {
-  final dotnet = ref.watch(dotNetServiceProvider);
-  final hasCommand = await dotnet.isInstalled();
-  if (!hasCommand) {
-    return StepState.error;
-  }
-
-  final sdks = await dotnet.listSdks();
-  const missingVersion = 'MISSING';
-  final sdk6Version = sdks.keys
-      .firstWhere((v) => v.startsWith('6.'), orElse: () => missingVersion);
-  final hasSdk6 = sdk6Version != missingVersion;
-
-  if (hasSdk6) {
-    return StepState.complete;
-  }
-  return StepState.error;
-});
-
-final _vpmStateProvider = FutureProvider.autoDispose((ref) async {
-  final vcc = ref.watch(vccServiceProvider);
-  final hasVcc = vcc.isInstalled();
-  if (!hasVcc) {
-    return StepState.error;
-  }
-  final version = await ref.read(vccServiceProvider).getCliVersion();
-  if (version >= requiredVpmVersion) {
-    return StepState.complete;
-  }
-  return StepState.error;
-});
-
-final _unityHubStateProvider = FutureProvider.autoDispose((ref) async {
-  final vcc = ref.watch(vccServiceProvider);
-  final hasHub = await vcc.checkHub();
-  return hasHub ? StepState.complete : StepState.error;
-});
-
-final _unityStateProvider = FutureProvider.autoDispose((ref) async {
-  final vcc = ref.watch(vccServiceProvider);
-  final hasUnity = await vcc.checkUnity();
-  return hasUnity ? StepState.complete : StepState.error;
-});
 
 final _stdoutProvider = StateProvider.autoDispose((ref) => '');
 
@@ -95,27 +50,27 @@ class RequirementsRoute extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final step = ref.watch(_stepProvider);
-    final dotnetState = ref.watch(_dotNetStateProvider);
-    final vpmState = ref.watch(_vpmStateProvider);
-    final hubState = ref.watch(_unityHubStateProvider);
-    final unityState = ref.watch(_unityStateProvider);
-    ref.listen(_dotNetStateProvider, (previous, next) {
-      if (!next.isLoading && next.valueOrNull == StepState.error) {
+    final dotnetState = ref.watch(dotNetStateProvider);
+    final vpmState = ref.watch(vpmStateProvider);
+    final hubState = ref.watch(unityHubStateProvider);
+    final unityState = ref.watch(unityStateProvider);
+    ref.listen(dotNetStateProvider, (previous, next) {
+      if (!next.isLoading && next.valueOrNull == RequirementState.ng) {
         ref.read(_stepProvider.notifier).state = _StepIndex.dotnet;
       }
     });
-    ref.listen(_vpmStateProvider, (previous, next) {
-      if (!next.isLoading && next.valueOrNull == StepState.error) {
+    ref.listen(vpmStateProvider, (previous, next) {
+      if (!next.isLoading && next.valueOrNull == RequirementState.ng) {
         ref.read(_stepProvider.notifier).state = _StepIndex.vpm;
       }
     });
-    ref.listen(_unityHubStateProvider, (previous, next) {
-      if (!next.isLoading && next.valueOrNull == StepState.error) {
+    ref.listen(unityHubStateProvider, (previous, next) {
+      if (!next.isLoading && next.valueOrNull == RequirementState.ng) {
         ref.read(_stepProvider.notifier).state = _StepIndex.unityHub;
       }
     });
-    ref.listen(_unityStateProvider, (previous, next) {
-      if (!next.isLoading && next.valueOrNull == StepState.error) {
+    ref.listen(unityStateProvider, (previous, next) {
+      if (!next.isLoading && next.valueOrNull == RequirementState.ng) {
         ref.read(_stepProvider.notifier).state = _StepIndex.unity;
       }
     });
@@ -234,15 +189,24 @@ class RequirementsRoute extends ConsumerWidget {
     );
   }
 
-  static StepState _stepState(AsyncValue<StepState> state) {
-    return state.isLoading
-        ? StepState.indexed
-        : state.valueOrNull ?? StepState.indexed;
+  static StepState _stepState(AsyncValue<RequirementState> state) {
+    return state.when(
+        data: ((data) {
+          switch (data) {
+            case RequirementState.ok:
+              return StepState.complete;
+            case RequirementState.ng:
+              return StepState.error;
+            case RequirementState.notChecked:
+              return StepState.indexed;
+          }
+        }),
+        error: (obj, trace) => StepState.indexed,
+        loading: () => StepState.indexed);
   }
 
   static ControlsWidgetBuilder _controlsBuilder(WidgetRef ref) {
     return (BuildContext context, ControlsDetails details) {
-      final dotnetState = ref.watch(_dotNetStateProvider);
       final step = _StepIndex.values[details.stepIndex];
       return Container(
         alignment: Alignment.centerLeft,
@@ -269,10 +233,10 @@ class RequirementsRoute extends ConsumerWidget {
   }
 
   static void _refresh(WidgetRef ref) {
-    ref.refresh(_dotNetStateProvider);
-    ref.refresh(_vpmStateProvider);
-    ref.refresh(_unityHubStateProvider);
-    ref.refresh(_unityStateProvider);
+    ref.refresh(dotNetStateProvider);
+    ref.refresh(vpmStateProvider);
+    ref.refresh(unityHubStateProvider);
+    ref.refresh(unityStateProvider);
   }
 
   static Future<void> _onClickInstall(
