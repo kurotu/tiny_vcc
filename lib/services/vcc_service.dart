@@ -664,4 +664,15 @@ class VccService {
     setting.userPackageFolders.remove(path);
     await setSettings(userPackageFolders: setting.userPackageFolders);
   }
+
+  Future<bool> installUnity({
+    required void Function(String event) onStdout,
+    required void Function(String event) onStderr,
+  }) async {
+    final process = await Process.start(_vpmPath, ['install', 'unity']);
+    process.stdout.transform(utf8.decoder).listen(onStdout);
+    process.stderr.transform(utf8.decoder).listen(onStderr);
+    final exitCode = await process.exitCode;
+    return exitCode == 0;
+  }
 }
