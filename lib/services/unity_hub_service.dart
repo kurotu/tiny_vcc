@@ -29,13 +29,11 @@ class UnityHubService {
     return Map.fromEntries(entries);
   }
 
-  Future<void> installUnity(
+  Future<Process> installUnity(
     String version,
     String changeset,
-    List<String>? modules, {
-    required void Function(String event) onStdout,
-    required void Function(String event) onStderr,
-  }) async {
+    List<String>? modules,
+  ) async {
     final args = [
       '--',
       '--headless',
@@ -50,20 +48,7 @@ class UnityHubService {
       args.addAll(modules);
     }
 
-    final process = await Process.start(_unityHubExe, args);
-    final stdout = process.stdout.transform(utf8.decoder).asBroadcastStream();
-    stdout.listen(onStdout);
-    stdout.listen((event) {
-      // Enter 'n' for child-modules
-      if (event.contains('(Y/n)')) {
-        process.stdin.writeln('n');
-      }
-    });
-    process.stderr.transform(utf8.decoder).listen(onStderr);
-    final exitCode = await process.exitCode;
-    if (exitCode != 0) {
-      throw NonZeroExitException(_unityHubExe, args, exitCode);
-    }
+    return Process.start(_unityHubExe, args);
   }
 
   Uri getWindowsInstallerUri() {
