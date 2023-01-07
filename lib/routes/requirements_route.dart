@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -81,6 +82,7 @@ class RequirementsRoute extends ConsumerWidget {
       Uri.parse('https://dotnet.microsoft.com/download/dotnet/6.0');
   final _vpmCliDocsUri =
       Uri.parse('https://vcc.docs.vrchat.com/vpm/cli/#installation--updating');
+  final _unityHubDownloadPageUri = Uri.parse('https://unity.com/download');
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -169,7 +171,18 @@ class RequirementsRoute extends ConsumerWidget {
             title: const Text('Unity Hub'),
             content: Container(
               alignment: Alignment.centerLeft,
-              child: Text('Install Unity Hub.'),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                      'Install Unity Hub. You can also download the installer from web.'),
+                  Link(
+                      uri: _unityHubDownloadPageUri,
+                      builder: (context, followLink) => TextButton(
+                          onPressed: followLink,
+                          child: Text(_unityHubDownloadPageUri.toString())))
+                ],
+              ),
             ),
             state: _stepState(hubState),
           ),
@@ -249,7 +262,13 @@ class RequirementsRoute extends ConsumerWidget {
         _refresh(ref);
         break;
       case _StepIndex.unityHub:
-        print('TODO: Handle this case.');
+        try {
+          await _installUnityHub(context, ref);
+        } on Exception catch (error) {
+          await showSimpleErrorDialog(
+              context, 'Failed to install Unity Hub', error);
+        }
+        _refresh(ref);
         break;
       case _StepIndex.unity:
         print('TODO: Handle this case.');
@@ -359,5 +378,60 @@ class RequirementsRoute extends ConsumerWidget {
       await Future.delayed(const Duration());
     }
     return true;
+  }
+
+  static Future<bool> _installUnityHub(
+      BuildContext context, WidgetRef ref) async {
+    if (Platform.isWindows) {
+      final dialog = showProgressDialog(
+          context, Theme.of(context), 'Downloading Unity Hub installer.');
+      File? installer;
+      try {
+        final tmp = await getTemporaryDirectory();
+        final dir = Directory(p.join(tmp.path, 'tiny_vcc'));
+        await dir.create(recursive: true);
+
+        final hub = ref.read(unityHubServiceProvider);
+        installer = File(p.join(dir.path,
+            'unity-hub-installer-${Random.secure().nextInt(65535)}.exe'));
+        final installerUri = hub.getWindowsInstallerUri();
+
+        logger?.i(
+            'Downloading dotnet sdk installer from $installerUri to $installer.');
+        final client = http.Client();
+        final request = http.Request('GET', installerUri);
+        final res = await client.send(request);
+        if (res.statusCode / 100 != 2) {
+          throw HttpException('Failed to get', uri: installerUri);
+        }
+        final sink = installer.openWrite();
+        await sink.addStream(res.stream);
+        await sink.close();
+        logger?.i(
+            'Downloaded Unity Hub installer from $installerUri to $installer.');
+
+        dialog.update(value: 1, msg: 'Installing Unity Hub.');
+        logger?.i('Executing installer: $installer');
+        final result = await Process.run(installer.path, [], runInShell: true);
+        logger
+            ?.i('Finished installer with code ${result.exitCode}: $installer');
+
+        return result.exitCode == 0;
+      } on Exception catch (error) {
+        logger?.e(error);
+        rethrow;
+      } finally {
+        if (await installer?.exists() == true) {
+          await installer?.delete();
+        }
+        dialog.close();
+        await Future.delayed(const Duration());
+      }
+    } else if (Platform.isMacOS) {
+      throw UnimplementedError("_installUnityHub is not implemented for macOS");
+    } else if (Platform.isLinux) {
+      throw UnimplementedError("_installUnityHub is not implemented for Linux");
+    }
+    throw Error();
   }
 }
