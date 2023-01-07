@@ -8,13 +8,13 @@ import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:system_info2/system_info2.dart';
-import 'package:tiny_vcc/widgets/console_dialog.dart';
 import 'package:url_launcher/link.dart';
 
 import '../globals.dart';
 import '../providers.dart';
 import '../utils.dart';
 import '../utils/system_info.dart';
+import '../widgets/console_dialog.dart';
 import '../widgets/copyable_text.dart';
 
 enum RequirementState { ok, ng, notChecked }
@@ -74,6 +74,8 @@ final _unityStateProvider = FutureProvider.autoDispose((ref) async {
   return hasUnity ? StepState.complete : StepState.error;
 });
 
+final _stdoutProvider = StateProvider.autoDispose((ref) => '');
+
 class RequirementsRoute extends ConsumerWidget {
   static const routeName = '/requirements';
 
@@ -85,6 +87,10 @@ class RequirementsRoute extends ConsumerWidget {
       Uri.parse('https://vcc.docs.vrchat.com/vpm/cli/#installation--updating');
   final _unityHubDownloadPageUri =
       Uri.parse('https://unity.com/download#how-get-started');
+  final _unityArchiveUri =
+      Uri.parse('https://unity.com/releases/editor/archive');
+  final _currentUnityVersionUri =
+      Uri.parse('https://docs.vrchat.com/docs/current-unity-version');
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -192,7 +198,34 @@ class RequirementsRoute extends ConsumerWidget {
             title: const Text('Unity'),
             content: Container(
               alignment: Alignment.centerLeft,
-              child: Text('Install Unity.'),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                      'Install Unity with Unity Hub. You can also install from archive, but you should install the exact version which VRChat specifies.'),
+                  const Padding(padding: EdgeInsets.symmetric(vertical: 4)),
+                  const Text(
+                      'In manual installation, you must install some modules together:'),
+                  Platform.isWindows
+                      ? const Text(
+                          '  - Android Build Support (to upload for Quest)')
+                      : const Text(
+                          '  - Android Build Support (to upload for Quest)\n'
+                          '  - Windows Build Support (mono) (to upload for PC from macOS or Linux'),
+                  Link(
+                    uri: _currentUnityVersionUri,
+                    builder: (context, followLink) => TextButton(
+                        onPressed: followLink,
+                        child: Text(_currentUnityVersionUri.toString())),
+                  ),
+                  Link(
+                    uri: _unityArchiveUri,
+                    builder: (context, followLink) => TextButton(
+                        onPressed: followLink,
+                        child: Text(_unityArchiveUri.toString())),
+                  ),
+                ],
+              ),
             ),
             state: _stepState(unityState),
           ),
@@ -475,22 +508,31 @@ class RequirementsRoute extends ConsumerWidget {
   }
 
   static Future<bool> _installUnity(BuildContext context, WidgetRef ref) async {
-    final stdoutBuilder = StateProvider((ref) => '');
-
     showDialog(
         context: context,
         barrierDismissible: false,
         builder: ((context) => ConsoleDialog(
-            title: 'Install Unity', consoleOutputProvider: stdoutBuilder)));
-
-    final vcc = ref.read(vccServiceProvider);
-    final result = await vcc.installUnity(
+            title: 'Install Unity', consoleOutputProvider: _stdoutProvider)));
+    try {
+      final hub = ref.read(unityHubServiceProvider);
+      final modules =
+          Platform.isWindows ? ['android'] : ['android', 'windows-mono'];
+      await hub.installUnity(
+        '2019.4.31f1',
+        'bd5abf232a62',
+        modules,
         onStdout: (event) {
-          ref.read(stdoutBuilder.notifier).state += event;
+          ref.read(_stdoutProvider.notifier).state += event;
         },
-        onStderr: (event) {});
-
-    Navigator.of(context).pop();
-    return result;
+        onStderr: (event) {},
+      );
+      return true;
+    } on Exception catch (error) {
+      logger?.e(error);
+      rethrow;
+    } finally {
+      Navigator.of(context).pop();
+      await Future.delayed(const Duration());
+    }
   }
 }
