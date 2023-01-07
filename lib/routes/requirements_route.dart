@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
@@ -9,7 +10,9 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:system_info2/system_info2.dart';
 import 'package:url_launcher/link.dart';
+import 'package:xterm/core.dart';
 
+import '../data/exceptions.dart';
 import '../data/tiny_vcc_data.dart';
 import '../globals.dart';
 import '../providers.dart';
@@ -30,10 +33,11 @@ enum _StepIndex {
 final _stepProvider =
     StateProvider.autoDispose<_StepIndex>((ref) => _StepIndex.dotnet);
 
-final _stdoutProvider = StateProvider.autoDispose((ref) => '');
+final _terminalProvider = Provider.autoDispose((ref) => Terminal());
 
 class RequirementsRoute extends ConsumerWidget {
   static const routeName = '/requirements';
+  static final _reLF = RegExp('[^\r]\n');
 
   RequirementsRoute({super.key});
 
@@ -55,6 +59,7 @@ class RequirementsRoute extends ConsumerWidget {
     final vpmState = ref.watch(vpmStateProvider);
     final hubState = ref.watch(unityHubStateProvider);
     final unityState = ref.watch(unityStateProvider);
+
     ref.listen(dotNetStateProvider, (previous, next) {
       if (!next.isLoading && next.valueOrNull == RequirementState.ng) {
         ref.read(_stepProvider.notifier).state = _StepIndex.dotnet;
@@ -478,24 +483,48 @@ class RequirementsRoute extends ConsumerWidget {
   }
 
   static Future<bool> _installUnity(BuildContext context, WidgetRef ref) async {
-    showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: ((context) => ConsoleDialog(
-            title: 'Install Unity', consoleOutputProvider: _stdoutProvider)));
+    final terminal = ref.read(_terminalProvider);
     try {
       final hub = ref.read(unityHubServiceProvider);
       final modules =
           Platform.isWindows ? ['android'] : ['android', 'windows-mono'];
-      await hub.installUnity(
+      final process = await hub.installUnity(
         '2019.4.31f1',
         'bd5abf232a62',
         modules,
-        onStdout: (event) {
-          ref.read(_stdoutProvider.notifier).state += event;
-        },
-        onStderr: (event) {},
       );
+      process.stdout.transform(utf8.decoder).listen((event) {
+        // Enter 'n' for child-modules
+        if (event.contains('(Y/n)')) {
+          process.stdin.writeln('n');
+        }
+        final str = event.replaceAll(_reLF, '\r\n');
+        terminal.write(str);
+      });
+      process.stderr.transform(utf8.decoder).listen((event) {
+        terminal.write(event);
+      });
+
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => ConsoleDialog(
+          title: 'Installing Unity',
+          terminal: terminal,
+          actions: [
+            TextButton(
+                onPressed: () {
+                  process.kill();
+                },
+                child: const Text('Cancel')),
+          ],
+        ),
+      );
+
+      final exitCode = await process.exitCode;
+      if (exitCode != 0) {
+        throw NonZeroExitException('Unity Hub', [], exitCode);
+      }
       return true;
     } on Exception catch (error) {
       logger?.e(error);
