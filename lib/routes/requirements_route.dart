@@ -83,7 +83,8 @@ class RequirementsRoute extends ConsumerWidget {
       Uri.parse('https://dotnet.microsoft.com/download/dotnet/6.0');
   final _vpmCliDocsUri =
       Uri.parse('https://vcc.docs.vrchat.com/vpm/cli/#installation--updating');
-  final _unityHubDownloadPageUri = Uri.parse('https://unity.com/download');
+  final _unityHubDownloadPageUri =
+      Uri.parse('https://unity.com/download#how-get-started');
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -395,7 +396,7 @@ class RequirementsRoute extends ConsumerWidget {
 
   static Future<bool> _installUnityHub(
       BuildContext context, WidgetRef ref) async {
-    if (Platform.isWindows) {
+    if (Platform.isWindows || Platform.isMacOS) {
       final dialog = showProgressDialog(
           context, Theme.of(context), 'Downloading Unity Hub installer.');
       File? installer;
@@ -405,9 +406,18 @@ class RequirementsRoute extends ConsumerWidget {
         await dir.create(recursive: true);
 
         final hub = ref.read(unityHubServiceProvider);
-        installer = File(p.join(dir.path,
-            'unity-hub-installer-${Random.secure().nextInt(65535)}.exe'));
-        final installerUri = hub.getWindowsInstallerUri();
+        final Uri installerUri;
+        if (Platform.isWindows) {
+          installer = File(p.join(dir.path,
+              'unity-hub-installer-${Random.secure().nextInt(65535)}.exe'));
+          installerUri = hub.getWindowsInstallerUri();
+        } else if (Platform.isMacOS) {
+          installer = File(p.join(dir.path,
+              'unity-hub-installer-${Random.secure().nextInt(65535)}.dmg'));
+          installerUri = hub.getMacInstallerUri();
+        } else {
+          throw UnimplementedError();
+        }
 
         logger?.i(
             'Downloading dotnet sdk installer from $installerUri to $installer.');
@@ -425,7 +435,25 @@ class RequirementsRoute extends ConsumerWidget {
 
         dialog.update(value: 1, msg: 'Installing Unity Hub.');
         logger?.i('Executing installer: $installer');
-        final result = await Process.run(installer.path, [], runInShell: true);
+        final ProcessResult result;
+        if (Platform.isWindows) {
+          result = await Process.run(installer.path, [], runInShell: true);
+        } else if (Platform.isMacOS) {
+          if (await Directory('/Applications/Unity Hub.app').exists()) {
+            throw Exception('"/Applications/Unity Hub.app" already exists.');
+          }
+          result = await Process.run('sh', [
+            '-e',
+            '-c',
+            [
+              'hdiutil mount ${installer.path}',
+              'cp -rv /Volumes/Unity\\ Hub\\ */Unity\\ Hub.app /Applications/',
+              'hdiutil unmount /Volumes/Unity\\ Hub\\ *',
+            ].join('\n'),
+          ]);
+        } else {
+          throw UnimplementedError();
+        }
         logger
             ?.i('Finished installer with code ${result.exitCode}: $installer');
 
@@ -440,8 +468,6 @@ class RequirementsRoute extends ConsumerWidget {
         dialog.close();
         await Future.delayed(const Duration());
       }
-    } else if (Platform.isMacOS) {
-      throw UnimplementedError("_installUnityHub is not implemented for macOS");
     } else if (Platform.isLinux) {
       throw UnimplementedError("_installUnityHub is not implemented for Linux");
     }
