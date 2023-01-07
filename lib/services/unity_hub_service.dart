@@ -27,4 +27,14 @@ class UnityHubService {
     });
     return Map.fromEntries(entries);
   }
+
+  Uri getWindowsInstallerUri() {
+    return Uri.parse(
+        'https://public-cdn.cloud.unity3d.com/hub/prod/UnityHubSetup.exe');
+  }
+
+  Uri getMacInstallerUri() {
+    return Uri.parse(
+        'https://public-cdn.cloud.unity3d.com/hub/prod/UnityHubSetup.dmg');
+  }
 }
