@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import '../data/exceptions.dart';
@@ -26,6 +27,43 @@ class UnityHubService {
       return MapEntry(version, unityExe);
     });
     return Map.fromEntries(entries);
+  }
+
+  Future<void> installUnity(
+    String version,
+    String changeset,
+    List<String>? modules, {
+    required void Function(String event) onStdout,
+    required void Function(String event) onStderr,
+  }) async {
+    final args = [
+      '--',
+      '--headless',
+      'install',
+      '--version',
+      version,
+      '-c',
+      changeset,
+    ];
+    if (modules != null && modules.isNotEmpty) {
+      args.add('--module');
+      args.addAll(modules);
+    }
+
+    final process = await Process.start(_unityHubExe, args);
+    final stdout = process.stdout.transform(utf8.decoder).asBroadcastStream();
+    stdout.listen(onStdout);
+    stdout.listen((event) {
+      // Enter 'n' for child-modules
+      if (event.contains('(Y/n)')) {
+        process.stdin.writeln('n');
+      }
+    });
+    process.stderr.transform(utf8.decoder).listen(onStderr);
+    final exitCode = await process.exitCode;
+    if (exitCode != 0) {
+      throw NonZeroExitException(_unityHubExe, args, exitCode);
+    }
   }
 
   Uri getWindowsInstallerUri() {
