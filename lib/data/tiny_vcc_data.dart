@@ -4,6 +4,8 @@ enum TinyVccThemeMode {
   system,
 }
 
+enum RequirementState { ok, ng, notChecked }
+
 class TinyVccSettings {
   TinyVccSettings({required this.themeMode});
 
