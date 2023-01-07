@@ -334,9 +334,15 @@ class RequirementsRoute extends ConsumerWidget {
 
       dialog.update(value: 1, msg: 'Installing .NET 6.0 SDK.');
       logger?.i('Executing installer: $installer');
-      final result = await Process.run(installer.path, []);
+      ProcessResult result;
+      if (Platform.isWindows) {
+        result = await Process.run(installer.path, []);
+      } else if (Platform.isMacOS) {
+        result = await Process.run('open', ['-W', installer.path]);
+      } else {
+        throw UnimplementedError();
+      }
       logger?.i('Finished installer with code ${result.exitCode}: $installer');
-
       return result.exitCode == 0;
     } on Exception catch (error) {
       logger?.e(error.toString());
