@@ -262,18 +262,22 @@ class RequirementsRoute extends ConsumerWidget {
 
   static StepState _stepState(AsyncValue<RequirementState> state) {
     return state.when(
-        data: ((data) {
-          switch (data) {
-            case RequirementState.ok:
-              return StepState.complete;
-            case RequirementState.ng:
-              return StepState.error;
-            case RequirementState.notChecked:
-              return StepState.indexed;
-          }
-        }),
+        data: _stepStateSub,
         error: (obj, trace) => StepState.indexed,
-        loading: () => StepState.indexed);
+        loading: () => state.hasValue
+            ? _stepStateSub(state.requireValue)
+            : StepState.indexed);
+  }
+
+  static StepState _stepStateSub(RequirementState state) {
+    switch (state) {
+      case RequirementState.ok:
+        return StepState.complete;
+      case RequirementState.ng:
+        return StepState.error;
+      case RequirementState.notChecked:
+        return StepState.indexed;
+    }
   }
 
   static ControlsWidgetBuilder _controlsBuilder(WidgetRef ref) {
@@ -304,6 +308,7 @@ class RequirementsRoute extends ConsumerWidget {
   }
 
   static void _refresh(WidgetRef ref) {
+    ref.refresh(vccSettingsProvider);
     ref.refresh(dotNetStateProvider);
     ref.refresh(vpmStateProvider);
     ref.refresh(unityHubStateProvider);

@@ -24,6 +24,11 @@ class DotNetService {
         _dotnetCommand = result.stdout.toString().trim();
         return _dotnetCommand;
       }
+      final defaultDotNet = File('C:\\Program Files\\dotnet\\dotnet.exe');
+      if (defaultDotNet.existsSync()) {
+        _dotnetCommand = defaultDotNet.path;
+        return _dotnetCommand;
+      }
       _dotnetCommand = '';
       return null;
     }

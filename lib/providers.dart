@@ -76,7 +76,11 @@ final readyToUseProvider = FutureProvider.autoDispose((ref) async {
     // do nothing, just catch
   }
 
-  return RequirementState.ok;
+  final set = states.map((e) => e.valueOrNull).toSet();
+  if (set.length == 1 && set.contains(RequirementState.ok)) {
+    return RequirementState.ok;
+  }
+  return RequirementState.notChecked;
 });
 
 final dotNetStateProvider = FutureProvider.autoDispose((ref) async {
@@ -99,59 +103,77 @@ final dotNetStateProvider = FutureProvider.autoDispose((ref) async {
 });
 
 final vpmStateProvider = FutureProvider.autoDispose((ref) async {
-  final vcc = ref.watch(vccServiceProvider);
-  final hasVcc = vcc.isInstalled();
-  if (!hasVcc) {
-    return RequirementState.ng;
-  }
-  final version = await ref.read(vccServiceProvider).getCliVersion();
-  if (version >= requiredVpmVersion) {
-    return RequirementState.ok;
-  }
-  return RequirementState.ng;
+  final dotnet = ref.watch(dotNetStateProvider);
+  final state = dotnet.when(
+    data: (data) async {
+      switch (data) {
+        case RequirementState.ok:
+          final vcc = ref.watch(vccServiceProvider);
+          final hasVcc = vcc.isInstalled();
+          if (!hasVcc) {
+            return RequirementState.ng;
+          }
+          final version = await ref.read(vccServiceProvider).getCliVersion();
+          if (version >= requiredVpmVersion) {
+            return RequirementState.ok;
+          }
+          return RequirementState.ng;
+        case RequirementState.ng:
+        case RequirementState.notChecked:
+          return RequirementState.notChecked;
+      }
+    },
+    error: (error, stack) => Future.value(RequirementState.notChecked),
+    loading: () => Future.value(RequirementState.notChecked),
+  );
+  return state;
 });
 
 final unityHubStateProvider = FutureProvider.autoDispose((ref) async {
-  final settings = ref.watch(vccSettingsProvider);
-  if (settings.isLoading || settings.hasError) {
-    return RequirementState.notChecked;
-  }
-
-  final vcc = ref.watch(vccServiceProvider);
-  if (!vcc.isInstalled()) {
-    return RequirementState.notChecked;
-  }
-
-  final hasHub = await vcc.checkHub();
-  if (!hasHub) {
-    return RequirementState.ng;
-  }
-
-  if (!await (File(settings.requireValue.pathToUnityHub).exists())) {
-    return RequirementState.ng;
-  }
-
-  return RequirementState.ok;
+  final vpm = ref.watch(vpmStateProvider);
+  final state = vpm.when(
+    data: (data) async {
+      switch (data) {
+        case RequirementState.ok:
+          final vcc = ref.watch(vccServiceProvider);
+          final hasHub = await vcc.checkHub();
+          if (!hasHub) {
+            return RequirementState.ng;
+          }
+          return RequirementState.ok;
+        case RequirementState.ng:
+        case RequirementState.notChecked:
+          return RequirementState.notChecked;
+      }
+    },
+    error: (error, stack) => Future.value(RequirementState.notChecked),
+    loading: () => Future.value(RequirementState.notChecked),
+  );
+  return state;
 });
 
 final unityStateProvider = FutureProvider.autoDispose((ref) async {
-  final settings = ref.watch(vccSettingsProvider);
-  if (settings.isLoading || settings.hasError) {
-    return RequirementState.notChecked;
-  }
-
-  final vcc = ref.watch(vccServiceProvider);
-  if (!vcc.isInstalled()) {
-    return RequirementState.notChecked;
-  }
-  final hasUnity = await vcc.checkUnity();
-  if (!hasUnity) {
-    return RequirementState.ng;
-  }
-
-  if (!await (File(settings.requireValue.pathToUnityExe).exists())) {
-    return RequirementState.ng;
-  }
-
-  return RequirementState.ok;
+  final hub = ref.watch(unityHubStateProvider);
+  final state = hub.when(data: (data) async {
+    switch (data) {
+      case RequirementState.ok:
+        final vcc = ref.watch(vccServiceProvider);
+        if (!vcc.isInstalled()) {
+          return RequirementState.notChecked;
+        }
+        final hasUnity = await vcc.checkUnity();
+        if (!hasUnity) {
+          return RequirementState.ng;
+        }
+        return RequirementState.ok;
+      case RequirementState.ng:
+      case RequirementState.notChecked:
+        return RequirementState.notChecked;
+    }
+  }, error: (error, stack) {
+    return Future.value(RequirementState.notChecked);
+  }, loading: () {
+    return Future.value(RequirementState.notChecked);
+  });
+  return state;
 });
