@@ -10,6 +10,7 @@ import 'package:yaml/yaml.dart';
 
 import '../data/exceptions.dart';
 import '../data/vcc_data.dart';
+import '../globals.dart';
 import 'unity_hub_service.dart';
 
 class VccProject {
@@ -120,7 +121,8 @@ class VccService {
     final home = Platform.isWindows
         ? Platform.environment['USERPROFILE']!
         : Platform.environment['HOME']!;
-    final vpmPath = p.join(home, '.dotnet', 'tools', 'vpm');
+    final ext = Platform.isWindows ? '.exe' : '';
+    final vpmPath = p.join(home, '.dotnet', 'tools', 'vpm$ext');
     if (File(vpmPath).existsSync()) {
       _vpmPath = vpmPath;
       return vpmPath;
@@ -342,6 +344,10 @@ class VccService {
     if (str.contains('Found unity version  at')) {
       return false;
     }
+
+    if (await _getSettingsFile().exists() == false) {
+      return false;
+    }
     final unityHubExe = (await getSettings()).pathToUnityHub;
     if (!await File(unityHubExe).exists()) {
       return false;
@@ -358,6 +364,9 @@ class VccService {
 
     if (Platform.isMacOS) {
       // vpm doesn't update pathToUnityExe and unityEditors on macOS.
+      if (await _getSettingsFile().exists() == false) {
+        return false;
+      }
       final settings = await getSettings();
       if (settings.pathToUnityExe == '') {
         final editors = await listUnity();
@@ -371,6 +380,11 @@ class VccService {
         );
       }
       return true;
+    }
+
+    // we can't rely exit code 0 when no unity editors exist.
+    if (result.stdout.toString().contains('Found No Editors')) {
+      return false;
     }
 
     return true;

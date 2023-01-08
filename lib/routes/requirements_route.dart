@@ -60,7 +60,13 @@ final _hasBrewProvider = FutureProvider.autoDispose((ref) async {
     return false;
   }
   final result = await Process.run('which', ['brew']);
-  return result.exitCode == 0;
+  if (result.exitCode == 0) {
+    return true;
+  }
+  if (await File('/usr/local/bin/brew').exists()) {
+    return true;
+  }
+  return false;
 });
 
 class RequirementsRoute extends ConsumerWidget {
@@ -256,18 +262,22 @@ class RequirementsRoute extends ConsumerWidget {
 
   static StepState _stepState(AsyncValue<RequirementState> state) {
     return state.when(
-        data: ((data) {
-          switch (data) {
-            case RequirementState.ok:
-              return StepState.complete;
-            case RequirementState.ng:
-              return StepState.error;
-            case RequirementState.notChecked:
-              return StepState.indexed;
-          }
-        }),
+        data: _stepStateSub,
         error: (obj, trace) => StepState.indexed,
-        loading: () => StepState.indexed);
+        loading: () => state.hasValue
+            ? _stepStateSub(state.requireValue)
+            : StepState.indexed);
+  }
+
+  static StepState _stepStateSub(RequirementState state) {
+    switch (state) {
+      case RequirementState.ok:
+        return StepState.complete;
+      case RequirementState.ng:
+        return StepState.error;
+      case RequirementState.notChecked:
+        return StepState.indexed;
+    }
   }
 
   static ControlsWidgetBuilder _controlsBuilder(WidgetRef ref) {
@@ -298,6 +308,7 @@ class RequirementsRoute extends ConsumerWidget {
   }
 
   static void _refresh(WidgetRef ref) {
+    ref.refresh(vccSettingsProvider);
     ref.refresh(dotNetStateProvider);
     ref.refresh(vpmStateProvider);
     ref.refresh(unityHubStateProvider);
@@ -474,6 +485,8 @@ class RequirementsRoute extends ConsumerWidget {
 
       logger?.i('Installing VPM templates.');
       await vcc.installTemplates();
+      logger?.i('Listing repos.');
+      await vcc.listRepos();
     } on Exception catch (error) {
       logger?.e(error.toString());
       rethrow;
