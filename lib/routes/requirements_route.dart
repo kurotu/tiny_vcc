@@ -485,6 +485,8 @@ class RequirementsRoute extends ConsumerWidget {
 
       logger?.i('Installing VPM templates.');
       await vcc.installTemplates();
+      logger?.i('Listing repos.');
+      await vcc.listRepos();
     } on Exception catch (error) {
       logger?.e(error.toString());
       rethrow;
