@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33110.190
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "TinyVccInstaller", "TinyVccInstaller\TinyVccInstaller.vdproj", "{035261A3-215D-41C1-9621-D5DB4AF553E0}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Default = Debug|Default
+		Release|Default = Release|Default
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{035261A3-215D-41C1-9621-D5DB4AF553E0}.Debug|Default.ActiveCfg = Debug
+		{035261A3-215D-41C1-9621-D5DB4AF553E0}.Debug|Default.Build.0 = Debug
+		{035261A3-215D-41C1-9621-D5DB4AF553E0}.Release|Default.ActiveCfg = Release
+		{035261A3-215D-41C1-9621-D5DB4AF553E0}.Release|Default.Build.0 = Release
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {37D7FE3D-D9B0-4BD1-A0A9-4CAA4643C5D9}
+	EndGlobalSection
+EndGlobal
