@@ -204,7 +204,8 @@ class ProjectRoute extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final packagesList = ref.watch(_packageItemListProvider(project));
     ref.listen(_needsToShowUnityBannerProvider, (previous, next) {
-      if (next == true) {
+      if (previous != next && next == true) {
+        logger?.i('All requirements satisfied');
         _showMessageToCloseUnity(ref);
       }
     });

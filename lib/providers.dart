@@ -118,6 +118,10 @@ final unityHubStateProvider = FutureProvider.autoDispose((ref) async {
   }
 
   final vcc = ref.watch(vccServiceProvider);
+  if (!vcc.isInstalled()) {
+    return RequirementState.notChecked;
+  }
+
   final hasHub = await vcc.checkHub();
   if (!hasHub) {
     return RequirementState.ng;
@@ -137,9 +141,12 @@ final unityStateProvider = FutureProvider.autoDispose((ref) async {
   }
 
   final vcc = ref.watch(vccServiceProvider);
+  if (!vcc.isInstalled()) {
+    return RequirementState.notChecked;
+  }
   final hasUnity = await vcc.checkUnity();
   if (!hasUnity) {
-    RequirementState.ng;
+    return RequirementState.ng;
   }
 
   if (!await (File(settings.requireValue.pathToUnityExe).exists())) {

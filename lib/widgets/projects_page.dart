@@ -121,11 +121,8 @@ class ProjectsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     ref.listen(readyToUseProvider, (previous, next) {
       if (next.valueOrNull == RequirementState.ng) {
+        logger?.i('There are missing requirements');
         Navigator.of(context).pushReplacementNamed(RequirementsRoute.routeName);
-        ref.refresh(dotNetStateProvider);
-        ref.refresh(vpmStateProvider);
-        ref.refresh(unityHubStateProvider);
-        ref.refresh(unityStateProvider);
       }
     });
     final settings = ref.watch(vccSettingsProvider);

@@ -30,8 +30,28 @@ enum _StepIndex {
   complete,
 }
 
-final _stepProvider =
-    StateProvider.autoDispose<_StepIndex>((ref) => _StepIndex.dotnet);
+final _stepProvider = StateProvider.autoDispose<_StepIndex>((ref) {
+  final dotnet = ref.read(dotNetStateProvider);
+  if (dotnet.valueOrNull == RequirementState.ng) {
+    return _StepIndex.dotnet;
+  }
+
+  final vpm = ref.read(vpmStateProvider);
+  if (vpm.valueOrNull == RequirementState.ng) {
+    return _StepIndex.vpm;
+  }
+
+  final hub = ref.read(unityHubStateProvider);
+  if (hub.valueOrNull == RequirementState.ng) {
+    return _StepIndex.unityHub;
+  }
+
+  final unity = ref.read(unityStateProvider);
+  if (unity.valueOrNull == RequirementState.ng) {
+    return _StepIndex.dotnet;
+  }
+  return _StepIndex.dotnet;
+});
 
 final _terminalProvider = Provider.autoDispose((ref) => Terminal());
 
