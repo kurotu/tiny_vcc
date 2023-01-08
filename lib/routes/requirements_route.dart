@@ -60,7 +60,13 @@ final _hasBrewProvider = FutureProvider.autoDispose((ref) async {
     return false;
   }
   final result = await Process.run('which', ['brew']);
-  return result.exitCode == 0;
+  if (result.exitCode == 0) {
+    return true;
+  }
+  if (await File('/usr/local/bin/brew').exists()) {
+    return true;
+  }
+  return false;
 });
 
 class RequirementsRoute extends ConsumerWidget {
