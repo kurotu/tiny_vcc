@@ -81,7 +81,7 @@ class RequirementsRoute extends ConsumerWidget {
       }
     });
     ref.listen(readyToUseProvider, (previous, next) {
-      if (!next.isLoading && next.valueOrNull == true) {
+      if (!next.isLoading && next.valueOrNull == RequirementState.ok) {
         Navigator.of(context).pushReplacementNamed(MainRoute.routeName);
       }
     });

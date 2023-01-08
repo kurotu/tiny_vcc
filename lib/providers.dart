@@ -64,19 +64,19 @@ final readyToUseProvider = FutureProvider.autoDispose((ref) async {
 
   try {
     states.firstWhere((element) => element.isLoading);
-    return true;
+    return RequirementState.notChecked;
   } on StateError {
     // do nothing, just catch
   }
 
   try {
     states.firstWhere((element) => element.valueOrNull == RequirementState.ng);
-    return false;
+    return RequirementState.ng;
   } on StateError {
     // do nothing, just catch
   }
 
-  return true;
+  return RequirementState.ok;
 });
 
 final dotNetStateProvider = FutureProvider.autoDispose((ref) async {

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/exceptions.dart';
+import '../data/tiny_vcc_data.dart';
 import '../globals.dart';
 import '../providers.dart';
 import '../routes/legacy_project_route.dart';
@@ -119,7 +120,7 @@ class ProjectsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     ref.listen(readyToUseProvider, (previous, next) {
-      if (next.valueOrNull == false) {
+      if (next.valueOrNull == RequirementState.ng) {
         Navigator.of(context).pushReplacementNamed(RequirementsRoute.routeName);
         ref.refresh(dotNetStateProvider);
         ref.refresh(vpmStateProvider);
