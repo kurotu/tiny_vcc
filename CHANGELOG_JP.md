@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### 追加
+
+- 必須ソフトウェアのインストールを自動化
+
+### 変更
+
+- 必須ソフトウェアページを新しいレイアウトに変更。
+
 ## [0.2.0] - 2023-01-04
 
 ### 追加
