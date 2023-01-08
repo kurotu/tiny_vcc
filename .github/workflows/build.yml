@@ -73,7 +73,7 @@ jobs:
 
       - uses: actions/download-artifact@v3
         with:
-          name: windows
+          name: msi
           path: build/windows/runner/Release
 
       - uses: actions/download-artifact@v3
@@ -103,7 +103,7 @@ jobs:
 
       - uses: softprops/action-gh-release@v1
         with:
-          # draft: true
+          draft: true
           body_path: ${{ github.workspace }}-release.txt
           files: |
             *.zip
