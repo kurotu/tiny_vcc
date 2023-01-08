@@ -382,6 +382,11 @@ class VccService {
       return true;
     }
 
+    // we can't rely exit code 0 when no unity editors exist.
+    if (result.stdout.toString().contains('Found No Editors')) {
+      return false;
+    }
+
     return true;
   }
 
