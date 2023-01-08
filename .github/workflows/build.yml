@@ -25,6 +25,23 @@ jobs:
           name: windows
           path: build/windows/runner/Release
 
+  build-msi:
+    needs: [build-windows]
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/download-artifact@v3
+        with:
+          name: windows
+          path: build/windows/runner/Release
+
+      - uses: ilammy/msvc-dev-cmd@v1
+      - run: devenv .\\installer\\TinyVccInstaller\\TinyVccInstaller.sln /build Release
+      - uses: actions/upload-artifact@v3
+        with:
+          name: msi
+          path: installer/TinyVccInstaller/TinyVccInstaller/Release
+
   build-macos:
     runs-on: macos-latest
     steps:
@@ -66,7 +83,7 @@ jobs:
 
   release:
     if: startsWith(github.ref, 'refs/tags/')
-    needs: [build-windows, build-macos, build-linux]
+    needs: [build-msi, build-macos, build-linux]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
