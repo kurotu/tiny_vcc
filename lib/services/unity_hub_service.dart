@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import '../data/exceptions.dart';
@@ -26,5 +27,37 @@ class UnityHubService {
       return MapEntry(version, unityExe);
     });
     return Map.fromEntries(entries);
+  }
+
+  Future<Process> installUnity(
+    String version,
+    String changeset,
+    List<String>? modules,
+  ) async {
+    final args = [
+      '--',
+      '--headless',
+      'install',
+      '--version',
+      version,
+      '-c',
+      changeset,
+    ];
+    if (modules != null && modules.isNotEmpty) {
+      args.add('--module');
+      args.addAll(modules);
+    }
+
+    return Process.start(_unityHubExe, args);
+  }
+
+  Uri getWindowsInstallerUri() {
+    return Uri.parse(
+        'https://public-cdn.cloud.unity3d.com/hub/prod/UnityHubSetup.exe');
+  }
+
+  Uri getMacInstallerUri() {
+    return Uri.parse(
+        'https://public-cdn.cloud.unity3d.com/hub/prod/UnityHubSetup.dmg');
   }
 }

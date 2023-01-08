@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/exceptions.dart';
+import '../data/tiny_vcc_data.dart';
 import '../globals.dart';
 import '../providers.dart';
 import '../routes/legacy_project_route.dart';
@@ -12,34 +13,6 @@ import '../routes/requirements_route.dart';
 import '../services/vcc_service.dart';
 import '../utils.dart';
 import '../utils/platform_feature.dart';
-
-final _readyToUseProvider = FutureProvider.autoDispose((ref) async {
-  // Quick check for startup.
-  final vcc = ref.read(vccServiceProvider);
-  if (!vcc.isInstalled()) {
-    return false;
-  }
-
-  if (await vcc.getCliVersion() < requiredVpmVersion) {
-    return false;
-  }
-
-  final settings = ref.watch(vccSettingsProvider);
-  if (settings.hasError) {
-    return false;
-  }
-  if (settings.isLoading) {
-    return true;
-  }
-
-  if (!await (File(settings.requireValue.pathToUnityHub).exists())) {
-    return false;
-  }
-  if (!await (File(settings.requireValue.pathToUnityExe).exists())) {
-    return false;
-  }
-  return true;
-});
 
 class ProjectsPage extends ConsumerWidget {
   const ProjectsPage({super.key});
@@ -146,9 +119,13 @@ class ProjectsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.listen(_readyToUseProvider, (previous, next) {
-      if (next.valueOrNull == false) {
+    ref.listen(readyToUseProvider, (previous, next) {
+      if (next.valueOrNull == RequirementState.ng) {
         Navigator.of(context).pushReplacementNamed(RequirementsRoute.routeName);
+        ref.refresh(dotNetStateProvider);
+        ref.refresh(vpmStateProvider);
+        ref.refresh(unityHubStateProvider);
+        ref.refresh(unityStateProvider);
       }
     });
     final settings = ref.watch(vccSettingsProvider);

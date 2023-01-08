@@ -1,337 +1,599 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:http/http.dart' as http;
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
+import 'package:system_info2/system_info2.dart';
+import 'package:url_launcher/link.dart';
+import 'package:xterm/core.dart';
 
+import '../data/exceptions.dart';
+import '../data/tiny_vcc_data.dart';
 import '../globals.dart';
 import '../providers.dart';
 import '../utils.dart';
+import '../utils/system_info.dart';
+import '../widgets/console_dialog.dart';
+import '../widgets/copyable_text.dart';
 import 'main_route.dart';
 
-enum RequirementState { ok, ng, notChecked }
-
-AutoDisposeFutureProvider<RequirementState> _createProvider(
-  AutoDisposeFutureProvider<RequirementState> dependency,
-  FutureOr<bool> Function(Ref ref) isOk,
-) {
-  return FutureProvider.autoDispose((ref) async {
-    final depend = ref.watch(dependency);
-    if (depend.isLoading) {
-      return RequirementState.notChecked;
-    }
-    switch (depend.valueOrNull) {
-      case null:
-      case RequirementState.notChecked:
-      case RequirementState.ng:
-        return RequirementState.notChecked;
-      case RequirementState.ok:
-        return await isOk(ref) ? RequirementState.ok : RequirementState.ng;
-    }
-  });
+enum _StepIndex {
+  dotnet,
+  vpm,
+  unityHub,
+  unity,
+  complete,
 }
 
-final _dotNetCommandStateProvider = FutureProvider.autoDispose((ref) async =>
-    await ref.read(dotNetServiceProvider).isInstalled()
-        ? RequirementState.ok
-        : RequirementState.ng);
+final _stepProvider =
+    StateProvider.autoDispose<_StepIndex>((ref) => _StepIndex.dotnet);
 
-final _dotNet6SdkStateProviver =
-    _createProvider(_dotNetCommandStateProvider, (ref) async {
-  final sdks = await ref.read(dotNetServiceProvider).listSdks();
-  const missingVersion = 'MISSING';
-  final sdk6Version = sdks.keys
-      .firstWhere((v) => v.startsWith('6.'), orElse: () => missingVersion);
-  return sdk6Version != missingVersion;
-});
+final _terminalProvider = Provider.autoDispose((ref) => Terminal());
 
-final _vpmCommandStateProvider =
-    _createProvider(_dotNet6SdkStateProviver, (ref) async {
-  return ref.read(vccServiceProvider).isInstalled();
-});
-
-final _vpmVersionStateProvider =
-    _createProvider(_vpmCommandStateProvider, (ref) async {
-  final version = await ref.read(vccServiceProvider).getCliVersion();
-  return version >= requiredVpmVersion;
-});
-
-final _unityHubStateProvider =
-    _createProvider(_vpmVersionStateProvider, (ref) async {
-  return ref.read(vccServiceProvider).checkHub();
-});
-
-final _unityStateProvider =
-    _createProvider(_unityHubStateProvider, (ref) async {
-  return ref.read(vccServiceProvider).checkUnity();
+final _hasBrewProvider = FutureProvider.autoDispose((ref) async {
+  if (Platform.isWindows) {
+    return false;
+  }
+  final result = await Process.run('which', ['brew']);
+  return result.exitCode == 0;
 });
 
 class RequirementsRoute extends ConsumerWidget {
   static const routeName = '/requirements';
+  static final _reLF = RegExp('[^\r]\n');
 
-  const RequirementsRoute({super.key});
+  RequirementsRoute({super.key});
+
+  final _dotnetDownloadPageUri =
+      Uri.parse('https://dotnet.microsoft.com/download/dotnet/6.0');
+  final _vpmCliDocsUri =
+      Uri.parse('https://vcc.docs.vrchat.com/vpm/cli/#installation--updating');
+  final _unityHubDownloadPageUri =
+      Uri.parse('https://unity.com/download#how-get-started');
+  final _unityArchiveUri =
+      Uri.parse('https://unity.com/releases/editor/archive');
+  final _currentUnityVersionUri =
+      Uri.parse('https://docs.vrchat.com/docs/current-unity-version');
+  final _brewDotNetSdkVersionsUri =
+      Uri.parse('https://github.com/isen-ng/homebrew-dotnet-sdk-versions');
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.listen(_dotNetCommandStateProvider, (previous, next) {
-      next.whenData((value) {
-        if (value == RequirementState.ng) {
-          _showDotNetBanner(ref);
-        }
-      });
+    final step = ref.watch(_stepProvider);
+    final dotnetState = ref.watch(dotNetStateProvider);
+    final vpmState = ref.watch(vpmStateProvider);
+    final hubState = ref.watch(unityHubStateProvider);
+    final unityState = ref.watch(unityStateProvider);
+    final hasBrew = ref.watch(_hasBrewProvider);
+
+    ref.listen(dotNetStateProvider, (previous, next) {
+      if (!next.isLoading && next.valueOrNull == RequirementState.ng) {
+        ref.read(_stepProvider.notifier).state = _StepIndex.dotnet;
+      }
     });
-    ref.listen(_dotNet6SdkStateProviver, (previous, next) {
-      next.whenData((value) {
-        if (value == RequirementState.ng) {
-          _showDotNetBanner(ref);
-        }
-      });
+    ref.listen(vpmStateProvider, (previous, next) {
+      if (!next.isLoading && next.valueOrNull == RequirementState.ng) {
+        ref.read(_stepProvider.notifier).state = _StepIndex.vpm;
+      }
     });
-    ref.listen(_vpmCommandStateProvider, (previous, next) {
-      next.whenData((value) {
-        if (value == RequirementState.ng) {
-          _showVpmInstallBanner(context, ref);
-        }
-      });
+    ref.listen(unityHubStateProvider, (previous, next) {
+      if (!next.isLoading && next.valueOrNull == RequirementState.ng) {
+        ref.read(_stepProvider.notifier).state = _StepIndex.unityHub;
+      }
     });
-    ref.listen(_vpmVersionStateProvider, (previous, next) {
-      next.whenData((value) {
-        if (value == RequirementState.ng) {
-          _showVpmUpdateBanner(context, ref);
-        }
-      });
+    ref.listen(unityStateProvider, (previous, next) {
+      if (!next.isLoading && next.valueOrNull == RequirementState.ng) {
+        ref.read(_stepProvider.notifier).state = _StepIndex.unity;
+      }
     });
-    ref.listen(_unityHubStateProvider, (previous, next) {
-      next.whenData((value) {
-        if (value == RequirementState.ng) {
-          _showUnityHubBanner(ref);
-        }
-      });
+    ref.listen(readyToUseProvider, (previous, next) {
+      if (!next.isLoading && next.valueOrNull == RequirementState.ok) {
+        Navigator.of(context).pushReplacementNamed(MainRoute.routeName);
+      }
     });
-    ref.listen(_unityStateProvider, ((previous, next) {
-      next.whenData((value) {
-        if (value == RequirementState.ng) {
-          _showUnityBanner(ref);
-        }
-        if (value == RequirementState.ok) {
-          ref.refresh(vccSettingsProvider);
-          Navigator.pushReplacementNamed(context, MainRoute.routeName);
-        }
-      });
-    }));
 
     return Scaffold(
       appBar: AppBar(title: const Text('Requirements')),
-      body: Center(
-        child: Wrap(
-          direction: Axis.vertical,
-          crossAxisAlignment: WrapCrossAlignment.start,
-          spacing: 8,
-          children: [
-            _RequirementItem(_dotNetCommandStateProvider, 'dotnet command'),
-            _RequirementItem(_dotNet6SdkStateProviver, '.NET 6.0 SDK'),
-            _RequirementItem(_vpmCommandStateProvider, 'vpm command'),
-            _RequirementItem(_vpmVersionStateProvider, 'VPM CLI version'),
-            _RequirementItem(_vpmVersionStateProvider, 'Unity Hub'),
-            _RequirementItem(_vpmVersionStateProvider, 'Unity'),
-          ],
-        ),
+      body: Stepper(
+        controlsBuilder: _controlsBuilder(ref),
+        onStepTapped: (value) {
+          ref.read(_stepProvider.notifier).state = _StepIndex.values[value];
+        },
+        currentStep: step.index,
+        steps: [
+          Step(
+            title: const Text('.NET 6.0 SDK'),
+            content: Container(
+                alignment: Alignment.centerLeft,
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: hasBrew.valueOrNull == true
+                        ? [
+                            const Text(
+                                'Install .NET 6.0 SDK with Homebrew. You can also install with following command.'),
+                            Container(
+                              margin: const EdgeInsets.symmetric(vertical: 16),
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                  color: Colors.black12,
+                                  borderRadius: BorderRadius.circular(4)),
+                              child: CopyableText(
+                                  'brew tap isen-ng/dotnet-sdk-versions\n'
+                                  'brew install --cask dotnet-sdk6-0-400'),
+                            ),
+                            Link(
+                              uri: _brewDotNetSdkVersionsUri,
+                              builder: (context, followLink) => TextButton(
+                                  onPressed: followLink,
+                                  child: Text(
+                                      _brewDotNetSdkVersionsUri.toString())),
+                            ),
+                          ]
+                        : [
+                            const Text(
+                                'Install .NET 6.0 SDK. You can also download the SDK installer from web.'),
+                            Link(
+                                uri: _dotnetDownloadPageUri,
+                                builder: (context, followLink) => TextButton(
+                                    onPressed: followLink,
+                                    child: Text(
+                                        _dotnetDownloadPageUri.toString())))
+                          ])),
+            state: _stepState(dotnetState),
+          ),
+          Step(
+            title: const Text('VPM CLI'),
+            content: Container(
+              alignment: Alignment.centerLeft,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                      'Install VPM CLI. You can also install with following command.'),
+                  Container(
+                    margin: const EdgeInsets.symmetric(vertical: 16),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                        color: Colors.black12,
+                        borderRadius: BorderRadius.circular(4)),
+                    child: CopyableText(
+                        'dotnet tool install --global vrchat.vpm.cli --version ${requiredVpmVersion.toString()}'),
+                  ),
+                  Link(
+                    uri: _vpmCliDocsUri,
+                    builder: (context, followLink) => TextButton(
+                        onPressed: followLink,
+                        child: Text(_vpmCliDocsUri.toString())),
+                  ),
+                ],
+              ),
+            ),
+            state: _stepState(vpmState),
+          ),
+          Step(
+            title: const Text('Unity Hub'),
+            content: Container(
+              alignment: Alignment.centerLeft,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                      'Install Unity Hub. You can also download the installer from web.'),
+                  Link(
+                      uri: _unityHubDownloadPageUri,
+                      builder: (context, followLink) => TextButton(
+                          onPressed: followLink,
+                          child: Text(_unityHubDownloadPageUri.toString())))
+                ],
+              ),
+            ),
+            state: _stepState(hubState),
+          ),
+          Step(
+            title: const Text('Unity'),
+            content: Container(
+              alignment: Alignment.centerLeft,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                      'Install Unity with Unity Hub. You can also install from archive, but you should install the exact version which VRChat specifies.'),
+                  const Padding(padding: EdgeInsets.symmetric(vertical: 4)),
+                  const Text(
+                      'In manual installation, you must install some modules together:'),
+                  Platform.isWindows
+                      ? const Text(
+                          '  - Android Build Support (to upload for Quest)')
+                      : const Text(
+                          '  - Android Build Support (to upload for Quest)\n'
+                          '  - Windows Build Support (mono) (to upload for PC from macOS or Linux'),
+                  Link(
+                    uri: _currentUnityVersionUri,
+                    builder: (context, followLink) => TextButton(
+                        onPressed: followLink,
+                        child: Text(_currentUnityVersionUri.toString())),
+                  ),
+                  Link(
+                    uri: _unityArchiveUri,
+                    builder: (context, followLink) => TextButton(
+                        onPressed: followLink,
+                        child: Text(_unityArchiveUri.toString())),
+                  ),
+                ],
+              ),
+            ),
+            state: _stepState(unityState),
+          ),
+        ],
       ),
     );
   }
 
-  void _checkRequirements(WidgetRef ref) {
-    final _ = ref.refresh(_dotNetCommandStateProvider);
+  static StepState _stepState(AsyncValue<RequirementState> state) {
+    return state.when(
+        data: ((data) {
+          switch (data) {
+            case RequirementState.ok:
+              return StepState.complete;
+            case RequirementState.ng:
+              return StepState.error;
+            case RequirementState.notChecked:
+              return StepState.indexed;
+          }
+        }),
+        error: (obj, trace) => StepState.indexed,
+        loading: () => StepState.indexed);
   }
 
-  void _showDotNetBanner(WidgetRef ref) {
-    ScaffoldFeatureController<MaterialBanner, MaterialBannerClosedReason>?
-        controller;
-    final banner = MaterialBanner(
-      content: const Text(
-          '.NET 6 SDK is required to execute VPM CLI. Download and install.'),
-      actions: [
-        TextButton(
-          onPressed: () {
-            launchUrl(
-                Uri.parse('https://dotnet.microsoft.com/download/dotnet/6.0'));
-          },
-          child: const Text('Download'),
+  static ControlsWidgetBuilder _controlsBuilder(WidgetRef ref) {
+    return (BuildContext context, ControlsDetails details) {
+      final step = _StepIndex.values[details.stepIndex];
+      return Container(
+        alignment: Alignment.centerLeft,
+        padding: const EdgeInsets.fromLTRB(0, 16, 0, 0),
+        height: 64,
+        child: Wrap(
+          spacing: 16,
+          alignment: WrapAlignment.start,
+          children: [
+            ElevatedButton(
+                onPressed: () async {
+                  await _onClickInstall(context, ref, step);
+                },
+                child: const Text('Install')),
+            TextButton(
+                onPressed: () {
+                  _refresh(ref);
+                },
+                child: const Text('Check again')),
+          ],
         ),
-        TextButton(
-          onPressed: () {
-            controller?.close();
-            _checkRequirements(ref);
-          },
-          child: const Text('Check again'),
-        ),
-      ],
-    );
-    controller = scaffoldKey.currentState?.showMaterialBanner(banner);
+      );
+    };
   }
 
-  void _showVpmInstallBanner(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    ScaffoldFeatureController<MaterialBanner, MaterialBannerClosedReason>?
-        controller;
-    final banner = MaterialBanner(
-      content: const Text('VPM CLI is required.'),
-      actions: [
-        TextButton(
-          onPressed: () async {
-            controller?.close();
-            final dialog =
-                showProgressDialog(context, theme, 'Installing vrchat.vpm.cli');
-            await ref
-                .read(dotNetServiceProvider)
-                .installGlobalTool(vpmPackageId, requiredVpmVersion.toString());
-            dialog.close();
-            _checkRequirements(ref);
-          },
-          child: const Text('Install'),
-        ),
-        TextButton(
-          onPressed: () {
-            controller?.close();
-            _checkRequirements(ref);
-          },
-          child: const Text('Check again'),
-        ),
-      ],
-    );
-    controller = scaffoldKey.currentState?.showMaterialBanner(banner);
+  static void _refresh(WidgetRef ref) {
+    ref.refresh(dotNetStateProvider);
+    ref.refresh(vpmStateProvider);
+    ref.refresh(unityHubStateProvider);
+    ref.refresh(unityStateProvider);
+    ref.refresh(_hasBrewProvider);
   }
 
-  void _showVpmUpdateBanner(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    ScaffoldFeatureController<MaterialBanner, MaterialBannerClosedReason>?
-        controller;
-    final banner = MaterialBanner(
-      content: Text('VPM CLI $requiredVpmVersion is required.'),
-      actions: [
-        TextButton(
-          onPressed: () async {
-            controller?.close();
-            final dialog = showProgressDialog(context, theme,
-                'Updating vrchat.vpm.cli to $requiredVpmVersion');
-            await ref
-                .read(dotNetServiceProvider)
-                .updateGlobalTool(vpmPackageId, requiredVpmVersion.toString());
-            dialog.close();
-            _checkRequirements(ref);
-          },
-          child: const Text('Update'),
-        ),
-        TextButton(
-          onPressed: () {
-            controller?.close();
-            _checkRequirements(ref);
-          },
-          child: const Text('Check again'),
-        ),
-      ],
-    );
-    controller = scaffoldKey.currentState?.showMaterialBanner(banner);
+  static Future<void> _onClickInstall(
+      BuildContext context, WidgetRef ref, _StepIndex step) async {
+    switch (step) {
+      case _StepIndex.dotnet:
+        try {
+          if (ref.read(_hasBrewProvider).valueOrNull == true) {
+            await _installDotNetSdkWithBrew(context);
+          } else {
+            await _installDotNetSdk(context, ref);
+          }
+        } on Exception catch (error) {
+          await showSimpleErrorDialog(
+              context, 'Failed to install .NET SDK', error);
+        }
+        _refresh(ref);
+        break;
+      case _StepIndex.vpm:
+        try {
+          await _installVpmCli(context, ref);
+        } on Exception catch (error) {
+          await showSimpleErrorDialog(
+              context, 'Failed to install VPM CLI', error);
+        }
+        _refresh(ref);
+        break;
+      case _StepIndex.unityHub:
+        try {
+          await _installUnityHub(context, ref);
+        } on Exception catch (error) {
+          await showSimpleErrorDialog(
+              context, 'Failed to install Unity Hub', error);
+        }
+        _refresh(ref);
+        break;
+      case _StepIndex.unity:
+        try {
+          await _installUnity(context, ref);
+        } on Exception catch (error) {
+          await showSimpleErrorDialog(
+              context, 'Failed to install Unity', error);
+        }
+        _refresh(ref);
+        break;
+      case _StepIndex.complete:
+        print('TODO: Handle this case.');
+        break;
+    }
   }
 
-  void _showUnityHubBanner(WidgetRef ref) {
-    ScaffoldFeatureController<MaterialBanner, MaterialBannerClosedReason>?
-        controller;
-    final banner = MaterialBanner(
-      content: const Text('Unity Hub is required.'),
-      actions: [
-        TextButton(
-          onPressed: () async {
-            launchUrl(Uri.parse('https://unity.com/download#how-get-started'));
-          },
-          child: const Text('Download'),
-        ),
-        TextButton(
-          onPressed: () {
-            controller?.close();
-            _checkRequirements(ref);
-          },
-          child: const Text('Check again'),
-        ),
-      ],
-    );
-    controller = scaffoldKey.currentState?.showMaterialBanner(banner);
+  static Future<bool> _installDotNetSdk(
+      BuildContext context, WidgetRef ref) async {
+    final dialog = showProgressDialog(
+        context, Theme.of(context), 'Downloading .NET 6.0 SDK installer.');
+    File? installer;
+    try {
+      if (SystemInfo.arch == Architecture.unknown) {
+        throw Exception(
+            "Failed to detect architecture for ${SysInfo.cores[0].architecture}.");
+      }
+
+      final tmp = await getTemporaryDirectory();
+      final dir = Directory(p.join(tmp.path, 'tiny_vcc'));
+      await dir.create(recursive: true);
+
+      final dotnet = ref.read(dotNetServiceProvider);
+      final version = await dotnet.getLatestVersion();
+      Uri installerUri;
+      if (Platform.isWindows) {
+        installer = File(p.join(dir.path,
+            'dotnet-sdk-installer-${DateTime.now().millisecondsSinceEpoch}.exe'));
+        installerUri = dotnet.getWindowsInstallerUri(version, SystemInfo.arch);
+      } else if (Platform.isMacOS) {
+        installer = File(p.join(dir.path,
+            'dotnet-sdk-installer-${DateTime.now().millisecondsSinceEpoch}.pkg'));
+        installerUri = dotnet.getMacInstallerUri(version, SystemInfo.arch);
+      } else if (Platform.isLinux) {
+        throw UnimplementedError('Need to implement dotnet installer.');
+      } else {
+        throw Error();
+      }
+
+      logger?.i(
+          'Downloading dotnet sdk installer from $installerUri to $installer.');
+      final client = http.Client();
+      final request = http.Request('GET', installerUri);
+      final res = await client.send(request);
+      if (res.statusCode / 100 != 2) {
+        throw HttpException('Failed to get', uri: installerUri);
+      }
+      final sink = installer.openWrite();
+      await sink.addStream(res.stream);
+      await sink.close();
+      logger?.i(
+          'Downloaded dotnet sdk installer from $installerUri to $installer.');
+
+      dialog.update(value: 1, msg: 'Installing .NET 6.0 SDK.');
+      logger?.i('Executing installer: $installer');
+      ProcessResult result;
+      if (Platform.isWindows) {
+        result = await Process.run(installer.path, []);
+      } else if (Platform.isMacOS) {
+        result = await Process.run('open', ['-W', installer.path]);
+      } else {
+        throw UnimplementedError();
+      }
+      logger?.i('Finished installer with code ${result.exitCode}: $installer');
+      return result.exitCode == 0;
+    } on Exception catch (error) {
+      logger?.e(error.toString());
+      rethrow;
+    } finally {
+      if (await installer?.exists() == true) {
+        await installer?.delete();
+      }
+      dialog.close();
+      await Future.delayed(const Duration());
+    }
   }
 
-  void _showUnityBanner(WidgetRef ref) {
-    ScaffoldFeatureController<MaterialBanner, MaterialBannerClosedReason>?
-        controller;
-    final banner = MaterialBanner(
-      content: const Text('Unity is required. Install with Unity Hub.'),
-      actions: [
-        TextButton(
-          onPressed: () async {
-            launchUrl(Uri.parse(
-                'https://docs.vrchat.com/docs/current-unity-version'));
-          },
-          child: const Text('See current version'),
-        ),
-        TextButton(
-          onPressed: () {
-            controller?.close();
-            controller = null;
-            _checkRequirements(ref);
-          },
-          child: const Text('Check again'),
-        ),
-      ],
-    );
-    controller = scaffoldKey.currentState?.showMaterialBanner(banner);
+  static Future<bool> _installDotNetSdkWithBrew(BuildContext context) async {
+    const script = 'set -eux\n'
+        'brew tap isen-ng/dotnet-sdk-versions\n'
+        'brew install --cask dotnet-sdk6-0-400\n'
+        'echo \'You can close this window.\'\n';
+    final tmp = await getTemporaryDirectory();
+    final dir = Directory(p.join(tmp.path, 'tiny_vcc'));
+    await dir.create(recursive: true);
+
+    final scriptFile = File(p.join(
+        dir.path, 'install-dotnet-sdk-${Random.secure().nextInt(65536)}.sh'));
+    await scriptFile.writeAsString(script);
+    await Process.run('chmod', ['+x', scriptFile.path]);
+    final result = await Process.run('osascript',
+        ['-e' 'tell application "Terminal" to do script "${scriptFile.path}"']);
+
+    await showAlertDialog(context,
+        title: "Installing .NET 6.0 SDK with Homebrew",
+        message: 'See Terminal app to continue installation.');
+
+    return result.exitCode == 0;
   }
-}
 
-class _RequirementItem<T> extends ConsumerWidget {
-  const _RequirementItem(this.provider, this.title);
+  static Future<bool> _installVpmCli(
+      BuildContext context, WidgetRef ref) async {
+    final dialog = showProgressDialog(context, Theme.of(context),
+        'Installing VPM CLI ${requiredVpmVersion.toString()}');
+    try {
+      final dotnet = ref.read(dotNetServiceProvider);
+      final vcc = ref.read(vccServiceProvider);
 
-  final AutoDisposeFutureProvider<RequirementState> provider;
-  final String title;
+      if (vcc.isInstalled()) {
+        final version = await vcc.getCliVersion();
+        if (version >= requiredVpmVersion) {
+          return true;
+        }
+        logger?.i('Updating VPM CLI.');
+        await dotnet.updateGlobalTool(
+            vpmPackageId, requiredVpmVersion.toString());
+      } else {
+        logger?.i('Installing VPM CLI.');
+        await dotnet.installGlobalTool(
+            vpmPackageId, requiredVpmVersion.toString());
+      }
+      if (!vcc.isInstalled()) {
+        return false;
+      }
 
-  static const _iconSize = 16.0;
+      logger?.i('Installing VPM templates.');
+      await vcc.installTemplates();
+    } on Exception catch (error) {
+      logger?.e(error.toString());
+      rethrow;
+    } finally {
+      dialog.close();
+      await Future.delayed(const Duration());
+    }
+    return true;
+  }
 
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(provider);
-    return Wrap(
-      spacing: 8,
-      children: [
-        state.when(
-          data: (data) {
-            switch (data) {
-              case RequirementState.ng:
-                return const Icon(
-                  Icons.clear,
-                  size: _iconSize,
-                  color: Colors.red,
-                );
-              case RequirementState.ok:
-                return const Icon(
-                  Icons.check,
-                  size: _iconSize,
-                  color: Colors.green,
-                );
-              case RequirementState.notChecked:
-                return const SizedBox.square(dimension: _iconSize);
-            }
-          },
-          loading: () => const SizedBox.square(
-            dimension: _iconSize,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-          error: ((error, stackTrace) {
-            return const Icon(
-              Icons.clear,
-              size: _iconSize,
-              color: Colors.red,
-            );
-          }),
+  static Future<bool> _installUnityHub(
+      BuildContext context, WidgetRef ref) async {
+    if (Platform.isWindows || Platform.isMacOS) {
+      final dialog = showProgressDialog(
+          context, Theme.of(context), 'Downloading Unity Hub installer.');
+      File? installer;
+      try {
+        final tmp = await getTemporaryDirectory();
+        final dir = Directory(p.join(tmp.path, 'tiny_vcc'));
+        await dir.create(recursive: true);
+
+        final hub = ref.read(unityHubServiceProvider);
+        final Uri installerUri;
+        if (Platform.isWindows) {
+          installer = File(p.join(dir.path,
+              'unity-hub-installer-${Random.secure().nextInt(65535)}.exe'));
+          installerUri = hub.getWindowsInstallerUri();
+        } else if (Platform.isMacOS) {
+          installer = File(p.join(dir.path,
+              'unity-hub-installer-${Random.secure().nextInt(65535)}.dmg'));
+          installerUri = hub.getMacInstallerUri();
+        } else {
+          throw UnimplementedError();
+        }
+
+        logger?.i(
+            'Downloading dotnet sdk installer from $installerUri to $installer.');
+        final client = http.Client();
+        final request = http.Request('GET', installerUri);
+        final res = await client.send(request);
+        if (res.statusCode / 100 != 2) {
+          throw HttpException('Failed to get', uri: installerUri);
+        }
+        final sink = installer.openWrite();
+        await sink.addStream(res.stream);
+        await sink.close();
+        logger?.i(
+            'Downloaded Unity Hub installer from $installerUri to $installer.');
+
+        dialog.update(value: 1, msg: 'Installing Unity Hub.');
+        logger?.i('Executing installer: $installer');
+        final ProcessResult result;
+        if (Platform.isWindows) {
+          result = await Process.run(installer.path, [], runInShell: true);
+        } else if (Platform.isMacOS) {
+          if (await Directory('/Applications/Unity Hub.app').exists()) {
+            throw Exception('"/Applications/Unity Hub.app" already exists.');
+          }
+          result = await Process.run('sh', [
+            '-e',
+            '-c',
+            [
+              'hdiutil mount ${installer.path}',
+              'cp -rv /Volumes/Unity\\ Hub\\ */Unity\\ Hub.app /Applications/',
+              'hdiutil unmount /Volumes/Unity\\ Hub\\ *',
+            ].join('\n'),
+          ]);
+        } else {
+          throw UnimplementedError();
+        }
+        logger
+            ?.i('Finished installer with code ${result.exitCode}: $installer');
+
+        return result.exitCode == 0;
+      } on Exception catch (error) {
+        logger?.e(error);
+        rethrow;
+      } finally {
+        if (await installer?.exists() == true) {
+          await installer?.delete();
+        }
+        dialog.close();
+        await Future.delayed(const Duration());
+      }
+    } else if (Platform.isLinux) {
+      throw UnimplementedError("_installUnityHub is not implemented for Linux");
+    }
+    throw Error();
+  }
+
+  static Future<bool> _installUnity(BuildContext context, WidgetRef ref) async {
+    final terminal = ref.read(_terminalProvider);
+    try {
+      final hub = ref.read(unityHubServiceProvider);
+      final modules =
+          Platform.isWindows ? ['android'] : ['android', 'windows-mono'];
+      final process = await hub.installUnity(
+        '2019.4.31f1',
+        'bd5abf232a62',
+        modules,
+      );
+      process.stdout.transform(utf8.decoder).listen((event) {
+        // Enter 'n' for child-modules
+        if (event.contains('(Y/n)')) {
+          process.stdin.writeln('n');
+        }
+        final str = event.replaceAll(_reLF, '\r\n');
+        terminal.write(str);
+      });
+      process.stderr.transform(utf8.decoder).listen((event) {
+        terminal.write(event);
+      });
+
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => ConsoleDialog(
+          title: 'Installing Unity',
+          terminal: terminal,
+          actions: [
+            TextButton(
+                onPressed: () {
+                  process.kill();
+                },
+                child: const Text('Cancel')),
+          ],
         ),
-        Text(title),
-      ],
-    );
+      );
+
+      final exitCode = await process.exitCode;
+      if (exitCode != 0) {
+        throw NonZeroExitException('Unity Hub', [], exitCode);
+      }
+      return true;
+    } on Exception catch (error) {
+      logger?.e(error);
+      rethrow;
+    } finally {
+      Navigator.of(context).pop();
+      await Future.delayed(const Duration());
+    }
   }
 }
