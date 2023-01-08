@@ -35,6 +35,14 @@ final _stepProvider =
 
 final _terminalProvider = Provider.autoDispose((ref) => Terminal());
 
+final _hasBrewProvider = FutureProvider.autoDispose((ref) async {
+  if (Platform.isWindows) {
+    return false;
+  }
+  final result = await Process.run('which', ['brew']);
+  return result.exitCode == 0;
+});
+
 class RequirementsRoute extends ConsumerWidget {
   static const routeName = '/requirements';
   static final _reLF = RegExp('[^\r]\n');
@@ -51,6 +59,8 @@ class RequirementsRoute extends ConsumerWidget {
       Uri.parse('https://unity.com/releases/editor/archive');
   final _currentUnityVersionUri =
       Uri.parse('https://docs.vrchat.com/docs/current-unity-version');
+  final _brewDotNetSdkVersionsUri =
+      Uri.parse('https://github.com/isen-ng/homebrew-dotnet-sdk-versions');
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -59,6 +69,7 @@ class RequirementsRoute extends ConsumerWidget {
     final vpmState = ref.watch(vpmStateProvider);
     final hubState = ref.watch(unityHubStateProvider);
     final unityState = ref.watch(unityStateProvider);
+    final hasBrew = ref.watch(_hasBrewProvider);
 
     ref.listen(dotNetStateProvider, (previous, next) {
       if (!next.isLoading && next.valueOrNull == RequirementState.ng) {
@@ -101,15 +112,38 @@ class RequirementsRoute extends ConsumerWidget {
                 alignment: Alignment.centerLeft,
                 child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                          'Install .NET 6.0 SDK. You can also download the SDK installer from web.'),
-                      Link(
-                          uri: _dotnetDownloadPageUri,
-                          builder: (context, followLink) => TextButton(
-                              onPressed: followLink,
-                              child: Text(_dotnetDownloadPageUri.toString())))
-                    ])),
+                    children: hasBrew.valueOrNull == true
+                        ? [
+                            const Text(
+                                'Install .NET 6.0 SDK with Homebrew. You can also install with following command.'),
+                            Container(
+                              margin: const EdgeInsets.symmetric(vertical: 16),
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                  color: Colors.black12,
+                                  borderRadius: BorderRadius.circular(4)),
+                              child: CopyableText(
+                                  'brew tap isen-ng/dotnet-sdk-versions\n'
+                                  'brew install --cask dotnet-sdk6-0-400'),
+                            ),
+                            Link(
+                              uri: _brewDotNetSdkVersionsUri,
+                              builder: (context, followLink) => TextButton(
+                                  onPressed: followLink,
+                                  child: Text(
+                                      _brewDotNetSdkVersionsUri.toString())),
+                            ),
+                          ]
+                        : [
+                            const Text(
+                                'Install .NET 6.0 SDK. You can also download the SDK installer from web.'),
+                            Link(
+                                uri: _dotnetDownloadPageUri,
+                                builder: (context, followLink) => TextButton(
+                                    onPressed: followLink,
+                                    child: Text(
+                                        _dotnetDownloadPageUri.toString())))
+                          ])),
             state: _stepState(dotnetState),
           ),
           Step(
@@ -248,6 +282,7 @@ class RequirementsRoute extends ConsumerWidget {
     ref.refresh(vpmStateProvider);
     ref.refresh(unityHubStateProvider);
     ref.refresh(unityStateProvider);
+    ref.refresh(_hasBrewProvider);
   }
 
   static Future<void> _onClickInstall(
@@ -255,7 +290,11 @@ class RequirementsRoute extends ConsumerWidget {
     switch (step) {
       case _StepIndex.dotnet:
         try {
-          await _installDotNetSdk(context, ref);
+          if (ref.read(_hasBrewProvider).valueOrNull == true) {
+            await _installDotNetSdkWithBrew(context);
+          } else {
+            await _installDotNetSdk(context, ref);
+          }
         } on Exception catch (error) {
           await showSimpleErrorDialog(
               context, 'Failed to install .NET SDK', error);
@@ -363,6 +402,29 @@ class RequirementsRoute extends ConsumerWidget {
       dialog.close();
       await Future.delayed(const Duration());
     }
+  }
+
+  static Future<bool> _installDotNetSdkWithBrew(BuildContext context) async {
+    const script = 'set -eux\n'
+        'brew tap isen-ng/dotnet-sdk-versions\n'
+        'brew install --cask dotnet-sdk6-0-400\n'
+        'echo \'You can close this window.\'\n';
+    final tmp = await getTemporaryDirectory();
+    final dir = Directory(p.join(tmp.path, 'tiny_vcc'));
+    await dir.create(recursive: true);
+
+    final scriptFile = File(p.join(
+        dir.path, 'install-dotnet-sdk-${Random.secure().nextInt(65536)}.sh'));
+    await scriptFile.writeAsString(script);
+    await Process.run('chmod', ['+x', scriptFile.path]);
+    final result = await Process.run('osascript',
+        ['-e' 'tell application "Terminal" to do script "${scriptFile.path}"']);
+
+    await showAlertDialog(context,
+        title: "Installing .NET 6.0 SDK with Homebrew",
+        message: 'See Terminal app to continue installation.');
+
+    return result.exitCode == 0;
   }
 
   static Future<bool> _installVpmCli(
