@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### 追加
 
 - 必須ソフトウェアのインストールを自動化
+- [Windows] インストーラー setup.exe を追加。
 
 ### 変更
 

@@ -25,6 +25,26 @@ jobs:
           name: windows
           path: build/windows/runner/Release
 
+  build-msi:
+    needs: [build-windows]
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/download-artifact@v3
+        with:
+          name: windows
+          path: build/windows/runner/Release
+
+      - run: ls -n -r .\\build\\windows\\runner\\Release > built-files.txt
+      - run: diff (type .\\installer\\TinyVccInstaller\\TinyVccInstaller\\files.txt) (type built-files.txt)
+
+      - uses: ilammy/msvc-dev-cmd@v1
+      - run: devenv .\\installer\\TinyVccInstaller\\TinyVccInstaller.sln /build Release
+      - uses: actions/upload-artifact@v3
+        with:
+          name: msi
+          path: installer/TinyVccInstaller/TinyVccInstaller/Release
+
   build-macos:
     runs-on: macos-latest
     steps:
@@ -66,14 +86,14 @@ jobs:
 
   release:
     if: startsWith(github.ref, 'refs/tags/')
-    needs: [build-windows, build-macos, build-linux]
+    needs: [build-msi, build-macos, build-linux]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
 
       - uses: actions/download-artifact@v3
         with:
-          name: windows
+          name: msi
           path: build/windows/runner/Release
 
       - uses: actions/download-artifact@v3
@@ -103,7 +123,7 @@ jobs:
 
       - uses: softprops/action-gh-release@v1
         with:
-          # draft: true
+          draft: true
           body_path: ${{ github.workspace }}-release.txt
           files: |
             *.zip
