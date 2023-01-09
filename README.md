@@ -21,25 +21,13 @@ It behaves as a GUI wrapper of VPM CLI and provides these core features of VCC.
 
 ## Installation
 
-### Required Software
-Install these software before.
+Other required software will be installed by the app.
 
-- [.NET 6.0 SDK](https://dotnet.microsoft.com/download/dotnet/6.0)
-- [Unity Hub](https://unity.com/ja/download#how-get-started)
-- Unity ([Version which is specified by VRChat](https://docs.vrchat.com/docs/current-unity-version))
-  - Android Build Support (to upload for Quest)
-  - Windows Build Support (to upload with macOS)
-
-#### Windows
-Install [Microsoft Visual C++ 2015-2022 Redistributable](https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist?view=msvc-170).
-
-### Tiny VCC
-
-#### Windows
+### Windows
 1. Download `tiny_vcc-vX.X.X.zip` from [the latest release](https://github.com/kurotu/tiny_vcc/releases/latest), then extract it to a desired location.
-2. Execute `tiny_vcc.exe` in the extracted folder.
+2. Execute `setup.exe` in the extracted folder.
 
-#### macOS
+### macOS
 1. Download `TinyVCC-vX.X.X.dmg` from [the latest release](https://github.com/kurotu/tiny_vcc/releases/latest), then open it.
 2. Drag & drop `Tiny VCC` into `Applications` folder.
 3. Open `Applications` folder, then select *Open* from right-click menu of `Tiny VCC`.

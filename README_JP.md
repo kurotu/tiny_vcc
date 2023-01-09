@@ -22,25 +22,13 @@ VPM CLI の GUI ラッパーとして動作し、 VCC のコア機能のうち�
 
 ## インストール
 
-### 必須ソフトウェア
-あらかじめ以下のソフトウェアをインストールしてください。
+他の必須ソフトウェアはアプリによってインストールされます。
 
-- [.NET 6.0 SDK](https://dotnet.microsoft.com/download/dotnet/6.0)
-- [Unity Hub](https://unity.com/ja/download#how-get-started)
-- Unity ([VRChat で指定されているバージョン](https://docs.vrchat.com/docs/current-unity-version))
-  - Android Build Support (Quest 用にアップロードする場合)
-  - Windows Build Support (macOS でアップロードする場合)
-
-#### Windows
-[Microsoft Visual C++ 2015-2022 再頒布可能パッケージ](https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist?view=msvc-170) をインストールしてください。
-
-### Tiny VCC
-
-#### Windows
+### Windows
 1. [最新のリリース](https://github.com/kurotu/tiny_vcc/releases/latest) から `tiny_vcc-vX.X.X.zip` をダウンロードし、任意の場所に展開します。
-2. 展開したフォルダの中にある `tiny_vcc.exe` を実行します。
+2. 展開したフォルダの中にある `setup.exe` を実行します。
 
-#### macOS
+### macOS
 1. [最新のリリース](https://github.com/kurotu/tiny_vcc/releases/latest) から `TinyVCC-vX.X.X.dmg` をダウンロードし、開きます。
 2. 表示されたウィンドウにある `Tiny VCC` を `Applications` フォルダにドラッグ&ドロップします。
 3. `Applications` フォルダを開き、 `Tiny VCC` を右クリックして「開く」を選択します。
