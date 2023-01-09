@@ -27,7 +27,6 @@ enum _StepIndex {
   vpm,
   unityHub,
   unity,
-  complete,
 }
 
 final _stepProvider = StateProvider.autoDispose<_StepIndex>((ref) {
@@ -283,6 +282,28 @@ class RequirementsRoute extends ConsumerWidget {
   static ControlsWidgetBuilder _controlsBuilder(WidgetRef ref) {
     return (BuildContext context, ControlsDetails details) {
       final step = _StepIndex.values[details.stepIndex];
+      final isReady = ref.watch(readyToUseProvider);
+      final dotnet = ref.watch(dotNetStateProvider);
+      final vpm = ref.watch(vpmStateProvider);
+      final hub = ref.watch(unityHubStateProvider);
+      final unity = ref.watch(unityStateProvider);
+
+      final bool shoudlEnable;
+      switch (step) {
+        case _StepIndex.dotnet:
+          shoudlEnable = _stepState(dotnet) != StepState.complete;
+          break;
+        case _StepIndex.vpm:
+          shoudlEnable = _stepState(vpm) != StepState.complete;
+          break;
+        case _StepIndex.unityHub:
+          shoudlEnable = _stepState(hub) != StepState.complete;
+          break;
+        case _StepIndex.unity:
+          shoudlEnable = _stepState(unity) != StepState.complete;
+          break;
+      }
+
       return Container(
         alignment: Alignment.centerLeft,
         padding: const EdgeInsets.fromLTRB(0, 16, 0, 0),
@@ -292,14 +313,18 @@ class RequirementsRoute extends ConsumerWidget {
           alignment: WrapAlignment.start,
           children: [
             ElevatedButton(
-                onPressed: () async {
-                  await _onClickInstall(context, ref, step);
-                },
+                onPressed: shoudlEnable
+                    ? () async {
+                        await _onClickInstall(context, ref, step);
+                      }
+                    : null,
                 child: const Text('Install')),
             TextButton(
-                onPressed: () {
-                  _refresh(ref);
-                },
+                onPressed: isReady.isLoading
+                    ? null
+                    : () {
+                        _refresh(ref);
+                      },
                 child: const Text('Check again')),
           ],
         ),
@@ -358,9 +383,6 @@ class RequirementsRoute extends ConsumerWidget {
               context, 'Failed to install Unity', error);
         }
         _refresh(ref);
-        break;
-      case _StepIndex.complete:
-        print('TODO: Handle this case.');
         break;
     }
   }
