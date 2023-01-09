@@ -35,6 +35,9 @@ jobs:
           name: windows
           path: build/windows/runner/Release
 
+      - run: ls -n -r .\\build\\windows\\runner\\Release > built-files.txt
+      - run: diff (type .\\installer\\TinyVccInstaller\\TinyVccInstaller\\files.txt) (type built-files.txt)
+
       - uses: ilammy/msvc-dev-cmd@v1
       - run: devenv .\\installer\\TinyVccInstaller\\TinyVccInstaller.sln /build Release
       - uses: actions/upload-artifact@v3
