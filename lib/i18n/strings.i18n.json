@@ -1,7 +1,43 @@
 {
+  "lang_name": "English",
   "navigation": {
     "projects": "Projects",
     "settings": "Settings",
     "about": "About Tiny VCC"
+  },
+  "actions": {
+    "add_project": {
+      "tooltip": "Add existing project"
+    },
+    "create_project": {
+      "tooltip": "Create new project"
+    },
+    "open_vcc_settings_folder": {
+      "label": "Open VCC Settings Folder"
+    },
+    "open_logs_folder": {
+      "label": "Open Logs Folder"
+    }
+  },
+  "settings": {
+    "headers": {
+      "tiny_vcc_preferences": "Tiny VCC Preferences",
+      "vcc_settings": "VCC Settings"
+    },
+    "labels": {
+      "theme": "Theme",
+      "language": "Language",
+      "unity_editors":"Unity Editors",
+      "backups": "Backups",
+      "user_packages": "User Packages"
+    },
+    "theme": {
+      "auto": "Auto",
+      "light": "Light",
+      "dark": "Dark"
+    },
+    "lang": {
+      "auto": "Auto"
+    }
   }
 }

@@ -1,7 +1,7 @@
 enum TinyVccThemeMode {
+  system,
   light,
   dark,
-  system,
 }
 
 enum RequirementState { ok, ng, notChecked }

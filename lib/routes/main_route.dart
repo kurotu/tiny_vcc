@@ -18,11 +18,6 @@ enum _PageIndex {
   about,
 }
 
-const _titles = {
-  _PageIndex.projects: 'Projects',
-  _PageIndex.settings: 'Settings',
-};
-
 enum ScreenSize { small, normal, large }
 
 ScreenSize getSize(BuildContext context) {
@@ -81,7 +76,11 @@ class MainRoute extends ConsumerWidget {
     final t = ref.watch(translationProvider);
     return NavigationScaffold(
       appBar: AppBar(
-        title: Text(_titles[selectedIndex] ?? ''),
+        title: Text({
+              _PageIndex.projects: t.navigation.projects,
+              _PageIndex.settings: t.navigation.settings,
+            }[selectedIndex] ??
+            ''),
         actions: _buildActions(context, ref, selectedIndex),
       ),
       useNavigationRail: size != ScreenSize.small,
@@ -120,12 +119,13 @@ class MainRoute extends ConsumerWidget {
         },
       ),
       body: _buildBody(context, selectedIndex),
-      floatingActionButton: _buildFAB(context, selectedIndex),
+      floatingActionButton: _buildFAB(context, ref, selectedIndex),
     );
   }
 
   List<Widget>? _buildActions(
       BuildContext context, WidgetRef ref, _PageIndex selectedIndex) {
+    final t = ref.watch(translationProvider);
     switch (selectedIndex) {
       case _PageIndex.projects:
         return [
@@ -133,7 +133,7 @@ class MainRoute extends ConsumerWidget {
             onPressed: () {
               _didClickAddProject(context, ref);
             },
-            tooltip: 'Add existing project',
+            tooltip: t.actions.add_project.tooltip,
             icon: const Icon(Icons.create_new_folder),
           ),
         ];
@@ -145,13 +145,13 @@ class MainRoute extends ConsumerWidget {
                 onTap: () {
                   _didClickOpenSettingsFolder(ref);
                 },
-                child: const Text('Open VCC Settings Folder'),
+                child: Text(t.actions.open_vcc_settings_folder.label),
               ),
               PopupMenuItem(
                 onTap: () {
                   _didClickOpenLogsFolder(ref);
                 },
-                child: const Text('Open Logs Folder'),
+                child: Text(t.actions.open_logs_folder.label),
               ),
             ],
           ),
@@ -172,11 +172,13 @@ class MainRoute extends ConsumerWidget {
     }
   }
 
-  Widget? _buildFAB(BuildContext context, _PageIndex selectedIndex) {
+  Widget? _buildFAB(
+      BuildContext context, WidgetRef ref, _PageIndex selectedIndex) {
+    final t = ref.watch(translationProvider);
     switch (selectedIndex) {
       case _PageIndex.projects:
         return FloatingActionButton(
-          tooltip: 'Create new project',
+          tooltip: t.actions.create_project.tooltip,
           child: const Icon(Icons.add),
           onPressed: () {
             _didClickNewProject(context);

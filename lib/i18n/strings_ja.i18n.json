@@ -1,7 +1,43 @@
 {
+  "lang_name": "日本語",
   "navigation": {
     "projects": "プロジェクト",
     "settings": "設定",
     "about": "Tiny VCC について"
+  },
+  "actions": {
+    "add_project": {
+      "tooltip": "既存プロジェクトを追加"
+    },
+    "create_project": {
+      "tooltip": "新規プロジェクトを作成"
+    },
+    "open_vcc_settings_folder": {
+      "label": "VCC の設定フォルダーを開く"
+    },
+    "open_logs_folder": {
+      "label": "ログフォルダーを開く"
+    }
+  },
+  "settings": {
+    "headers": {
+      "tiny_vcc_preferences": "Tiny VCC 設定",
+      "vcc_settings": "VCC 設定"
+    },
+    "labels": {
+      "theme": "テーマ",
+      "language": "言語",
+      "unity_editors":"Unity エディター",
+      "backups": "バックアップ",
+      "user_packages": "ユーザーパッケージ"
+    },
+    "theme": {
+      "auto": "自動",
+      "light": "ライト",
+      "dark": "ダーク"
+    },
+    "lang": {
+      "auto": "自動"
+    }
   }
 }
