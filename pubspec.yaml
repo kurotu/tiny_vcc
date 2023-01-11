@@ -52,6 +52,8 @@ dependencies:
   system_info2: ^2.0.4
   http: ^0.13.5
   xterm: ^3.4.0
+  slang: ^3.7.0
+  slang_flutter: ^3.7.0
 
 dev_dependencies:
   flutter_test:
@@ -64,6 +66,8 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^2.0.0
   flutter_launcher_icons: ^0.11.0
+  build_runner: ^2.3.3
+  slang_build_runner: ^3.7.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
