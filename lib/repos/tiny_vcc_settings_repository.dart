@@ -12,4 +12,8 @@ class TinyVccSettingsRepository {
   Future<void> setThemeMode(TinyVccThemeMode mode) async {
     await _tinyVcc.writeSettings(themeMode: mode);
   }
+
+  Future<void> setLocale(TinyVccLocale locale) async {
+    await _tinyVcc.writeSettings(locale: locale);
+  }
 }

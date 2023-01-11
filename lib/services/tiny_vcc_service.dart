@@ -25,13 +25,16 @@ class TinyVccService {
     }
     final str = await file.readAsString();
     final json = jsonDecode(str);
+    final def = TinyVccSettings.defaultValues();
     return TinyVccSettings(
       themeMode: TinyVccThemeMode.values.byName(json['themeMode'] ?? 'system'),
+      locale: TinyVccLocale.values.byName(json['locale'] ?? def.locale.name),
     );
   }
 
   Future<void> writeSettings({
     TinyVccThemeMode? themeMode,
+    TinyVccLocale? locale,
   }) async {
     final file = await _getSettingsFile();
     final str = await file.readAsString();
@@ -39,6 +42,9 @@ class TinyVccService {
 
     if (themeMode != null) {
       json['themeMode'] = themeMode.name;
+    }
+    if (locale != null) {
+      json['locale'] = locale.name;
     }
 
     const encoder = JsonEncoder.withIndent('  ');

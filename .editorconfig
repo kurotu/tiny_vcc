@@ -1,0 +1,5 @@
+root = true
+
+[lib/**.json]
+indent_style = space
+indext_size = 2

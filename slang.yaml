@@ -1,0 +1,2 @@
+locale_handling: false # remove unused t variable, LocaleSettings, etc.
+translation_class_visibility: public

@@ -220,6 +220,26 @@ class SettingsPage extends ConsumerWidget {
                     }
                   },
                 ),
+                const Padding(padding: EdgeInsets.symmetric(vertical: 8)),
+                DropdownButtonFormField(
+                  decoration: const InputDecoration(labelText: 'Language'),
+                  value: tinyVccSettings.valueOrNull?.locale,
+                  items: TinyVccLocale.values
+                      .map((mode) => DropdownMenuItem(
+                            value: mode,
+                            child: Text(mode.name),
+                          ))
+                      .toList(),
+                  onChanged: (value) async {
+                    if (value != null) {
+                      await ref
+                          .read(tinyVccSettingsRepositoryProvider)
+                          .setLocale(value);
+                      ref.refresh(tinyVccSettingsProvider);
+                    }
+                  },
+                ),
+                const Padding(padding: EdgeInsets.symmetric(vertical: 8)),
                 const Divider(),
                 Text(
                   'VCC Settings',

@@ -6,8 +6,8 @@ import '../main_drawer.dart';
 import '../providers.dart';
 import '../widgets/navigation_scaffold.dart';
 import '../widgets/projects_page.dart';
-import 'new_project_route.dart';
 import '../widgets/settings_page.dart';
+import 'new_project_route.dart';
 
 final _selectedIndexProvider =
     StateProvider.autoDispose((ref) => _PageIndex.projects);
@@ -78,7 +78,7 @@ class MainRoute extends ConsumerWidget {
     final packageInfo = ref.watch(packageInfoProvider);
     final notice = ref.watch(licenseNoticeProvider);
     final size = getSize(context);
-
+    final t = ref.watch(translationProvider);
     return NavigationScaffold(
       appBar: AppBar(
         title: Text(_titles[selectedIndex] ?? ''),
@@ -94,19 +94,19 @@ class MainRoute extends ConsumerWidget {
       navigationRail: NavigationRail(
         labelType: NavigationRailLabelType.none,
         extended: size == ScreenSize.large,
-        destinations: const [
+        destinations: [
           NavigationRailDestination(
-              icon: Icon(Icons.folder_special_outlined),
-              selectedIcon: Icon(Icons.folder_special),
-              label: Text('Projects')),
+              icon: const Icon(Icons.folder_special_outlined),
+              selectedIcon: const Icon(Icons.folder_special),
+              label: Text(t.navigation.projects)),
           NavigationRailDestination(
-            icon: Icon(Icons.settings_outlined),
-            selectedIcon: Icon(Icons.settings),
-            label: Text('Settings'),
+            icon: const Icon(Icons.settings_outlined),
+            selectedIcon: const Icon(Icons.settings),
+            label: Text(t.navigation.settings),
           ),
           NavigationRailDestination(
-            icon: Icon(Icons.info_outline),
-            label: Text('About'),
+            icon: const Icon(Icons.info_outline),
+            label: Text(t.navigation.about),
           ),
         ],
         selectedIndex: selectedIndex.index,
