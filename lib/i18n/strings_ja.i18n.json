@@ -39,5 +39,23 @@
     "lang": {
       "auto": "自動"
     }
+  },
+  "new_project": {
+    "title": "新規プロジェクト",
+    "labels": {
+      "project_template": "プロジェクトテンプレート",
+      "project_name": "プロジェクト名",
+      "location": "保存先",
+      "create": "作成"
+    },
+    "errors": {
+      "select_project_template": "テンプレートを選択してください。",
+      "enter_project_name": "プロジェクト名を入力してください。",
+      "enter_location_path": "保存先を選択してください。"
+    },
+    "info": {
+      "creating_project": "$template プロジェクト \"$name\" を $location に作成しています。",
+      "created_project": "$template プロジェクト \"$name\" が $projectLocation に作成されました。"
+    }
   }
 }

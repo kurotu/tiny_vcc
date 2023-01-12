@@ -39,5 +39,23 @@
     "lang": {
       "auto": "Auto"
     }
+  },
+  "new_project": {
+    "title": "New Project",
+    "labels": {
+      "project_template": "Project Template",
+      "project_name": "Project Name",
+      "location": "Location",
+      "create": "Create"
+    },
+    "errors": {
+      "select_project_template": "Please select project template.",
+      "enter_project_name": "Please enter project name.",
+      "enter_location_path": "Please enter location path."
+    },
+    "info": {
+      "creating_project": "Creating $template project, \"$name\" at $location.",
+      "created_project": "$template project, \"$name\" has been created at $projectLocation."
+    }
   }
 }
