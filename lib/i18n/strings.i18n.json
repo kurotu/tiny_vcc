@@ -1,5 +1,11 @@
 {
   "lang_name": "English",
+  "common": {
+    "labels": {
+      "ok": "OK",
+      "cancel": "Cancel"
+    }
+  },
   "navigation": {
     "projects": "Projects",
     "settings": "Settings",
@@ -56,6 +62,39 @@
     "info": {
       "creating_project": "Creating $template project, \"$name\" at $location.",
       "created_project": "$template project, \"$name\" has been created at $projectLocation."
+    }
+  },
+  "legacy_project": {
+    "labels": {
+      "migrate": "Migrate",
+      "open_folder": "Open Folder",
+      "make_backup": "Make Backup"
+    },
+    "dialogs": {
+      "confirm": {
+        "title": "Project Migration",
+        "content": "Migration is needed.",
+        "labels": {
+          "migrate_a_copy": "Migrate a copy",
+          "migrate_in_place": "Migrate in place\nI HAVE A BACKUP"
+        }
+      },
+      "progress_backup": {
+        "title": "Backing up $name"
+      },
+      "made_backup": {
+        "title": "Made Backup",
+        "labels": {
+          "show_me": "Show Me"
+        }
+      },
+      "backup_error": {
+        "title": "Backup Error",
+        "content": "Failed to back up $projectName.\n\n$error"
+      },
+      "progress_migration": {
+        "title": "Migrating $name"
+      }
     }
   }
 }

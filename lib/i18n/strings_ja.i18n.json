@@ -1,5 +1,11 @@
 {
   "lang_name": "日本語",
+  "common": {
+    "labels": {
+      "ok": "OK",
+      "cancel": "キャンセル"
+    }
+  },
   "navigation": {
     "projects": "プロジェクト",
     "settings": "設定",
@@ -56,6 +62,39 @@
     "info": {
       "creating_project": "$template プロジェクト \"$name\" を $location に作成しています。",
       "created_project": "$template プロジェクト \"$name\" が $projectLocation に作成されました。"
+    }
+  },
+  "legacy_project": {
+    "labels": {
+      "migrate": "移行",
+      "open_folder": "フォルダーを開く",
+      "make_backup": "バックアップを作成"
+    },
+    "dialogs": {
+      "confirm": {
+        "title": "プロジェクトの移行",
+        "content": "プロジェクトを移行する必要があります。",
+        "labels": {
+          "migrate_a_copy": "コピーを作成して移行",
+          "migrate_in_place": "バックアップがあるのでそのまま移行"
+        }
+      },
+      "progress_backup": {
+        "title": "$name をバックアップ中"
+      },
+      "made_backup": {
+        "title": "バックアップの作成完了",
+        "labels": {
+          "show_me": "表示"
+        }
+      },
+      "backup_error": {
+        "title": "バックアップエラー",
+        "content": "$projectName のバックアップに失敗しました。\n\n$error"
+      },
+      "progress_migration": {
+        "title": "$name を移行中"
+      }
     }
   }
 }
