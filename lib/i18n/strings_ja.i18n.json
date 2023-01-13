@@ -3,7 +3,8 @@
   "common": {
     "labels": {
       "ok": "OK",
-      "cancel": "キャンセル"
+      "cancel": "キャンセル",
+      "dismiss": "閉じる"
     }
   },
   "navigation": {
@@ -62,6 +63,36 @@
     "info": {
       "creating_project": "$template プロジェクト \"$name\" を $location に作成しています。",
       "created_project": "$template プロジェクト \"$name\" が $projectLocation に作成されました。"
+    }
+  },
+  "project": {
+    "labels": {
+      "open_project": "プロジェクトを開く",
+      "open_folder": "フォルダーを開く",
+      "make_backup": "バックアップを作成",
+      "add": "追加",
+      "update": "更新",
+      "downgrade": "ダウングレード",
+      "remove": "削除"
+    },
+    "info": {
+      "packages_changed": "パッケージが変更されました。Unity を閉じて開きなおしてください。",
+      "unity_not_found": "VCC 設定に Unity $editorVersion が見つかりません。"
+    },
+    "dialogs": {
+      "progress_backup": {
+        "title": "$name をバックアップ中"
+      },
+      "made_backup": {
+        "title": "バックアップの作成完了",
+        "labels": {
+          "show_me": "表示"
+        }
+      },
+      "backup_error": {
+        "title": "バックアップエラー",
+        "content": "$projectName のバックアップに失敗しました。\n\n$error"
+      }
     }
   },
   "legacy_project": {

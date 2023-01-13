@@ -3,7 +3,8 @@
   "common": {
     "labels": {
       "ok": "OK",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "dismiss": "Dismiss"
     }
   },
   "navigation": {
@@ -62,6 +63,36 @@
     "info": {
       "creating_project": "Creating $template project, \"$name\" at $location.",
       "created_project": "$template project, \"$name\" has been created at $projectLocation."
+    }
+  },
+  "project": {
+    "labels": {
+      "open_project": "Open Project",
+      "open_folder": "Open Folder",
+      "make_backup": "Make Backup",
+      "add": "Add",
+      "update": "Update",
+      "downgrade": "Downgrade",
+      "remove": "Remove"
+    },
+    "info": {
+      "packages_changed": "Packages have been changed. Close and reopen Unity project to apply changes.",
+      "unity_not_found": "Unity $editorVersion not found in VCC settings."
+    },
+    "dialogs": {
+      "progress_backup": {
+        "title": "Backing up $name"
+      },
+      "made_backup": {
+        "title": "Made Backup",
+        "labels": {
+          "show_me": "Show Me"
+        }
+      },
+      "backup_error": {
+        "title": "Backup Error",
+        "content": "Failed to back up $projectName.\n\n$error"
+      }
     }
   },
   "legacy_project": {

@@ -125,11 +125,13 @@ class ProjectRoute extends ConsumerWidget {
   }
 
   Future<void> _didClickOpenProject(WidgetRef ref) async {
+    final t = ref.watch(translationProvider);
     var editorVersion = await project.getUnityEditorVersion();
     final editor =
         await ref.read(vccSettingsRepoProvider).getUnityEditor(editorVersion);
     if (editor == null) {
-      throw Exception('Unity $editorVersion not found in VCC settings.');
+      throw Exception(
+          t.project.info.unity_not_found(editorVersion: editorVersion));
     }
     await Process.start(editor, ['-projectPath', project.path],
         mode: ProcessStartMode.detached);
@@ -141,16 +143,19 @@ class ProjectRoute extends ConsumerWidget {
   }
 
   void _didClickMakeBackup(BuildContext context, WidgetRef ref) async {
+    final t = ref.watch(translationProvider);
     final projectName = project.name;
-    showProgressDialog(context, Theme.of(context), 'Backing up $projectName');
+    showProgressDialog(context, Theme.of(context),
+        t.project.dialogs.progress_backup.title(name: projectName));
     File file;
     try {
       file = await ref.read(vccProjectsRepoProvider).backup(project);
     } on Exception catch (error) {
       Navigator.pop(context);
       showAlertDialog(context,
-          title: 'Backup Error',
-          message: 'Failed to back up $projectName.\n\n$error');
+          title: t.project.dialogs.backup_error.title,
+          message: t.project.dialogs.backup_error
+              .content(projectName: projectName, error: error));
       return;
     }
 
@@ -159,20 +164,20 @@ class ProjectRoute extends ConsumerWidget {
     final showFile = await showDialog(
       context: context,
       builder: ((context) => AlertDialog(
-            title: const Text('Made Backup'),
+            title: Text(t.project.dialogs.made_backup.title),
             content: Text(file.path),
             actions: [
               TextButton(
                 onPressed: () {
                   Navigator.pop(context);
                 },
-                child: const Text('OK'),
+                child: Text(t.common.labels.ok),
               ),
               TextButton(
                 onPressed: () {
                   Navigator.pop(context, true);
                 },
-                child: const Text('Show Me'),
+                child: Text(t.project.dialogs.made_backup.labels.show_me),
               ),
             ],
           )),
@@ -183,11 +188,11 @@ class ProjectRoute extends ConsumerWidget {
   }
 
   void _showMessageToCloseUnity(WidgetRef ref) {
+    final t = ref.watch(translationProvider);
     ScaffoldFeatureController? controller;
 
     controller = scaffoldKey.currentState?.showMaterialBanner(MaterialBanner(
-      content: const Text(
-          'Packages have been changed. Close and reopen Unity project to apply changes.'),
+      content: Text(t.project.info.packages_changed),
       actions: [
         TextButton(
             onPressed: () {
@@ -195,7 +200,7 @@ class ProjectRoute extends ConsumerWidget {
               controller = null;
               ref.read(_needsToShowUnityBannerProvider.notifier).state = false;
             },
-            child: const Text('Dismiss')),
+            child: Text(t.common.labels.dismiss)),
       ],
     ));
   }
@@ -203,6 +208,7 @@ class ProjectRoute extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final packagesList = ref.watch(_packageItemListProvider(project));
+    final t = ref.watch(translationProvider);
     ref.listen(_needsToShowUnityBannerProvider, (previous, next) {
       if (previous != next && next == true) {
         logger?.i('All requirements satisfied');
@@ -229,18 +235,15 @@ class ProjectRoute extends ConsumerWidget {
                       onPressed: () {
                         _didClickOpenProject(ref);
                       },
-                      child: const Text('Open Project')),
+                      child: Text(t.project.labels.open_project)),
                   OutlinedButton(
-                    onPressed: _didClickOpenFolder,
-                    child: const Text('Open Folder'),
-                  ),
+                      onPressed: _didClickOpenFolder,
+                      child: Text(t.project.labels.open_folder)),
                   OutlinedButton(
                     onPressed: () {
                       _didClickMakeBackup(context, ref);
                     },
-                    child: const Text(
-                      'Make Backup',
-                    ),
+                    child: Text(t.project.labels.make_backup),
                   ),
                 ],
               ),
