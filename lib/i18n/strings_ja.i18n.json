@@ -2,6 +2,8 @@
   "lang_name": "日本語",
   "common": {
     "labels": {
+      "yes": "はい",
+      "no": "いいえ",
       "ok": "OK",
       "cancel": "キャンセル",
       "dismiss": "閉じる"
@@ -24,6 +26,30 @@
     },
     "open_logs_folder": {
       "label": "ログフォルダーを開く"
+    }
+  },
+  "projects": {
+    "labels": {
+      "remove_from_list": "リストから削除",
+      "move_to_recycle_bin": "ごみ箱に移動",
+      "move_to_trash": "ごみ箱に移動"
+    },
+    "dialogs": {
+      "remove_project": {
+        "title": "$projectName の削除",
+        "content_win": "$projectPath をごみ箱に移動しますか？",
+        "content_others": "$projectPath をごみ箱に移動しますか？"
+      }
+    },
+    "info": {
+      "failed_to_remove": "$projectPath を削除できませんでした。",
+      "error_project_not_supported": "プロジェクト \"$path\" はサポートされていません。",
+      "error_add_project": "プロジェクトの追加でエラーが発生しました。",
+      "error_project_not_exist": "$projectPath が見つかりません。",
+      "avatar_git_not_supported": "Avatar Git プロジェクト ($projectPath) は Tiny VCC ではサポートされていません。",
+      "world_git_not_supported": "World Git プロジェクト ($projectPath) は Tiny VCC ではサポートされていません。",
+      "project_is_sdk2": "$projectPath は VRCSDK2 プロジェクトです。",
+      "project_is_invalid": "$projectPath は不正なプロジェクトです。"
     }
   },
   "settings": {

@@ -2,6 +2,8 @@
   "lang_name": "English",
   "common": {
     "labels": {
+      "yes": "Yes",
+      "no": "No",
       "ok": "OK",
       "cancel": "Cancel",
       "dismiss": "Dismiss"
@@ -24,6 +26,30 @@
     },
     "open_logs_folder": {
       "label": "Open Logs Folder"
+    }
+  },
+  "projects": {
+    "labels": {
+      "remove_from_list": "Remove from list",
+      "move_to_recycle_bin": "Move to Recycle Bin",
+      "move_to_trash": "Move to Trash"
+    },
+    "dialogs": {
+      "remove_project": {
+        "title": "Remove $projectName",
+        "content_win": "Are you sure you want to move $projectPath to the Recycle Bin?",
+        "content_others": "Are you sure you want to move $projectPath to the Trash?"
+      }
+    },
+    "info": {
+      "failed_to_remove": "Failed to remove $projectPath.",
+      "error_project_not_supported": "Project \"$path\" is not supported.",
+      "error_add_project": "Error occurred when adding a project.",
+      "error_project_not_exist": "$projectPath does not exist.",
+      "avatar_git_not_supported": "Avatar Git project ($projectPath) is not supported in Tiny VCC.",
+      "world_git_not_supported": "World Git project ($projectPath) is not supported in Tiny VCC.",
+      "project_is_sdk2": "$projectPath is VRCSDK2 project.",
+      "project_is_invalid": "$projectPath is invalid project."
     }
   },
   "settings": {
