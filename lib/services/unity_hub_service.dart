@@ -13,6 +13,9 @@ class UnityHubService {
   Future<Map<String, String>> listInstalledEditors() async {
     final exe = _unityHubExe;
     final args = ['--', '--headless', 'editors', '-i'];
+    if (Platform.isLinux) {
+      args.removeAt(0);
+    }
     final result = await Process.run(exe, args);
     if (result.exitCode != 0) {
       throw NonZeroExitException(exe, args, result.exitCode);
@@ -43,6 +46,9 @@ class UnityHubService {
       '-c',
       changeset,
     ];
+    if (Platform.isLinux) {
+      args.removeAt(0);
+    }
     if (modules != null && modules.isNotEmpty) {
       args.add('--module');
       args.addAll(modules);

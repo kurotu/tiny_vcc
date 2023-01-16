@@ -10,6 +10,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:system_info2/system_info2.dart';
 import 'package:url_launcher/link.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:xterm/core.dart';
 
 import '../data/exceptions.dart';
@@ -86,6 +87,10 @@ class RequirementsRoute extends ConsumerWidget {
       Uri.parse('https://docs.vrchat.com/docs/current-unity-version');
   final _brewDotNetSdkVersionsUri =
       Uri.parse('https://github.com/isen-ng/homebrew-dotnet-sdk-versions');
+  final _dotnetLinuxUri =
+      Uri.parse('https://learn.microsoft.com/dotnet/core/install/linux');
+  final _unityHubLinuxUri =
+      Uri.parse('https://docs.unity3d.com/hub/manual/InstallHub.html');
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -133,42 +138,7 @@ class RequirementsRoute extends ConsumerWidget {
         steps: [
           Step(
             title: const Text('.NET 6.0 SDK'),
-            content: Container(
-                alignment: Alignment.centerLeft,
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: hasBrew.valueOrNull == true
-                        ? [
-                            const Text(
-                                'Install .NET 6.0 SDK with Homebrew. You can also install with following command.'),
-                            Container(
-                              margin: const EdgeInsets.symmetric(vertical: 16),
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                  color: Colors.black12,
-                                  borderRadius: BorderRadius.circular(4)),
-                              child: CopyableText(
-                                  'brew tap isen-ng/dotnet-sdk-versions\n'
-                                  'brew install --cask dotnet-sdk6-0-400'),
-                            ),
-                            Link(
-                              uri: _brewDotNetSdkVersionsUri,
-                              builder: (context, followLink) => TextButton(
-                                  onPressed: followLink,
-                                  child: Text(
-                                      _brewDotNetSdkVersionsUri.toString())),
-                            ),
-                          ]
-                        : [
-                            const Text(
-                                'Install .NET 6.0 SDK. You can also download the SDK installer from web.'),
-                            Link(
-                                uri: _dotnetDownloadPageUri,
-                                builder: (context, followLink) => TextButton(
-                                    onPressed: followLink,
-                                    child: Text(
-                                        _dotnetDownloadPageUri.toString())))
-                          ])),
+            content: _buildDotNetContent(hasBrew),
             state: _stepState(dotnetState),
           ),
           Step(
@@ -206,15 +176,25 @@ class RequirementsRoute extends ConsumerWidget {
               alignment: Alignment.centerLeft,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                      'Install Unity Hub. You can also download the installer from web.'),
-                  Link(
-                      uri: _unityHubDownloadPageUri,
-                      builder: (context, followLink) => TextButton(
-                          onPressed: followLink,
-                          child: Text(_unityHubDownloadPageUri.toString())))
-                ],
+                children: Platform.isLinux
+                    ? [
+                        const Text('Install Unity Hub. See instruction below.'),
+                        Link(
+                            uri: _unityHubLinuxUri,
+                            builder: (context, followLink) => TextButton(
+                                onPressed: followLink,
+                                child: Text(_unityHubLinuxUri.toString())))
+                      ]
+                    : [
+                        const Text(
+                            'Install Unity Hub. You can also download the installer from web.'),
+                        Link(
+                            uri: _unityHubDownloadPageUri,
+                            builder: (context, followLink) => TextButton(
+                                onPressed: followLink,
+                                child:
+                                    Text(_unityHubDownloadPageUri.toString())))
+                      ],
               ),
             ),
             state: _stepState(hubState),
@@ -259,6 +239,62 @@ class RequirementsRoute extends ConsumerWidget {
     );
   }
 
+  Container _buildDotNetContent(AsyncValue<bool> hasBrew) {
+    if (Platform.isLinux) {
+      return Container(
+        alignment: Alignment.centerLeft,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+                'Install .NET 6.0 SDK with package manager. See instruction below.'),
+            Link(
+              uri: _dotnetLinuxUri,
+              builder: (context, followLink) => TextButton(
+                  onPressed: followLink,
+                  child: Text(_dotnetLinuxUri.toString())),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+        alignment: Alignment.centerLeft,
+        child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: hasBrew.valueOrNull == true
+                ? [
+                    const Text(
+                        'Install .NET 6.0 SDK with Homebrew. You can also install with following command.'),
+                    Container(
+                      margin: const EdgeInsets.symmetric(vertical: 16),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                          color: Colors.black12,
+                          borderRadius: BorderRadius.circular(4)),
+                      child:
+                          CopyableText('brew tap isen-ng/dotnet-sdk-versions\n'
+                              'brew install --cask dotnet-sdk6-0-400'),
+                    ),
+                    Link(
+                      uri: _brewDotNetSdkVersionsUri,
+                      builder: (context, followLink) => TextButton(
+                          onPressed: followLink,
+                          child: Text(_brewDotNetSdkVersionsUri.toString())),
+                    ),
+                  ]
+                : [
+                    const Text(
+                        'Install .NET 6.0 SDK. You can also download the SDK installer from web.'),
+                    Link(
+                        uri: _dotnetDownloadPageUri,
+                        builder: (context, followLink) => TextButton(
+                            onPressed: followLink,
+                            child: Text(_dotnetDownloadPageUri.toString())))
+                  ]));
+  }
+
   static StepState _stepState(AsyncValue<RequirementState> state) {
     return state.when(
         data: _stepStateSub,
@@ -279,7 +315,7 @@ class RequirementsRoute extends ConsumerWidget {
     }
   }
 
-  static ControlsWidgetBuilder _controlsBuilder(WidgetRef ref) {
+  ControlsWidgetBuilder _controlsBuilder(WidgetRef ref) {
     return (BuildContext context, ControlsDetails details) {
       final step = _StepIndex.values[details.stepIndex];
       final isReady = ref.watch(readyToUseProvider);
@@ -341,12 +377,14 @@ class RequirementsRoute extends ConsumerWidget {
     ref.refresh(_hasBrewProvider);
   }
 
-  static Future<void> _onClickInstall(
+  Future<void> _onClickInstall(
       BuildContext context, WidgetRef ref, _StepIndex step) async {
     switch (step) {
       case _StepIndex.dotnet:
         try {
-          if (ref.read(_hasBrewProvider).valueOrNull == true) {
+          if (Platform.isLinux) {
+            await launchUrl(_dotnetLinuxUri);
+          } else if (ref.read(_hasBrewProvider).valueOrNull == true) {
             await _installDotNetSdkWithBrew(context);
           } else {
             await _installDotNetSdk(context, ref);
@@ -368,7 +406,11 @@ class RequirementsRoute extends ConsumerWidget {
         break;
       case _StepIndex.unityHub:
         try {
-          await _installUnityHub(context, ref);
+          if (Platform.isLinux) {
+            await launchUrl(_unityHubLinuxUri);
+          } else {
+            await _installUnityHub(context, ref);
+          }
         } on Exception catch (error) {
           await showSimpleErrorDialog(
               context, 'Failed to install Unity Hub', error);
@@ -413,8 +455,6 @@ class RequirementsRoute extends ConsumerWidget {
         installer = File(p.join(dir.path,
             'dotnet-sdk-installer-${DateTime.now().millisecondsSinceEpoch}.pkg'));
         installerUri = dotnet.getMacInstallerUri(version, SystemInfo.arch);
-      } else if (Platform.isLinux) {
-        throw UnimplementedError('Need to implement dotnet installer.');
       } else {
         throw Error();
       }
@@ -593,8 +633,6 @@ class RequirementsRoute extends ConsumerWidget {
         dialog.close();
         await Future.delayed(const Duration());
       }
-    } else if (Platform.isLinux) {
-      throw UnimplementedError("_installUnityHub is not implemented for Linux");
     }
     throw Error();
   }
