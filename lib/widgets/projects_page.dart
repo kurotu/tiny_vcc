@@ -18,6 +18,7 @@ class ProjectsPage extends ConsumerWidget {
   const ProjectsPage({super.key});
 
   static void addProject(BuildContext context, WidgetRef ref) async {
+    final t = ref.watch(translationProvider);
     final path = await showDirectoryPickerWindow(lockParentWindow: true);
     if (path == null) {
       return;
@@ -51,11 +52,11 @@ class ProjectsPage extends ConsumerWidget {
       await repo.addVccProject(VccProject(path));
       _refreshProjects(ref);
     } on VccProjectTypeException catch (error) {
-      await showSimpleErrorDialog(
-          context, 'Project "$path" is not supported.', error);
+      await showSimpleErrorDialog(context,
+          t.projects.info.error_project_not_supported(path: path), error);
     } on Exception catch (error) {
       await showSimpleErrorDialog(
-          context, 'Error occurred when adding a project.', error);
+          context, t.projects.info.error_add_project, error);
     }
   }
 
@@ -65,9 +66,11 @@ class ProjectsPage extends ConsumerWidget {
 
   Future<void> _didSelectProject(
       BuildContext context, WidgetRef ref, VccProject project) async {
+    final t = ref.watch(translationProvider);
     if (!await Directory(project.path).exists()) {
       scaffoldKey.currentState?.showSnackBar(SnackBar(
-        content: Text('${project.path} does not exist.'),
+        content: Text(
+            t.projects.info.error_project_not_exist(projectPath: project.path)),
       ));
       return;
     }
@@ -85,14 +88,14 @@ class ProjectsPage extends ConsumerWidget {
         break;
       case VccProjectType.avatarGit:
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(
-              'Avatar Git project (${project.path}) is not supported in Tiny VCC.'),
+          content: Text(t.projects.info
+              .avatar_git_not_supported(projectPath: project.path)),
         ));
         break;
       case VccProjectType.worldGit:
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(
-              'World Git project (${project.path}) is not supported in Tiny VCC.'),
+          content: Text(t.projects.info
+              .world_git_not_supported(projectPath: project.path)),
         ));
         break;
       case VccProjectType.legacySdk3Avatar:
@@ -105,13 +108,15 @@ class ProjectsPage extends ConsumerWidget {
         break;
       case VccProjectType.legacySdk2:
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('${project.path} is VRCSDK2 project.'),
+          content:
+              Text(t.projects.info.project_is_sdk2(projectPath: project.path)),
         ));
         break;
       case VccProjectType.invalid:
       case VccProjectType.unknown:
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('${project.path} is invalid project.'),
+          content: Text(
+              t.projects.info.project_is_invalid(projectPath: project.path)),
         ));
         break;
     }
@@ -126,6 +131,7 @@ class ProjectsPage extends ConsumerWidget {
       }
     });
     final settings = ref.watch(vccSettingsProvider);
+    final t = ref.watch(translationProvider);
 
     return ListView.builder(
       padding: const EdgeInsets.only(bottom: kFloatingActionButtonMargin + 64),
@@ -147,7 +153,7 @@ class ProjectsPage extends ConsumerWidget {
                       .deleteVccProject(project);
                   _refreshProjects(ref);
                 },
-                child: const Text('Remove from list'),
+                child: Text(t.projects.labels.remove_from_list),
               ),
               PopupMenuItem(
                 onTap: () async {
@@ -155,21 +161,27 @@ class ProjectsPage extends ConsumerWidget {
                   final result = await showDialog<bool>(
                     context: context,
                     builder: ((context) => AlertDialog(
-                          title: Text('Remove ${project.name}'),
+                          title: Text(t.projects.dialogs.remove_project
+                              .title(projectName: project.name)),
                           content: Text(
-                              'Are you sure you want to move ${project.path} to the ${Platform.isWindows ? 'Recycle Bin' : 'Trash'}?'),
+                            Platform.isWindows
+                                ? t.projects.dialogs.remove_project
+                                    .content_win(projectPath: project.path)
+                                : t.projects.dialogs.remove_project
+                                    .content_others(projectPath: project.path),
+                          ),
                           actions: [
                             TextButton(
                               onPressed: () {
                                 Navigator.pop(context, false);
                               },
-                              child: const Text('No'),
+                              child: Text(t.common.labels.no),
                             ),
                             ElevatedButton(
                               onPressed: () {
                                 Navigator.pop(context, true);
                               },
-                              child: const Text('Yes'),
+                              child: Text(t.common.labels.yes),
                             ),
                           ],
                         )),
@@ -184,13 +196,16 @@ class ProjectsPage extends ConsumerWidget {
                       _refreshProjects(ref);
                     } on Exception catch (error) {
                       await showSimpleErrorDialog(
-                          context, 'Failed to remove ${project.path}.', error);
+                          context,
+                          t.projects.info
+                              .failed_to_remove(projectPath: project.path),
+                          error);
                     }
                   }
                 },
                 child: Platform.isWindows
-                    ? const Text('Move to Recycle Bin')
-                    : const Text('Move to Trash'),
+                    ? Text(t.projects.labels.move_to_recycle_bin)
+                    : Text(t.projects.labels.move_to_trash),
               ),
             ],
           ),

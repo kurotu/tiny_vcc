@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'providers.dart';
 
-class MainDrawer extends StatelessWidget {
+class MainDrawer extends ConsumerWidget {
   const MainDrawer(
       {super.key, required this.selectedIndex, required this.onItemSelected});
 
@@ -16,7 +16,8 @@ class MainDrawer extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = ref.watch(translationProvider);
     return Drawer(
       child: ListView(
         children: <Widget>[
@@ -25,7 +26,7 @@ class MainDrawer extends StatelessWidget {
             selectedIndex: selectedIndex,
             selectedLeading: const Icon(Icons.folder_special),
             leading: const Icon(Icons.folder_special_outlined),
-            title: const Text('Projects'),
+            title: Text(t.navigation.projects),
             onSelect: (value) {
               _didSelectItem(context, value);
             },
@@ -35,7 +36,7 @@ class MainDrawer extends StatelessWidget {
             selectedIndex: selectedIndex,
             selectedLeading: const Icon(Icons.settings),
             leading: const Icon(Icons.settings_outlined),
-            title: const Text('Settings'),
+            title: Text(t.navigation.settings),
             onSelect: (value) {
               _didSelectItem(context, value);
             },

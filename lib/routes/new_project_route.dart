@@ -65,10 +65,11 @@ class NewProjectRoute extends ConsumerWidget {
     final projectNameController = ref.watch(_projectNameControllerProvider);
     final projectLocationController =
         ref.watch(_projectLocationControllerProvider);
+    final t = ref.watch(translationProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('New Project'),
+        title: Text(t.new_project.title),
       ),
       body: Container(
         padding: const EdgeInsets.all(15),
@@ -78,8 +79,8 @@ class NewProjectRoute extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               DropdownButtonFormField(
-                decoration:
-                    const InputDecoration(labelText: 'Project Template'),
+                decoration: InputDecoration(
+                    labelText: t.new_project.labels.project_template),
                 value: selectedTemplatePath,
                 items: templates.valueOrNull
                     ?.map((e) => DropdownMenuItem(
@@ -87,17 +88,19 @@ class NewProjectRoute extends ConsumerWidget {
                           child: Text(e.name),
                         ))
                     .toList(),
-                validator: (value) =>
-                    value == null ? 'Please select project template.' : null,
+                validator: (value) => value == null
+                    ? t.new_project.errors.select_project_template
+                    : null,
                 onChanged: (value) {
                   ref.read(_selectedTemplatePathProvider.notifier).path = value;
                 },
               ),
               TextFormField(
-                decoration: const InputDecoration(labelText: 'Project Name'),
+                decoration: InputDecoration(
+                    labelText: t.new_project.labels.project_name),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter project name.';
+                    return t.new_project.errors.enter_project_name;
                   }
                   return null;
                 },
@@ -106,7 +109,7 @@ class NewProjectRoute extends ConsumerWidget {
               TextFormField(
                 readOnly: true,
                 decoration: InputDecoration(
-                  labelText: 'Location',
+                  labelText: t.new_project.labels.location,
                   suffixIcon: IconButton(
                     onPressed: () async {
                       final path = await _selectLocation(ref);
@@ -122,7 +125,7 @@ class NewProjectRoute extends ConsumerWidget {
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter location path.';
+                    return t.new_project.errors.enter_location_path;
                   }
                   return null;
                 },
@@ -141,8 +144,11 @@ class NewProjectRoute extends ConsumerWidget {
                         final selected = templates.requireValue
                             .firstWhere((t) => t.path == selectedTemplatePath);
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text(
-                              'Creating ${selected.name} project, "${projectLocationController.text}" at ${projectLocationController.text}'),
+                          content: Text(t.new_project.info.creating_project(
+                            template: selected.name,
+                            name: projectNameController.text,
+                            location: projectLocationController.text,
+                          )),
                         ));
                         final newProject = await ref
                             .read(vccProjectsRepoProvider)
@@ -158,10 +164,14 @@ class NewProjectRoute extends ConsumerWidget {
                           arguments: ProjectRouteArguments(project: newProject),
                         );
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                            content: Text(
-                                '${selected.name} project, "${newProject.name}" has been created at ${newProject.path}')));
+                          content: Text(t.new_project.info.created_project(
+                            template: selected.name,
+                            name: newProject.name,
+                            projectLocation: newProject.path,
+                          )),
+                        ));
                       },
-                child: const Text('Create'),
+                child: Text(t.new_project.labels.create),
               ),
             ],
           ),

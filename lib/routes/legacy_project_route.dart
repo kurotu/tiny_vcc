@@ -65,7 +65,7 @@ class LegacyProjectRoute extends ConsumerWidget {
   final VccProject project;
 
   Future<void> _didClickMigrate(BuildContext context, WidgetRef ref) async {
-    final action = await _showMigrationConfirmDialog(context);
+    final action = await _showMigrationConfirmDialog(context, ref);
     if (action == null) {
       return;
     }
@@ -111,30 +111,32 @@ class LegacyProjectRoute extends ConsumerWidget {
   }
 
   Future<_MigrateAction?> _showMigrationConfirmDialog(
-      BuildContext context) async {
+      BuildContext context, WidgetRef ref) async {
+    final t = ref.watch(translationProvider);
     final _MigrateAction? action = await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Project Migration'),
-        content: const Text('Migration is needed'),
+        title: Text(t.legacy_project.dialogs.confirm.title),
+        content: Text(t.legacy_project.dialogs.confirm.content),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.pop(context, _MigrateAction.migrateCopy);
             },
-            child: const Text('Migrate a copy'),
+            child: Text(t.legacy_project.dialogs.confirm.labels.migrate_a_copy),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(context, _MigrateAction.migrateInPlace);
             },
-            child: const Text('Migrate in place\nI HAVE A BACKUP'),
+            child:
+                Text(t.legacy_project.dialogs.confirm.labels.migrate_in_place),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
             },
-            child: const Text('Cancel'),
+            child: Text(t.common.labels.cancel),
           ),
         ],
       ),
@@ -158,15 +160,18 @@ class LegacyProjectRoute extends ConsumerWidget {
 
   void _didClickMakeBackup(BuildContext context, WidgetRef ref) async {
     final projectName = project.name;
-    showProgressDialog(context, Theme.of(context), 'Backing up $projectName');
+    final t = ref.watch(translationProvider);
+    showProgressDialog(context, Theme.of(context),
+        t.legacy_project.dialogs.progress_backup.title(name: projectName));
     File file;
     try {
       file = await compute(ref.read(vccProjectsRepoProvider).backup, project);
     } on Exception catch (error) {
       Navigator.pop(context);
       showAlertDialog(context,
-          title: 'Backup Error',
-          message: 'Failed to back up $projectName.\n\n$error');
+          title: t.legacy_project.dialogs.backup_error.title,
+          message: t.legacy_project.dialogs.backup_error
+              .content(projectName: projectName, error: error));
       return;
     }
 
@@ -175,20 +180,21 @@ class LegacyProjectRoute extends ConsumerWidget {
     final showFile = await showDialog(
       context: context,
       builder: ((context) => AlertDialog(
-            title: const Text('Made Backup'),
+            title: Text(t.legacy_project.dialogs.made_backup.title),
             content: Text(file.path),
             actions: [
               TextButton(
                 onPressed: () {
                   Navigator.pop(context);
                 },
-                child: const Text('OK'),
+                child: Text(t.common.labels.ok),
               ),
               TextButton(
                 onPressed: () {
                   Navigator.pop(context, true);
                 },
-                child: const Text('Show Me'),
+                child:
+                    Text(t.legacy_project.dialogs.made_backup.labels.show_me),
               ),
             ],
           )),
@@ -201,6 +207,7 @@ class LegacyProjectRoute extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDoingTask = ref.watch(_doingTaskProvider);
+    final t = ref.watch(translationProvider);
     return Scaffold(
       appBar: AppBar(title: Text(project.name)),
       body: Container(
@@ -220,7 +227,7 @@ class LegacyProjectRoute extends ConsumerWidget {
                       : () {
                           _didClickMigrate(context, ref);
                         },
-                  child: const Text('Migrate'),
+                  child: Text(t.legacy_project.labels.migrate),
                 ),
                 OutlinedButton(
                   onPressed: isDoingTask
@@ -228,7 +235,7 @@ class LegacyProjectRoute extends ConsumerWidget {
                       : () {
                           _didClickOpenFolder();
                         },
-                  child: const Text('Open Folder'),
+                  child: Text(t.legacy_project.labels.open_folder),
                 ),
                 OutlinedButton(
                   onPressed: isDoingTask
@@ -236,7 +243,7 @@ class LegacyProjectRoute extends ConsumerWidget {
                       : () {
                           _didClickMakeBackup(context, ref);
                         },
-                  child: const Text('Make Backup'),
+                  child: Text(t.legacy_project.labels.make_backup),
                 ),
               ],
             ),
@@ -256,8 +263,10 @@ class _MigrationProgressDialog extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final message = ref.watch(_migrationMessageProvider);
     final errorMessage = ref.watch(_errorMessageProvider);
+    final t = ref.watch(translationProvider);
     return AlertDialog(
-      title: Text('Migrating ${project.name}'),
+      title: Text(t.legacy_project.dialogs.progress_migration
+          .title(name: project.name)),
       content: SizedBox(
         width: MediaQuery.of(context).size.width,
         height: MediaQuery.of(context).size.height,
@@ -292,7 +301,7 @@ class _MigrationProgressDialog extends ConsumerWidget {
                 onPressed: () {
                   Navigator.pop(context);
                 },
-                child: const Text('OK'),
+                child: Text(t.common.labels.ok),
               )
             ]
           : null,

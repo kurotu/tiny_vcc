@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pub_semver/pub_semver.dart';
 
+import '../providers.dart';
 import '../services/vcc_service.dart';
 
 class PackageItem {
@@ -108,7 +110,7 @@ class PackageListItem extends StatelessWidget {
   }
 }
 
-class _ActionRow extends StatelessWidget {
+class _ActionRow extends ConsumerWidget {
   const _ActionRow({
     required this.canRemove,
     required this.selectedVersion,
@@ -130,23 +132,24 @@ class _ActionRow extends StatelessWidget {
   final void Function()? onClickRemove;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Row(
-      children: _getChildren(),
+      children: _getChildren(ref),
     );
   }
 
-  List<Widget> _getChildren() {
+  List<Widget> _getChildren(WidgetRef ref) {
+    final t = ref.watch(translationProvider);
     List<Widget> children = [];
     if (installedVersion == null) {
-      children
-          .add(OutlinedButton(onPressed: onClickAdd, child: const Text('Add')));
+      children.add(OutlinedButton(
+          onPressed: onClickAdd, child: Text(t.project.labels.add)));
       children.add(const Padding(
         padding: EdgeInsets.symmetric(horizontal: 4),
       ));
     } else if (canRemove) {
       children.add(OutlinedButton(
-          onPressed: onClickRemove, child: const Text('Remove')));
+          onPressed: onClickRemove, child: Text(t.project.labels.remove)));
       children.add(const Padding(
         padding: EdgeInsets.symmetric(horizontal: 4),
       ));
@@ -170,10 +173,11 @@ class _ActionRow extends StatelessWidget {
         final compare = selectedVersion!.compareTo(installedVersion!);
         if (compare > 0) {
           children.add(ElevatedButton(
-              onPressed: onClickUpdate, child: const Text('Update')));
+              onPressed: onClickUpdate, child: Text(t.project.labels.update)));
         } else {
           children.add(ElevatedButton(
-              onPressed: onClickUpdate, child: const Text('Downgrade')));
+              onPressed: onClickUpdate,
+              child: Text(t.project.labels.downgrade)));
         }
       }
     }

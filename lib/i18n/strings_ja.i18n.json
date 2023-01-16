@@ -1,0 +1,157 @@
+{
+  "lang_name": "日本語",
+  "common": {
+    "labels": {
+      "yes": "はい",
+      "no": "いいえ",
+      "ok": "OK",
+      "cancel": "キャンセル",
+      "dismiss": "閉じる"
+    }
+  },
+  "navigation": {
+    "projects": "プロジェクト",
+    "settings": "設定",
+    "about": "Tiny VCC について"
+  },
+  "actions": {
+    "add_project": {
+      "tooltip": "既存プロジェクトを追加"
+    },
+    "create_project": {
+      "tooltip": "新規プロジェクトを作成"
+    },
+    "open_vcc_settings_folder": {
+      "label": "VCC の設定フォルダーを開く"
+    },
+    "open_logs_folder": {
+      "label": "ログフォルダーを開く"
+    }
+  },
+  "projects": {
+    "labels": {
+      "remove_from_list": "リストから削除",
+      "move_to_recycle_bin": "ごみ箱に移動",
+      "move_to_trash": "ごみ箱に移動"
+    },
+    "dialogs": {
+      "remove_project": {
+        "title": "$projectName の削除",
+        "content_win": "$projectPath をごみ箱に移動しますか？",
+        "content_others": "$projectPath をごみ箱に移動しますか？"
+      }
+    },
+    "info": {
+      "failed_to_remove": "$projectPath を削除できませんでした。",
+      "error_project_not_supported": "プロジェクト \"$path\" はサポートされていません。",
+      "error_add_project": "プロジェクトの追加でエラーが発生しました。",
+      "error_project_not_exist": "$projectPath が見つかりません。",
+      "avatar_git_not_supported": "Avatar Git プロジェクト ($projectPath) は Tiny VCC ではサポートされていません。",
+      "world_git_not_supported": "World Git プロジェクト ($projectPath) は Tiny VCC ではサポートされていません。",
+      "project_is_sdk2": "$projectPath は VRCSDK2 プロジェクトです。",
+      "project_is_invalid": "$projectPath は不正なプロジェクトです。"
+    }
+  },
+  "settings": {
+    "headers": {
+      "tiny_vcc_preferences": "Tiny VCC 設定",
+      "vcc_settings": "VCC 設定"
+    },
+    "labels": {
+      "theme": "テーマ",
+      "language": "言語",
+      "unity_editors":"Unity エディター",
+      "backups": "バックアップ",
+      "user_packages": "ユーザーパッケージ"
+    },
+    "theme": {
+      "auto": "自動",
+      "light": "ライト",
+      "dark": "ダーク"
+    },
+    "lang": {
+      "auto": "自動"
+    }
+  },
+  "new_project": {
+    "title": "新規プロジェクト",
+    "labels": {
+      "project_template": "プロジェクトテンプレート",
+      "project_name": "プロジェクト名",
+      "location": "保存先",
+      "create": "作成"
+    },
+    "errors": {
+      "select_project_template": "テンプレートを選択してください。",
+      "enter_project_name": "プロジェクト名を入力してください。",
+      "enter_location_path": "保存先を選択してください。"
+    },
+    "info": {
+      "creating_project": "$template プロジェクト \"$name\" を $location に作成しています。",
+      "created_project": "$template プロジェクト \"$name\" が $projectLocation に作成されました。"
+    }
+  },
+  "project": {
+    "labels": {
+      "open_project": "プロジェクトを開く",
+      "open_folder": "フォルダーを開く",
+      "make_backup": "バックアップを作成",
+      "add": "追加",
+      "update": "更新",
+      "downgrade": "ダウングレード",
+      "remove": "削除"
+    },
+    "info": {
+      "packages_changed": "パッケージが変更されました。Unity を閉じて開きなおしてください。",
+      "unity_not_found": "VCC 設定に Unity $editorVersion が見つかりません。"
+    },
+    "dialogs": {
+      "progress_backup": {
+        "title": "$name をバックアップ中"
+      },
+      "made_backup": {
+        "title": "バックアップの作成完了",
+        "labels": {
+          "show_me": "表示"
+        }
+      },
+      "backup_error": {
+        "title": "バックアップエラー",
+        "content": "$projectName のバックアップに失敗しました。\n\n$error"
+      }
+    }
+  },
+  "legacy_project": {
+    "labels": {
+      "migrate": "移行",
+      "open_folder": "フォルダーを開く",
+      "make_backup": "バックアップを作成"
+    },
+    "dialogs": {
+      "confirm": {
+        "title": "プロジェクトの移行",
+        "content": "プロジェクトを移行する必要があります。",
+        "labels": {
+          "migrate_a_copy": "コピーを作成して移行",
+          "migrate_in_place": "バックアップがあるのでそのまま移行"
+        }
+      },
+      "progress_backup": {
+        "title": "$name をバックアップ中"
+      },
+      "made_backup": {
+        "title": "バックアップの作成完了",
+        "labels": {
+          "show_me": "表示"
+        }
+      },
+      "backup_error": {
+        "title": "バックアップエラー",
+        "content": "$projectName のバックアップに失敗しました。\n\n$error"
+      },
+      "progress_migration": {
+        "title": "$name を移行中"
+      }
+    }
+  }
+}

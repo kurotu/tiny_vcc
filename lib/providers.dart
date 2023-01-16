@@ -1,11 +1,10 @@
-import 'dart:io';
-
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import 'data/tiny_vcc_data.dart';
 import 'globals.dart';
+import 'i18n/strings.g.dart';
 import 'repos/tiny_vcc_settings_repository.dart';
 import 'repos/vcc_projects_repository.dart';
 import 'repos/vcc_settings_repository.dart';
@@ -40,6 +39,18 @@ final tinyVccSettingsRepositoryProvider = Provider(
     (ref) => TinyVccSettingsRepository(ref.read(tinyVccServiceProvider)));
 final tinyVccSettingsProvider = FutureProvider(
     (ref) => ref.read(tinyVccSettingsRepositoryProvider).fetchSettings());
+final translationProvider = Provider((ref) {
+  final settings = ref.watch(tinyVccSettingsProvider);
+  final locale = settings.when(
+      data: (data) => data.locale,
+      error: (error, stackTrace) => settings.valueOrNull?.locale,
+      loading: () => settings.valueOrNull?.locale);
+  if (locale == null || locale == TinyVccLocale.auto) {
+    return AppLocaleUtils.findDeviceLocale().build();
+  } else {
+    return AppLocaleUtils.parseLocaleParts(languageCode: locale.name).build();
+  }
+});
 
 final vpmTemplatesRepoProvider = Provider((ref) {
   return VccTemplatesRepository(ref.read(vccServiceProvider));

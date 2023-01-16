@@ -2,11 +2,11 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import 'package:url_launcher/url_launcher.dart';
 
 import '../data/tiny_vcc_data.dart';
+import '../i18n/strings.g.dart';
 import '../providers.dart';
 import '../utils.dart';
 
@@ -145,6 +145,10 @@ class SettingsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final localeDevice = AppLocaleUtils.findDeviceLocale().build();
+    final localeEn = AppLocale.en.build();
+    final localeJa = AppLocale.ja.build();
+
     ref.listen(vccSettingsProvider, (previous, next) {
       next.when(
         data: (data) {
@@ -164,6 +168,7 @@ class SettingsPage extends ConsumerWidget {
     final backupLocationController =
         ref.watch(_backupLocationControllerProvider);
     final tinyVccSettings = ref.watch(tinyVccSettingsProvider);
+    final t = ref.watch(translationProvider);
 
     return Scaffold(
 //      drawer: const MainDrawer(),
@@ -199,16 +204,21 @@ class SettingsPage extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Tiny VCC Preferences',
+                  t.settings.headers.tiny_vcc_preferences,
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
                 DropdownButtonFormField(
-                  decoration: const InputDecoration(labelText: 'Theme'),
+                  decoration:
+                      InputDecoration(labelText: t.settings.labels.theme),
                   value: tinyVccSettings.valueOrNull?.themeMode,
                   items: TinyVccThemeMode.values
                       .map((mode) => DropdownMenuItem(
                             value: mode,
-                            child: Text(toBeginningOfSentenceCase(mode.name)!),
+                            child: Text({
+                              TinyVccThemeMode.system: t.settings.theme.auto,
+                              TinyVccThemeMode.light: t.settings.theme.light,
+                              TinyVccThemeMode.dark: t.settings.theme.dark,
+                            }[mode]!),
                           ))
                       .toList(),
                   onChanged: (value) async {
@@ -220,14 +230,40 @@ class SettingsPage extends ConsumerWidget {
                     }
                   },
                 ),
+                const Padding(padding: EdgeInsets.symmetric(vertical: 8)),
+                DropdownButtonFormField(
+                  decoration:
+                      InputDecoration(labelText: t.settings.labels.language),
+                  value: tinyVccSettings.valueOrNull?.locale,
+                  items: TinyVccLocale.values
+                      .map((mode) => DropdownMenuItem(
+                            value: mode,
+                            child: Text({
+                              TinyVccLocale.auto:
+                                  '${t.settings.lang.auto} (${localeDevice.lang_name})',
+                              TinyVccLocale.en: localeEn.lang_name,
+                              TinyVccLocale.ja: localeJa.lang_name,
+                            }[mode]!),
+                          ))
+                      .toList(),
+                  onChanged: (value) async {
+                    if (value != null) {
+                      await ref
+                          .read(tinyVccSettingsRepositoryProvider)
+                          .setLocale(value);
+                      ref.refresh(tinyVccSettingsProvider);
+                    }
+                  },
+                ),
+                const Padding(padding: EdgeInsets.symmetric(vertical: 8)),
                 const Divider(),
                 Text(
-                  'VCC Settings',
+                  t.settings.headers.vcc_settings,
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
                 DropdownButtonFormField(
                   decoration: InputDecoration(
-                      labelText: 'Unity Editors',
+                      labelText: t.settings.labels.unity_editors,
                       suffixIcon: Wrap(spacing: 8, children: [
                         isLoadingEditors
                             ? const IconButton(
@@ -260,7 +296,7 @@ class SettingsPage extends ConsumerWidget {
                 TextFormField(
                   readOnly: true,
                   decoration: InputDecoration(
-                    labelText: 'Backups',
+                    labelText: t.settings.labels.backups,
                     suffixIcon: IconButton(
                       onPressed: isLoadingEditors
                           ? null
@@ -275,15 +311,15 @@ class SettingsPage extends ConsumerWidget {
                 const Padding(padding: EdgeInsets.symmetric(vertical: 8)),
                 Row(
                   children: [
-                    const Text('User Packages'),
+                    Text(t.settings.labels.user_packages),
                     const Padding(padding: EdgeInsets.symmetric(horizontal: 4)),
-                    OutlinedButton(
+                    IconButton(
                         onPressed: isLoadingEditors
                             ? null
                             : () {
                                 _didClickAddUserPackage(context, ref);
                               },
-                        child: const Text('Add')),
+                        icon: const Icon(Icons.add))
                   ],
                 ),
                 SizedBox(

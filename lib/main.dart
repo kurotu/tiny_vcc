@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:developer';
-import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:github/github.dart';
 import 'package:logger/logger.dart';
@@ -13,6 +13,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'data/tiny_vcc_data.dart';
 import 'globals.dart';
+import 'i18n/strings.g.dart';
 import 'providers.dart';
 import 'routes/legacy_project_route.dart';
 import 'routes/main_route.dart';
@@ -88,6 +89,7 @@ void main() async {
     return true;
   };
 
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const ProviderScope(child: MyApp()));
 
   if (kReleaseMode) {
@@ -121,8 +123,12 @@ class MyApp extends ConsumerWidget {
           return ThemeMode.dark;
       }
     }));
+    final t = ref.watch(translationProvider);
     return MaterialApp(
       title: 'Tiny VCC',
+      locale: t.$meta.locale.flutterLocale,
+      supportedLocales: AppLocale.values.map((e) => e.flutterLocale),
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
       darkTheme: ThemeData.dark(),
       theme: ThemeData(
         // This is the theme of your application.
