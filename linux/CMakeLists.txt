@@ -6,8 +6,8 @@ project(runner LANGUAGES CXX)
 # the on-disk name of your application.
 set(BINARY_NAME "tiny_vcc")
 # The unique GTK application identifier for this application. See:
-# https://wiki.gnome.org/HowDoI/ChooseApplicationID
-set(APPLICATION_ID "com.example.tiny_vcc")
+# https://developer.gnome.org/documentation/tutorials/application-id.html
+set(APPLICATION_ID "com.github.kurotu.tiny_vcc")
 
 # Explicitly opt in to modern CMake behaviors to avoid warnings with recent
 # versions of CMake.
