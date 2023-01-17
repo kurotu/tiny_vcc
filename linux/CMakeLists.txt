@@ -64,6 +64,7 @@ add_executable(${BINARY_NAME}
   "main.cc"
   "my_application.cc"
   "${FLUTTER_MANAGED_DIR}/generated_plugin_registrant.cc"
+  "functions.cc"
 )
 
 # Apply the standard set of build settings. This can be removed for applications

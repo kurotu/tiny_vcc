@@ -5,7 +5,12 @@
 #include <gdk/gdkx.h>
 #endif
 
+#include "functions.h"
 #include "flutter/generated_plugin_registrant.h"
+
+static void method_call_cb(FlMethodChannel *channel,
+                           FlMethodCall *method_call,
+                           gpointer user_data);
 
 struct _MyApplication {
   GtkApplication parent_instance;
@@ -59,6 +64,15 @@ static void my_application_activate(GApplication* application) {
 
   fl_register_plugins(FL_PLUGIN_REGISTRY(view));
 
+  // Set up method channel.
+  FlEngine *engine = fl_view_get_engine(view);
+  g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();
+  g_autoptr(FlBinaryMessenger) messenger = fl_engine_get_binary_messenger(engine);
+  g_autoptr(FlMethodChannel) channel = fl_method_channel_new(
+    messenger, "com.github.kurotu.tiny_vcc/platform", FL_METHOD_CODEC(codec));
+  fl_method_channel_set_method_call_handler(
+    channel, method_call_cb, g_object_ref(view), g_object_unref);
+
   gtk_widget_grab_focus(GTK_WIDGET(view));
 }
 
@@ -101,4 +115,20 @@ MyApplication* my_application_new() {
                                      "application-id", APPLICATION_ID,
                                      "flags", G_APPLICATION_NON_UNIQUE,
                                      nullptr));
+}
+
+static void method_call_cb(FlMethodChannel *channel,
+                           FlMethodCall *method_call,
+                           gpointer user_data) {
+  g_autoptr(FlMethodResponse) response = nullptr;
+  const gchar *method = fl_method_call_get_name(method_call);
+  if (strcmp(method, "moveToTrash") == 0) {
+    FlValue* args = fl_method_call_get_args(method_call);
+    auto *text_value = fl_value_get_string(args);
+    response = moveToTrash(text_value);
+  } else {
+    response = FL_METHOD_RESPONSE(fl_method_not_implemented_response_new());
+  }
+  g_autoptr(GError) error = nullptr;
+  fl_method_call_respond(method_call, response, &error);
 }
