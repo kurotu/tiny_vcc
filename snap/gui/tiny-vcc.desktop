@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Tiny VCC
+Comment=Yet Another VRChat Creator Companion
+Exec=tiny-vcc 
+Icon=${SNAP}/meta/gui/tiny-vcc.png
+Terminal=false
+Type=Application
+Categories=Development;

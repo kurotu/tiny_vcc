@@ -1,0 +1,28 @@
+name: tiny-vcc
+version: 0.3.0
+summary: Tiny VCC
+description: Yet Another VRChat Creator Companion
+
+confinement: strict
+base: core18
+grade: stable
+
+slots:
+  dbus-tiny-vcc:
+    interface: dbus
+    bus: session
+    name: com.github.kurotu.tiny_vcc
+    
+apps:
+  tiny-vcc:
+    command: tiny_vcc
+    extensions: [flutter-stable]
+    plugs:
+      - classic-support
+    slots:
+      - dbus-tiny-vcc
+parts:
+  tiny-vcc:
+    source: .
+    plugin: flutter
+    flutter-target: lib/main.dart
