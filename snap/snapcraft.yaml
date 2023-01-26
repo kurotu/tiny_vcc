@@ -26,3 +26,4 @@ parts:
     source: .
     plugin: flutter
     flutter-target: lib/main.dart
+    flutter-revision: 3.3.0
