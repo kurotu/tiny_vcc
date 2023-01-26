@@ -84,14 +84,15 @@ jobs:
       - run: flutter config --enable-linux-desktop
       - run: flutter pub get
       - run: flutter pub run build_runner build --delete-conflicting-outputs
-      - uses: samuelmeuli/action-snapcraft@v1
-        with:
-          use_lxd: true
-      - run: sg lxd -c 'snapcraft --use-lxd'
-      - uses: actions/upload-artifact@v3
-        with:
-          name: linux
-          path: '*.snap'
+      - run: flutter build linux
+#      - uses: samuelmeuli/action-snapcraft@v1
+#        with:
+#          use_lxd: true
+#      - run: sg lxd -c 'snapcraft --use-lxd'
+#      - uses: actions/upload-artifact@v3
+#        with:
+#          name: linux
+#          path: '*.snap'
 
   release:
     if: startsWith(github.ref, 'refs/tags/')
