@@ -153,5 +153,44 @@
         "title": "Migrating $name"
       }
     }
+  },
+  "requirements": {
+    "title": "Requirements",
+    "labels": {
+      "dotnet6sdk": ".NET 6.0 SDK",
+      "vpm_cli": "VPM CLI",
+      "unity_hub": "Unity Hub",
+      "unity": "Unity",
+      "install": "Install",
+      "check_again": "Check again"
+    },
+    "info": {
+      "downloading_dotnet": "Downloading .NET 6.0 SDK installer.",
+      "installing_dotnet": "Installing .NET 6.0 SDK.",
+      "installing_dotnet_with_brew": "Installing .NET 6.0 SDK with Homebrew",
+      "see_terminal_to_continue": "See Terminal app to continue installation.",
+      "installing_vpm": "Installing VPM CLI $version",
+      "downloading_unity_hub": "Downloading Unity Hub installer.",
+      "installing_unity_hub": "Installing Unity Hub.",
+      "installing_unity": "Installing Unity"
+    },
+    "description": {
+      "dotnet": "Install .NET 6.0 SDK. You can also download the SDK installer from web.",
+      "dotnet_brew": "Install .NET 6.0 SDK with Homebrew. You can also install with following command.",
+      "dotnet_linux": "Install .NET 6.0 SDK with package manager. See instruction below.",
+      "vpm": "Install VPM CLI. You can also install with following command.",
+      "unity_hub": "Install Unity Hub. You can also download the installer from web.",
+      "unity_hub_linux": "Install Unity Hub. See instruction below.",
+      "unity": "Install Unity with Unity Hub. You can also install from archive, but you should install the exact version which VRChat specifies.",
+      "unity_modules": "In manual installation, you must install some modules together:",
+      "unity_modules_android": "Android Build Support (to upload for Quest)",
+      "unity_modules_mono": "Windows Build Support (mono) (to upload for PC from macOS or Linux)"
+    },
+    "errors": {
+      "failed_to_isntall_dotnet": "Failed to install .NET SDK",
+      "failed_to_isntall_vpm": "Failed to install VPM CLI",
+      "failed_to_isntall_unity_hub": "Failed to install Unity Hub",
+      "failed_to_isntall_unity": "Failed to install Unity"
+    }
   }
 }

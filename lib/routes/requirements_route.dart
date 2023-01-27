@@ -16,6 +16,7 @@ import 'package:xterm/core.dart';
 import '../data/exceptions.dart';
 import '../data/tiny_vcc_data.dart';
 import '../globals.dart';
+import '../i18n/strings.g.dart';
 import '../providers.dart';
 import '../utils.dart';
 import '../utils/system_info.dart';
@@ -100,6 +101,7 @@ class RequirementsRoute extends ConsumerWidget {
     final hubState = ref.watch(unityHubStateProvider);
     final unityState = ref.watch(unityStateProvider);
     final hasBrew = ref.watch(_hasBrewProvider);
+    final t = ref.watch(translationProvider);
 
     ref.listen(dotNetStateProvider, (previous, next) {
       if (!next.isLoading && next.valueOrNull == RequirementState.ng) {
@@ -128,7 +130,7 @@ class RequirementsRoute extends ConsumerWidget {
     });
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Requirements')),
+      appBar: AppBar(title: Text(t.requirements.title)),
       body: Stepper(
         controlsBuilder: _controlsBuilder(ref),
         onStepTapped: (value) {
@@ -137,19 +139,18 @@ class RequirementsRoute extends ConsumerWidget {
         currentStep: step.index,
         steps: [
           Step(
-            title: const Text('.NET 6.0 SDK'),
-            content: _buildDotNetContent(hasBrew),
+            title: Text(t.requirements.labels.dotnet6sdk),
+            content: _buildDotNetContent(t, hasBrew),
             state: _stepState(dotnetState),
           ),
           Step(
-            title: const Text('VPM CLI'),
+            title: Text(t.requirements.labels.vpm_cli),
             content: Container(
               alignment: Alignment.centerLeft,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                      'Install VPM CLI. You can also install with following command.'),
+                  Text(t.requirements.description.vpm),
                   Container(
                     margin: const EdgeInsets.symmetric(vertical: 16),
                     padding: const EdgeInsets.all(16),
@@ -171,14 +172,14 @@ class RequirementsRoute extends ConsumerWidget {
             state: _stepState(vpmState),
           ),
           Step(
-            title: const Text('Unity Hub'),
+            title: Text(t.requirements.labels.unity_hub),
             content: Container(
               alignment: Alignment.centerLeft,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: Platform.isLinux
                     ? [
-                        const Text('Install Unity Hub. See instruction below.'),
+                        Text(t.requirements.description.unity_hub_linux),
                         Link(
                             uri: _unityHubLinuxUri,
                             builder: (context, followLink) => TextButton(
@@ -186,8 +187,7 @@ class RequirementsRoute extends ConsumerWidget {
                                 child: Text(_unityHubLinuxUri.toString())))
                       ]
                     : [
-                        const Text(
-                            'Install Unity Hub. You can also download the installer from web.'),
+                        Text(t.requirements.description.unity_hub),
                         Link(
                             uri: _unityHubDownloadPageUri,
                             builder: (context, followLink) => TextButton(
@@ -200,23 +200,21 @@ class RequirementsRoute extends ConsumerWidget {
             state: _stepState(hubState),
           ),
           Step(
-            title: const Text('Unity'),
+            title: Text(t.requirements.labels.unity),
             content: Container(
               alignment: Alignment.centerLeft,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                      'Install Unity with Unity Hub. You can also install from archive, but you should install the exact version which VRChat specifies.'),
+                  Text(t.requirements.description.unity),
                   const Padding(padding: EdgeInsets.symmetric(vertical: 4)),
-                  const Text(
-                      'In manual installation, you must install some modules together:'),
+                  Text(t.requirements.description.unity_modules),
                   Platform.isWindows
-                      ? const Text(
-                          '  - Android Build Support (to upload for Quest)')
-                      : const Text(
-                          '  - Android Build Support (to upload for Quest)\n'
-                          '  - Windows Build Support (mono) (to upload for PC from macOS or Linux'),
+                      ? Text(
+                          '  - ${t.requirements.description.unity_modules_android}')
+                      : Text(
+                          '  - ${t.requirements.description.unity_modules_android}\n'
+                          '  - ${t.requirements.description.unity_modules_mono}'),
                   Link(
                     uri: _currentUnityVersionUri,
                     builder: (context, followLink) => TextButton(
@@ -239,15 +237,14 @@ class RequirementsRoute extends ConsumerWidget {
     );
   }
 
-  Container _buildDotNetContent(AsyncValue<bool> hasBrew) {
+  Container _buildDotNetContent(StringsEn t, AsyncValue<bool> hasBrew) {
     if (Platform.isLinux) {
       return Container(
         alignment: Alignment.centerLeft,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-                'Install .NET 6.0 SDK with package manager. See instruction below.'),
+            Text(t.requirements.description.dotnet_linux),
             Link(
               uri: _dotnetLinuxUri,
               builder: (context, followLink) => TextButton(
@@ -265,8 +262,7 @@ class RequirementsRoute extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: hasBrew.valueOrNull == true
                 ? [
-                    const Text(
-                        'Install .NET 6.0 SDK with Homebrew. You can also install with following command.'),
+                    Text(t.requirements.description.dotnet_brew),
                     Container(
                       margin: const EdgeInsets.symmetric(vertical: 16),
                       padding: const EdgeInsets.all(16),
@@ -285,8 +281,7 @@ class RequirementsRoute extends ConsumerWidget {
                     ),
                   ]
                 : [
-                    const Text(
-                        'Install .NET 6.0 SDK. You can also download the SDK installer from web.'),
+                    Text(t.requirements.description.dotnet),
                     Link(
                         uri: _dotnetDownloadPageUri,
                         builder: (context, followLink) => TextButton(
@@ -323,6 +318,7 @@ class RequirementsRoute extends ConsumerWidget {
       final vpm = ref.watch(vpmStateProvider);
       final hub = ref.watch(unityHubStateProvider);
       final unity = ref.watch(unityStateProvider);
+      final t = ref.watch(translationProvider);
 
       final bool shoudlEnable;
       switch (step) {
@@ -354,14 +350,14 @@ class RequirementsRoute extends ConsumerWidget {
                         await _onClickInstall(context, ref, step);
                       }
                     : null,
-                child: const Text('Install')),
+                child: Text(t.requirements.labels.install)),
             TextButton(
                 onPressed: isReady.isLoading
                     ? null
                     : () {
                         _refresh(ref);
                       },
-                child: const Text('Check again')),
+                child: Text(t.requirements.labels.check_again)),
           ],
         ),
       );
@@ -379,19 +375,20 @@ class RequirementsRoute extends ConsumerWidget {
 
   Future<void> _onClickInstall(
       BuildContext context, WidgetRef ref, _StepIndex step) async {
+    final t = ref.watch(translationProvider);
     switch (step) {
       case _StepIndex.dotnet:
         try {
           if (Platform.isLinux) {
             await launchUrl(_dotnetLinuxUri);
           } else if (ref.read(_hasBrewProvider).valueOrNull == true) {
-            await _installDotNetSdkWithBrew(context);
+            await _installDotNetSdkWithBrew(context, ref);
           } else {
             await _installDotNetSdk(context, ref);
           }
         } on Exception catch (error) {
           await showSimpleErrorDialog(
-              context, 'Failed to install .NET SDK', error);
+              context, t.requirements.errors.failed_to_isntall_dotnet, error);
         }
         _refresh(ref);
         break;
@@ -400,7 +397,7 @@ class RequirementsRoute extends ConsumerWidget {
           await _installVpmCli(context, ref);
         } on Exception catch (error) {
           await showSimpleErrorDialog(
-              context, 'Failed to install VPM CLI', error);
+              context, t.requirements.errors.failed_to_isntall_vpm, error);
         }
         _refresh(ref);
         break;
@@ -412,8 +409,8 @@ class RequirementsRoute extends ConsumerWidget {
             await _installUnityHub(context, ref);
           }
         } on Exception catch (error) {
-          await showSimpleErrorDialog(
-              context, 'Failed to install Unity Hub', error);
+          await showSimpleErrorDialog(context,
+              t.requirements.errors.failed_to_isntall_unity_hub, error);
         }
         _refresh(ref);
         break;
@@ -422,7 +419,7 @@ class RequirementsRoute extends ConsumerWidget {
           await _installUnity(context, ref);
         } on Exception catch (error) {
           await showSimpleErrorDialog(
-              context, 'Failed to install Unity', error);
+              context, t.requirements.errors.failed_to_isntall_unity, error);
         }
         _refresh(ref);
         break;
@@ -431,8 +428,9 @@ class RequirementsRoute extends ConsumerWidget {
 
   static Future<bool> _installDotNetSdk(
       BuildContext context, WidgetRef ref) async {
+    final t = ref.watch(translationProvider);
     final dialog = showProgressDialog(
-        context, Theme.of(context), 'Downloading .NET 6.0 SDK installer.');
+        context, Theme.of(context), t.requirements.info.downloading_dotnet);
     File? installer;
     try {
       if (SystemInfo.arch == Architecture.unknown) {
@@ -473,7 +471,7 @@ class RequirementsRoute extends ConsumerWidget {
       logger?.i(
           'Downloaded dotnet sdk installer from $installerUri to $installer.');
 
-      dialog.update(value: 1, msg: 'Installing .NET 6.0 SDK.');
+      dialog.update(value: 1, msg: t.requirements.info.installing_dotnet);
       logger?.i('Executing installer: $installer');
       ProcessResult result;
       if (Platform.isWindows) {
@@ -497,7 +495,9 @@ class RequirementsRoute extends ConsumerWidget {
     }
   }
 
-  static Future<bool> _installDotNetSdkWithBrew(BuildContext context) async {
+  static Future<bool> _installDotNetSdkWithBrew(
+      BuildContext context, WidgetRef ref) async {
+    final t = ref.watch(translationProvider);
     const script = 'set -eux\n'
         'brew tap isen-ng/dotnet-sdk-versions\n'
         'brew install --cask dotnet-sdk6-0-400\n'
@@ -513,17 +513,24 @@ class RequirementsRoute extends ConsumerWidget {
     final result = await Process.run('osascript',
         ['-e' 'tell application "Terminal" to do script "${scriptFile.path}"']);
 
-    await showAlertDialog(context,
-        title: "Installing .NET 6.0 SDK with Homebrew",
-        message: 'See Terminal app to continue installation.');
+    await showAlertDialog(
+      context,
+      title: t.requirements.info.installing_dotnet_with_brew,
+      message: t.requirements.info.see_terminal_to_continue,
+    );
 
     return result.exitCode == 0;
   }
 
   static Future<bool> _installVpmCli(
       BuildContext context, WidgetRef ref) async {
-    final dialog = showProgressDialog(context, Theme.of(context),
-        'Installing VPM CLI ${requiredVpmVersion.toString()}');
+    final t = ref.watch(translationProvider);
+    final dialog = showProgressDialog(
+      context,
+      Theme.of(context),
+      t.requirements.info
+          .installing_vpm(version: requiredVpmVersion.toString()),
+    );
     try {
       final dotnet = ref.read(dotNetServiceProvider);
       final vcc = ref.read(vccServiceProvider);
@@ -561,9 +568,10 @@ class RequirementsRoute extends ConsumerWidget {
 
   static Future<bool> _installUnityHub(
       BuildContext context, WidgetRef ref) async {
+    final t = ref.watch(translationProvider);
     if (Platform.isWindows || Platform.isMacOS) {
-      final dialog = showProgressDialog(
-          context, Theme.of(context), 'Downloading Unity Hub installer.');
+      final dialog = showProgressDialog(context, Theme.of(context),
+          t.requirements.info.downloading_unity_hub);
       File? installer;
       try {
         final tmp = await getTemporaryDirectory();
@@ -598,7 +606,7 @@ class RequirementsRoute extends ConsumerWidget {
         logger?.i(
             'Downloaded Unity Hub installer from $installerUri to $installer.');
 
-        dialog.update(value: 1, msg: 'Installing Unity Hub.');
+        dialog.update(value: 1, msg: t.requirements.info.installing_unity_hub);
         logger?.i('Executing installer: $installer');
         final ProcessResult result;
         if (Platform.isWindows) {
@@ -638,6 +646,7 @@ class RequirementsRoute extends ConsumerWidget {
   }
 
   static Future<bool> _installUnity(BuildContext context, WidgetRef ref) async {
+    final t = ref.watch(translationProvider);
     final terminal = ref.read(_terminalProvider);
     try {
       final hub = ref.read(unityHubServiceProvider);
@@ -664,14 +673,14 @@ class RequirementsRoute extends ConsumerWidget {
         context: context,
         barrierDismissible: false,
         builder: (context) => ConsoleDialog(
-          title: 'Installing Unity',
+          title: t.requirements.info.installing_unity,
           terminal: terminal,
           actions: [
             TextButton(
                 onPressed: () {
                   process.kill();
                 },
-                child: const Text('Cancel')),
+                child: Text(t.common.labels.cancel)),
           ],
         ),
       );

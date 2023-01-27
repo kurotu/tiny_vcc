@@ -153,5 +153,44 @@
         "title": "$name を移行中"
       }
     }
+  },
+  "requirements": {
+    "title": "必須ソフトウェア",
+    "labels": {
+      "dotnet6sdk": ".NET 6.0 SDK",
+      "vpm_cli": "VPM CLI",
+      "unity_hub": "Unity Hub",
+      "unity": "Unity",
+      "install": "インストール",
+      "check_again": "再確認"
+    },
+    "info": {
+      "downloading_dotnet": ".NET 6.0 SDK インストーラーをダウンロードしています。",
+      "installing_dotnet": ".NET 6.0 SDK をインストールしています。",
+      "installing_dotnet_with_brew": ".NET 6.0 SDK を Homebrew でインストール中",
+      "see_terminal_to_continue": "「ターミナル」アプリを確認してください。",
+      "installing_vpm": "VPM CLI $version をインストールしています。",
+      "downloading_unity_hub": "Unity Hub インストーラーをダウンロードしています。",
+      "installing_unity_hub": "Unity Hub をインストールしています。",
+      "installing_unity": "Unity をインストール中"
+    },
+    "description": {
+      "dotnet": ".NET 6.0 SDK をインストールします。Web から SDK インストーラーをダウンロードすることもできます。",
+      "dotnet_brew": ".NET 6.0 SDK を Homebrew でインストールします。次のコマンドでインストールすることもできます。",
+      "dotnet_linux": ".NET 6.0 SDK をパッケージマネージャーでインストールします。次の説明を参照してください。",
+      "vpm": "VPM CLI をインストールします。次のコマンドでインストールすることもできます。",
+      "unity_hub": "Unity Hub をインストールします。Web からインストーラーをダウンロードすることもできます。",
+      "unity_hub_linux": "Unity Hub をインストールします。次の説明を参照してください。",
+      "unity": "Unity を Unity Hub でインストールします。アーカイブからインストールすることもできますが、VRChat が指定するバージョンをインストールする必要があります。",
+      "unity_modules": "手動でインストールする場合、次のモジュールのインストールが必要です。",
+      "unity_modules_android": "Android Build Support (Quest 用にアップロードする場合)",
+      "unity_modules_mono": "Windows Build Support (mono) (macOS または Linux から PC 用にアップロードする場合)"
+    },
+    "errors": {
+      "failed_to_isntall_dotnet": ".NET SDK のインストールに失敗しました。",
+      "failed_to_isntall_vpm": "VPM CLI のインストールに失敗しました。",
+      "failed_to_isntall_unity_hub": "Unity Hub のインストールに失敗しました。",
+      "failed_to_isntall_unity": "Unity のインストールに失敗しました。"
+    }
   }
 }
