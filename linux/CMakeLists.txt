@@ -6,8 +6,8 @@ project(runner LANGUAGES CXX)
 # the on-disk name of your application.
 set(BINARY_NAME "tiny_vcc")
 # The unique GTK application identifier for this application. See:
-# https://wiki.gnome.org/HowDoI/ChooseApplicationID
-set(APPLICATION_ID "com.example.tiny_vcc")
+# https://developer.gnome.org/documentation/tutorials/application-id.html
+set(APPLICATION_ID "com.github.kurotu.tiny_vcc")
 
 # Explicitly opt in to modern CMake behaviors to avoid warnings with recent
 # versions of CMake.
@@ -64,6 +64,7 @@ add_executable(${BINARY_NAME}
   "main.cc"
   "my_application.cc"
   "${FLUTTER_MANAGED_DIR}/generated_plugin_registrant.cc"
+  "functions.cc"
 )
 
 # Apply the standard set of build settings. This can be removed for applications

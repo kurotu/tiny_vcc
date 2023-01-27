@@ -335,20 +335,31 @@ class VccService {
     if (result.exitCode != 0) {
       return false;
     }
-    // we can't rely on exit code 0.
-    // https://github.com/vrchat-community/creator-companion/issues/52
-    final str = result.stdout.toString();
-    if (str.contains('not find')) {
-      return false;
-    }
-    if (str.contains('Found unity version  at')) {
-      return false;
+
+    if (Platform.isMacOS) {
+      // we can't rely on exit code 0.
+      // https://github.com/vrchat-community/creator-companion/issues/52
+      final str = result.stdout.toString();
+      if (str.contains('not find')) {
+        return false;
+      }
+      if (str.contains('Found unity version  at')) {
+        return false;
+      }
     }
 
     if (await _getSettingsFile().exists() == false) {
       return false;
     }
-    final unityHubExe = (await getSettings()).pathToUnityHub;
+    var unityHubExe = (await getSettings()).pathToUnityHub;
+    if (unityHubExe == '' && Platform.isLinux) {
+      final result = await Process.run('which', ['unityhub']);
+      if (result.exitCode != 0) {
+        return false;
+      }
+      unityHubExe = result.stdout.toString().trim();
+      await setSettings(pathToUnityHub: unityHubExe);
+    }
     if (!await File(unityHubExe).exists()) {
       return false;
     }
@@ -362,7 +373,7 @@ class VccService {
       return false;
     }
 
-    if (Platform.isMacOS) {
+    if (Platform.isMacOS || Platform.isLinux) {
       // vpm doesn't update pathToUnityExe and unityEditors on macOS.
       if (await _getSettingsFile().exists() == false) {
         return false;
@@ -391,7 +402,7 @@ class VccService {
   }
 
   Future<Map<String, String>> listUnity() async {
-    if (Platform.isMacOS) {
+    if (Platform.isMacOS || Platform.isLinux) {
       // `vpm list unity` can't properly list unity editors on macOS.
       // https://github.com/vrchat-community/creator-companion/issues/46
       await checkHub();
@@ -529,14 +540,14 @@ class VccService {
       return Directory(
           p.join(roaming.parent.path, 'Local', 'VRChatCreatorCompanion'));
     }
-    if (Platform.isMacOS) {
+    if (Platform.isMacOS || Platform.isLinux) {
       final home = Platform.environment['HOME'];
       if (home == null) {
         throw Error();
       }
       return Directory(p.join(home, '.local/share/VRChatCreatorCompanion'));
     }
-    throw UnimplementedError();
+    throw Error();
   }
 
   File _getSettingsFile() {
@@ -624,6 +635,7 @@ class VccService {
 
   Future<void> setSettings({
     String? pathToUnityExe,
+    String? pathToUnityHub,
     List<String>? userProjects,
     List<String>? unityEditors,
     String? defaultProjectPath,
@@ -633,6 +645,9 @@ class VccService {
     final json = await _getSettingsJson();
     if (pathToUnityExe != null) {
       json['pathToUnityExe'] = pathToUnityExe;
+    }
+    if (pathToUnityHub != null) {
+      json['pathToUnityHub'] = pathToUnityHub;
     }
     if (userProjects != null) {
       json['userProjects'] = userProjects;
