@@ -30,6 +30,7 @@
   },
   "projects": {
     "labels": {
+      "open_folder": "Open Folder",
       "remove_from_list": "Remove from list",
       "move_to_recycle_bin": "Move to Recycle Bin",
       "move_to_trash": "Move to Trash"

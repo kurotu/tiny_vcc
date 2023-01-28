@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../data/exceptions.dart';
 import '../data/tiny_vcc_data.dart';
@@ -145,7 +146,15 @@ class ProjectsPage extends ConsumerWidget {
           },
           subtitle: Text(project.path),
           trailing: PopupMenuButton(
-            itemBuilder: (context) => [
+            itemBuilder: (context) => <PopupMenuEntry>[
+              PopupMenuItem(
+                onTap: () {
+                  final uri = Uri.file(project.path);
+                  launchUrl(uri);
+                },
+                child: Text(t.projects.labels.open_folder),
+              ),
+              const PopupMenuDivider(),
               PopupMenuItem(
                 onTap: () async {
                   await ref

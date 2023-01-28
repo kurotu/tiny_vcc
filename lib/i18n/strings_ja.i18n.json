@@ -30,6 +30,7 @@
   },
   "projects": {
     "labels": {
+      "open_folder": "フォルダーを開く",
       "remove_from_list": "リストから削除",
       "move_to_recycle_bin": "ごみ箱に移動",
       "move_to_trash": "ごみ箱に移動"
