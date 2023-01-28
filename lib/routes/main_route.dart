@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import '../globals.dart';
 import '../main_drawer.dart';
 import '../providers.dart';
 import '../utils.dart';
@@ -89,26 +90,35 @@ class MainRoute extends ConsumerWidget {
       return;
     }
     final t = ref.read(translationProvider);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        behavior: SnackBarBehavior.floating,
-        width: 344,
-        content: Text(t.new_project.info.creating_project(
-          template: data.template!.name,
-          name: data.name,
-          location: data.location,
-        ))));
-    final newProject = await ref
-        .read(vccProjectsRepoProvider)
-        .createVccProject(data.template!, data.name, data.location);
-    ref.refresh(vccSettingsProvider);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        behavior: SnackBarBehavior.floating,
-        width: 344,
-        content: Text(t.new_project.info.created_project(
-          template: data.template!.name,
-          name: data.name,
-          projectLocation: data.location,
-        ))));
+    showSnackBar(
+      context,
+      t.new_project.info.creating_project(
+        template: data.template!.name,
+        name: data.name,
+        location: data.location,
+      ),
+    );
+    try {
+      final newProject = await ref
+          .read(vccProjectsRepoProvider)
+          .createVccProject(data.template!, data.name, data.location);
+      ref.refresh(vccSettingsProvider);
+    } on Exception catch (error) {
+      logger?.e(error);
+      showSnackBar(
+          context,
+          t.new_project.errors.failed_to_create_project +
+              '\n${error.toString()}');
+      return;
+    }
+    showSnackBar(
+      context,
+      t.new_project.info.created_project(
+        template: data.template!.name,
+        name: data.name,
+        projectLocation: data.location,
+      ),
+    );
   }
 
   void _didClickOpenSettingsFolder(WidgetRef ref) {

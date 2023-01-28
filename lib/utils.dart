@@ -71,6 +71,15 @@ String? _cleanupPath(String? path) {
   return path;
 }
 
+ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showSnackBar(
+    BuildContext context, String message) {
+  return ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+    behavior: SnackBarBehavior.floating,
+    width: 344,
+    content: Text(message),
+  ));
+}
+
 Future<T?> showAlertDialog<T>(BuildContext context,
     {String? title, String? message}) {
   return showDialog<T>(
