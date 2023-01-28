@@ -13,6 +13,7 @@ import '../routes/project_route.dart';
 import '../routes/requirements_route.dart';
 import '../services/vcc_service.dart';
 import '../utils.dart';
+import '../utils/layout_util.dart';
 import '../utils/platform_feature.dart';
 
 class ProjectsPage extends ConsumerWidget {
@@ -135,7 +136,9 @@ class ProjectsPage extends ConsumerWidget {
     final t = ref.watch(translationProvider);
 
     return ListView.builder(
-      padding: const EdgeInsets.only(bottom: kFloatingActionButtonMargin + 64),
+      padding: getScreenSizeClass(context) == ScreenSizeClass.small
+          ? const EdgeInsets.only(bottom: kFloatingActionButtonMargin + 64)
+          : null,
       itemCount: settings.valueOrNull?.userProjects.length ?? 0,
       itemBuilder: (context, index) {
         final project = VccProject(settings.requireValue.userProjects[index]);

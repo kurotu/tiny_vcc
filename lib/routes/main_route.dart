@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import '../widgets/navigation_rail_fab.dart';
 
 import '../globals.dart';
 import '../main_drawer.dart';
 import '../providers.dart';
 import '../utils.dart';
+import '../utils/layout_util.dart';
 import '../widgets/navigation_scaffold.dart';
 import '../widgets/new_project_dialog.dart';
 import '../widgets/new_project_form.dart';
@@ -19,15 +21,6 @@ enum _PageIndex {
   projects,
   settings,
   about,
-}
-
-enum ScreenSize { small, normal, large }
-
-ScreenSize getSize(BuildContext context) {
-  double deviceWidth = MediaQuery.of(context).size.width;
-  if (deviceWidth < 600) return ScreenSize.small;
-  if (deviceWidth < 900) return ScreenSize.normal;
-  return ScreenSize.large;
 }
 
 class MainRoute extends ConsumerWidget {
@@ -134,7 +127,7 @@ class MainRoute extends ConsumerWidget {
     final selectedIndex = ref.watch(_selectedIndexProvider);
     final packageInfo = ref.watch(packageInfoProvider);
     final notice = ref.watch(licenseNoticeProvider);
-    final size = getSize(context);
+    final size = getScreenSizeClass(context);
     final t = ref.watch(translationProvider);
     return NavigationScaffold(
       appBar: AppBar(
@@ -145,7 +138,7 @@ class MainRoute extends ConsumerWidget {
             ''),
         actions: _buildActions(context, ref, selectedIndex),
       ),
-      useNavigationRail: size != ScreenSize.small,
+      useNavigationRail: size != ScreenSizeClass.small,
       drawer: MainDrawer(
         selectedIndex: selectedIndex.index,
         onItemSelected: (index) {
@@ -154,7 +147,14 @@ class MainRoute extends ConsumerWidget {
       ),
       navigationRail: NavigationRail(
         labelType: NavigationRailLabelType.none,
-        extended: size == ScreenSize.large,
+        extended: size == ScreenSizeClass.large,
+        leading: NavigationRailFab(
+          label: Text(t.navigation.create),
+          icon: const Icon(Icons.add),
+          onPressed: () {
+            _didClickNewProject(context, ref);
+          },
+        ),
         destinations: [
           NavigationRailDestination(
               icon: const Icon(Icons.folder_special_outlined),
@@ -237,6 +237,10 @@ class MainRoute extends ConsumerWidget {
   Widget? _buildFAB(
       BuildContext context, WidgetRef ref, _PageIndex selectedIndex) {
     final t = ref.watch(translationProvider);
+    if (getScreenSizeClass(context) != ScreenSizeClass.small) {
+      return null;
+    }
+
     switch (selectedIndex) {
       case _PageIndex.projects:
         return FloatingActionButton(
