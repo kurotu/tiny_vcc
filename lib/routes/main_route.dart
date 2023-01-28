@@ -4,10 +4,12 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 import '../main_drawer.dart';
 import '../providers.dart';
+import '../utils.dart';
 import '../widgets/navigation_scaffold.dart';
+import '../widgets/new_project_dialog.dart';
+import '../widgets/new_project_form.dart';
 import '../widgets/projects_page.dart';
 import '../widgets/settings_page.dart';
-import 'new_project_route.dart';
 
 final _selectedIndexProvider =
     StateProvider.autoDispose((ref) => _PageIndex.projects);
@@ -55,8 +57,58 @@ class MainRoute extends ConsumerWidget {
     ProjectsPage.addProject(context, ref);
   }
 
-  void _didClickNewProject(BuildContext context) {
-    Navigator.pushNamed(context, NewProjectRoute.routeName);
+  void _didClickNewProject(BuildContext context, WidgetRef ref) async {
+    final templates = await ref.read(vpmTemplatesProvider.future);
+    final defaultLocation =
+        (await ref.read(vccSettingsProvider.future)).defaultProjectPath;
+    final data = await showDialog<NewProjectFormData>(
+      context: context,
+      builder: (context) => NewProjectDialog(
+        templates: templates,
+        defaultLocation: defaultLocation,
+        onPressedCreate: (data) {
+          Navigator.of(context).pop(data);
+        },
+        onClickLocationButton: () async {
+          final location = await showDirectoryPickerWindow(
+            lockParentWindow: true,
+            initialDirectory:
+                ref.read(vccSettingsProvider).valueOrNull?.defaultProjectPath,
+          );
+          if (location != null) {
+            await ref
+                .read(vccServiceProvider)
+                .setSettings(defaultProjectPath: location);
+            ref.refresh(vccSettingsProvider);
+          }
+          return location;
+        },
+      ),
+    );
+    if (data == null) {
+      return;
+    }
+    final t = ref.read(translationProvider);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        behavior: SnackBarBehavior.floating,
+        width: 344,
+        content: Text(t.new_project.info.creating_project(
+          template: data.template!.name,
+          name: data.name,
+          location: data.location,
+        ))));
+    final newProject = await ref
+        .read(vccProjectsRepoProvider)
+        .createVccProject(data.template!, data.name, data.location);
+    ref.refresh(vccSettingsProvider);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        behavior: SnackBarBehavior.floating,
+        width: 344,
+        content: Text(t.new_project.info.created_project(
+          template: data.template!.name,
+          name: data.name,
+          projectLocation: data.location,
+        ))));
   }
 
   void _didClickOpenSettingsFolder(WidgetRef ref) {
@@ -181,7 +233,7 @@ class MainRoute extends ConsumerWidget {
           tooltip: t.actions.create_project.tooltip,
           child: const Icon(Icons.add),
           onPressed: () {
-            _didClickNewProject(context);
+            _didClickNewProject(context, ref);
           },
         );
       case _PageIndex.settings:
