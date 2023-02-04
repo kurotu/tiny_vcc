@@ -129,7 +129,7 @@ class MyApp extends ConsumerWidget {
       locale: t.$meta.locale.flutterLocale,
       supportedLocales: AppLocale.values.map((e) => e.flutterLocale),
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
-      darkTheme: ThemeData.dark(),
+      darkTheme: ThemeData.dark(useMaterial3: true),
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -140,6 +140,7 @@ class MyApp extends ConsumerWidget {
         // or simply save your changes to "hot reload" in a Flutter IDE).
         // Notice that the counter didn't reset back to zero; the application
         // is not restarted.
+        useMaterial3: true,
         primarySwatch: Colors.blue,
       ),
       themeMode: themeMode,
