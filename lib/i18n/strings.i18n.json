@@ -10,7 +10,7 @@
     }
   },
   "navigation": {
-    "create": "CREATE",
+    "new_project": "NEW PROJECT",
     "projects": "Projects",
     "settings": "Settings",
     "about": "About Tiny VCC"

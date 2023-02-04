@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import '../widgets/navigation_rail_fab.dart';
+import '../widgets/m3_speed_dial.dart';
 
 import '../globals.dart';
 import '../main_drawer.dart';
@@ -148,13 +149,9 @@ class MainRoute extends ConsumerWidget {
       navigationRail: NavigationRail(
         labelType: NavigationRailLabelType.none,
         extended: size == ScreenSizeClass.large,
-        leading: NavigationRailFab(
-          label: Text(t.navigation.create),
-          icon: const Icon(Icons.add),
-          onPressed: () {
-            _didClickNewProject(context, ref);
-          },
-        ),
+        leading: size == ScreenSizeClass.large
+            ? _buildExtendedNavRailFAB(context, ref)
+            : _buildNavRailFAB(context, ref),
         destinations: [
           NavigationRailDestination(
               icon: const Icon(Icons.folder_special_outlined),
@@ -181,7 +178,9 @@ class MainRoute extends ConsumerWidget {
         },
       ),
       body: _buildBody(context, selectedIndex),
-      floatingActionButton: _buildFAB(context, ref, selectedIndex),
+      floatingActionButton: size == ScreenSizeClass.small
+          ? _buildFAB(context, ref, selectedIndex)
+          : null,
     );
   }
 
@@ -190,15 +189,7 @@ class MainRoute extends ConsumerWidget {
     final t = ref.watch(translationProvider);
     switch (selectedIndex) {
       case _PageIndex.projects:
-        return [
-          IconButton(
-            onPressed: () {
-              _didClickAddProject(context, ref);
-            },
-            tooltip: t.actions.add_project.tooltip,
-            icon: const Icon(Icons.create_new_folder),
-          ),
-        ];
+        return null;
       case _PageIndex.settings:
         return [
           PopupMenuButton(
@@ -218,7 +209,7 @@ class MainRoute extends ConsumerWidget {
             ],
           ),
         ];
-      default:
+      case _PageIndex.about:
         return null;
     }
   }
@@ -236,23 +227,55 @@ class MainRoute extends ConsumerWidget {
 
   Widget? _buildFAB(
       BuildContext context, WidgetRef ref, _PageIndex selectedIndex) {
-    final t = ref.watch(translationProvider);
-    if (getScreenSizeClass(context) != ScreenSizeClass.small) {
-      return null;
-    }
-
     switch (selectedIndex) {
       case _PageIndex.projects:
-        return FloatingActionButton(
-          tooltip: t.actions.create_project.tooltip,
-          child: const Icon(Icons.add),
-          onPressed: () {
-            _didClickNewProject(context, ref);
-          },
+        return m3SpeedDial(
+          icon: Icons.add,
+          children: _buildSpeedDialChildren(context, ref),
         );
       case _PageIndex.settings:
       case _PageIndex.about:
         return null;
     }
+  }
+
+  Widget _buildNavRailFAB(BuildContext context, WidgetRef ref) {
+    return m3SpeedDial(
+      icon: Icons.add,
+      switchLabelPosition: true,
+      direction: SpeedDialDirection.down,
+      children: _buildSpeedDialChildren(context, ref),
+    );
+  }
+
+  Widget _buildExtendedNavRailFAB(BuildContext context, WidgetRef ref) {
+    final t = ref.watch(translationProvider);
+    return m3SpeedDial(
+      icon: Icons.add,
+      label: Text(t.navigation.new_project),
+      isExtended: true,
+      switchLabelPosition: true,
+      direction: SpeedDialDirection.down,
+      children: _buildSpeedDialChildren(context, ref),
+    );
+  }
+
+  List<SpeedDialChild> _buildSpeedDialChildren(
+      BuildContext context, WidgetRef ref) {
+    final t = ref.watch(translationProvider);
+    return [
+      m3SpeedDialChild(
+          child: const Icon(Icons.create),
+          label: t.actions.create_project.tooltip,
+          onTap: () {
+            _didClickNewProject(context, ref);
+          }),
+      m3SpeedDialChild(
+          child: const Icon(Icons.folder_open),
+          label: t.actions.add_project.tooltip,
+          onTap: () {
+            _didClickAddProject(context, ref);
+          }),
+    ];
   }
 }
