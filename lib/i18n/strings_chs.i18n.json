@@ -1,0 +1,157 @@
+{
+  "lang_name": "简体中文",
+  "common": {
+    "labels": {
+      "yes": "是",
+      "no": "否",
+      "ok": "确定",
+      "cancel": "取消",
+      "dismiss": "关闭"
+    }
+  },
+  "navigation": {
+    "projects": "项目",
+    "settings": "设置",
+    "about": "关于 Tiny VCC"
+  },
+  "actions": {
+    "add_project": {
+      "tooltip": "添加现有项目"
+    },
+    "create_project": {
+      "tooltip": "创建新项目"
+    },
+    "open_vcc_settings_folder": {
+      "label": "打开 VCC 设置文件夹"
+    },
+    "open_logs_folder": {
+      "label": "打开日志文件夹"
+    }
+  },
+  "projects": {
+    "labels": {
+      "remove_from_list": "从列表中移除",
+      "move_to_recycle_bin": "移动到回收站",
+      "move_to_trash": "移动到废纸篓"
+    },
+    "dialogs": {
+      "remove_project": {
+        "title": "移除 $projectName",
+        "content_win": "你确定要将 $projectPath 移动到回收站吗？",
+        "content_others": "你确定要将 $projectPath 移动到废纸篓吗？"
+      }
+    },
+    "info": {
+      "failed_to_remove": "无法移除 $projectPath。",
+      "error_project_not_supported": "项目 \"$path\" 不受支持。",
+      "error_add_project": "添加项目时发生错误。",
+      "error_project_not_exist": "$projectPath 不存在。",
+      "avatar_git_not_supported": "Avatar Git 项目 ($projectPath) 不受 Tiny VCC 支持。",
+      "world_git_not_supported": "World Git 项目 ($projectPath) 不受 Tiny VCC 支持。",
+      "project_is_sdk2": "$projectPath 是 VRCSDK2 项目。",
+      "project_is_invalid": "$projectPath 是无效项目。"
+    }
+  },
+  "settings": {
+    "headers": {
+      "tiny_vcc_preferences": "Tiny VCC 首选项",
+      "vcc_settings": "VCC 设置"
+    },
+    "labels": {
+      "theme": "主题",
+      "language": "语言",
+      "unity_editors":"Unity 编辑器",
+      "backups": "备份",
+      "user_packages": "用户包"
+    },
+    "theme": {
+      "auto": "自动",
+      "light": "浅色",
+      "dark": "深色"
+    },
+    "lang": {
+      "auto": "自动"
+    }
+  },
+  "new_project": {
+    "title": "新项目",
+    "labels": {
+      "project_template": "项目模板",
+      "project_name": "项目名称",
+      "location": "位置",
+      "create": "创建"
+    },
+    "errors": {
+      "select_project_template": "请选择项目模板。",
+      "enter_project_name": "请输入项目名称。",
+      "enter_location_path": "请输入位置路径。"
+    },
+    "info": {
+      "creating_project": "正在 $location 此路径创建 $template 项目 \"$name\"。",
+      "created_project": "$template 项目 \"$name\" 已在 $projectLocation 路径创建。"
+    }
+  },
+  "project": {
+    "labels": {
+      "open_project": "打开项目",
+      "open_folder": "打开文件夹",
+      "make_backup": "创建备份",
+      "add": "添加",
+      "update": "更新",
+      "downgrade": "降级",
+      "remove": "移除"
+    },
+    "info": {
+      "packages_changed": "包已更改。关闭并重新打开 Unity 项目以应用更改。",
+      "unity_not_found": "VCC 设置中未找到 Unity $editorVersion。"
+    },
+    "dialogs": {
+      "progress_backup": {
+        "title": "正在备份 $name"
+      },
+      "made_backup": {
+        "title": "已创建备份",
+        "labels": {
+          "show_me": "显示"
+        }
+      },
+      "backup_error": {
+        "title": "备份错误",
+        "content": "无法备份 $projectName。\n\n$error"
+      }
+    }
+  },
+  "legacy_project": {
+    "labels": {
+      "migrate": "迁移",
+      "open_folder": "打开文件夹",
+      "make_backup": "创建备份"
+    },
+    "dialogs": {
+      "confirm": {
+        "title": "项目迁移",
+        "content": "需要迁移。",
+        "labels": {
+          "migrate_a_copy": "迁移副本",
+          "migrate_in_place": "迁移\n我已备份"
+        }
+      },
+      "progress_backup": {
+        "title": "正在备份 $name"
+      },
+      "made_backup": {
+        "title": "已创建备份",
+        "labels": {
+          "show_me": "显示"
+        }
+      },
+      "backup_error": {
+        "title": "备份错误",
+        "content": "无法备份 $projectName。\n\n$error"
+      },
+      "progress_migration": {
+        "title": "正在迁移 $name"
+      }
+    }
+  }
+}
