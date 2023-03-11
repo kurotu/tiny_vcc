@@ -10,6 +10,7 @@
     }
   },
   "navigation": {
+    "new_project": "新規プロジェクト",
     "projects": "プロジェクト",
     "settings": "設定",
     "about": "Tiny VCC について"
@@ -30,6 +31,7 @@
   },
   "projects": {
     "labels": {
+      "open_folder": "フォルダーを開く",
       "remove_from_list": "リストから削除",
       "move_to_recycle_bin": "ごみ箱に移動",
       "move_to_trash": "ごみ箱に移動"
@@ -84,7 +86,8 @@
     "errors": {
       "select_project_template": "テンプレートを選択してください。",
       "enter_project_name": "プロジェクト名を入力してください。",
-      "enter_location_path": "保存先を選択してください。"
+      "enter_location_path": "保存先を選択してください。",
+      "failed_to_create_project": "プロフジェクトの作成に失敗しました。"
     },
     "info": {
       "creating_project": "$template プロジェクト \"$name\" を $location に作成しています。",

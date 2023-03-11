@@ -10,6 +10,7 @@
     }
   },
   "navigation": {
+    "new_project": "NEW PROJECT",
     "projects": "Projects",
     "settings": "Settings",
     "about": "About Tiny VCC"
@@ -30,6 +31,7 @@
   },
   "projects": {
     "labels": {
+      "open_folder": "Open Folder",
       "remove_from_list": "Remove from list",
       "move_to_recycle_bin": "Move to Recycle Bin",
       "move_to_trash": "Move to Trash"
@@ -84,7 +86,8 @@
     "errors": {
       "select_project_template": "Please select project template.",
       "enter_project_name": "Please enter project name.",
-      "enter_location_path": "Please enter location path."
+      "enter_location_path": "Please enter location path.",
+      "failed_to_create_project": "Failed to create project."
     },
     "info": {
       "creating_project": "Creating $template project, \"$name\" at $location.",

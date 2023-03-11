@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import '../widgets/m3_speed_dial.dart';
 
+import '../globals.dart';
 import '../main_drawer.dart';
 import '../providers.dart';
 import '../utils.dart';
+import '../utils/layout_util.dart';
 import '../widgets/navigation_scaffold.dart';
 import '../widgets/new_project_dialog.dart';
 import '../widgets/new_project_form.dart';
@@ -18,15 +22,6 @@ enum _PageIndex {
   projects,
   settings,
   about,
-}
-
-enum ScreenSize { small, normal, large }
-
-ScreenSize getSize(BuildContext context) {
-  double deviceWidth = MediaQuery.of(context).size.width;
-  if (deviceWidth < 600) return ScreenSize.small;
-  if (deviceWidth < 900) return ScreenSize.normal;
-  return ScreenSize.large;
 }
 
 class MainRoute extends ConsumerWidget {
@@ -89,26 +84,35 @@ class MainRoute extends ConsumerWidget {
       return;
     }
     final t = ref.read(translationProvider);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        behavior: SnackBarBehavior.floating,
-        width: 344,
-        content: Text(t.new_project.info.creating_project(
-          template: data.template!.name,
-          name: data.name,
-          location: data.location,
-        ))));
-    final newProject = await ref
-        .read(vccProjectsRepoProvider)
-        .createVccProject(data.template!, data.name, data.location);
-    ref.refresh(vccSettingsProvider);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        behavior: SnackBarBehavior.floating,
-        width: 344,
-        content: Text(t.new_project.info.created_project(
-          template: data.template!.name,
-          name: data.name,
-          projectLocation: data.location,
-        ))));
+    showSnackBar(
+      context,
+      t.new_project.info.creating_project(
+        template: data.template!.name,
+        name: data.name,
+        location: data.location,
+      ),
+    );
+    try {
+      final newProject = await ref
+          .read(vccProjectsRepoProvider)
+          .createVccProject(data.template!, data.name, data.location);
+      ref.refresh(vccSettingsProvider);
+    } on Exception catch (error) {
+      logger?.e(error);
+      showSnackBar(
+          context,
+          t.new_project.errors.failed_to_create_project +
+              '\n${error.toString()}');
+      return;
+    }
+    showSnackBar(
+      context,
+      t.new_project.info.created_project(
+        template: data.template!.name,
+        name: data.name,
+        projectLocation: data.location,
+      ),
+    );
   }
 
   void _didClickOpenSettingsFolder(WidgetRef ref) {
@@ -124,7 +128,7 @@ class MainRoute extends ConsumerWidget {
     final selectedIndex = ref.watch(_selectedIndexProvider);
     final packageInfo = ref.watch(packageInfoProvider);
     final notice = ref.watch(licenseNoticeProvider);
-    final size = getSize(context);
+    final size = getScreenSizeClass(context);
     final t = ref.watch(translationProvider);
     return NavigationScaffold(
       appBar: AppBar(
@@ -135,7 +139,7 @@ class MainRoute extends ConsumerWidget {
             ''),
         actions: _buildActions(context, ref, selectedIndex),
       ),
-      useNavigationRail: size != ScreenSize.small,
+      useNavigationRail: size != ScreenSizeClass.small,
       drawer: MainDrawer(
         selectedIndex: selectedIndex.index,
         onItemSelected: (index) {
@@ -144,7 +148,14 @@ class MainRoute extends ConsumerWidget {
       ),
       navigationRail: NavigationRail(
         labelType: NavigationRailLabelType.none,
-        extended: size == ScreenSize.large,
+        extended: size == ScreenSizeClass.large,
+        leading: size == ScreenSizeClass.large
+            ? Container(
+                width: 256,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Row(children: [_buildExtendedNavRailFAB(context, ref)]),
+              )
+            : _buildNavRailFAB(context, ref),
         destinations: [
           NavigationRailDestination(
               icon: const Icon(Icons.folder_special_outlined),
@@ -171,7 +182,9 @@ class MainRoute extends ConsumerWidget {
         },
       ),
       body: _buildBody(context, selectedIndex),
-      floatingActionButton: _buildFAB(context, ref, selectedIndex),
+      floatingActionButton: size == ScreenSizeClass.small
+          ? _buildFAB(context, ref, selectedIndex)
+          : null,
     );
   }
 
@@ -180,15 +193,7 @@ class MainRoute extends ConsumerWidget {
     final t = ref.watch(translationProvider);
     switch (selectedIndex) {
       case _PageIndex.projects:
-        return [
-          IconButton(
-            onPressed: () {
-              _didClickAddProject(context, ref);
-            },
-            tooltip: t.actions.add_project.tooltip,
-            icon: const Icon(Icons.create_new_folder),
-          ),
-        ];
+        return null;
       case _PageIndex.settings:
         return [
           PopupMenuButton(
@@ -208,7 +213,7 @@ class MainRoute extends ConsumerWidget {
             ],
           ),
         ];
-      default:
+      case _PageIndex.about:
         return null;
     }
   }
@@ -226,19 +231,55 @@ class MainRoute extends ConsumerWidget {
 
   Widget? _buildFAB(
       BuildContext context, WidgetRef ref, _PageIndex selectedIndex) {
-    final t = ref.watch(translationProvider);
     switch (selectedIndex) {
       case _PageIndex.projects:
-        return FloatingActionButton(
-          tooltip: t.actions.create_project.tooltip,
-          child: const Icon(Icons.add),
-          onPressed: () {
-            _didClickNewProject(context, ref);
-          },
+        return m3SpeedDial(
+          icon: Icons.add,
+          children: _buildSpeedDialChildren(context, ref),
         );
       case _PageIndex.settings:
       case _PageIndex.about:
         return null;
     }
+  }
+
+  Widget _buildNavRailFAB(BuildContext context, WidgetRef ref) {
+    return m3SpeedDial(
+      icon: Icons.add,
+      switchLabelPosition: true,
+      direction: SpeedDialDirection.down,
+      children: _buildSpeedDialChildren(context, ref),
+    );
+  }
+
+  Widget _buildExtendedNavRailFAB(BuildContext context, WidgetRef ref) {
+    final t = ref.watch(translationProvider);
+    return m3SpeedDial(
+      icon: Icons.add,
+      label: Text(t.navigation.new_project),
+      isExtended: true,
+      switchLabelPosition: true,
+      direction: SpeedDialDirection.down,
+      children: _buildSpeedDialChildren(context, ref),
+    );
+  }
+
+  List<SpeedDialChild> _buildSpeedDialChildren(
+      BuildContext context, WidgetRef ref) {
+    final t = ref.watch(translationProvider);
+    return [
+      m3SpeedDialChild(
+          child: const Icon(Icons.create),
+          label: t.actions.create_project.tooltip,
+          onTap: () {
+            _didClickNewProject(context, ref);
+          }),
+      m3SpeedDialChild(
+          child: const Icon(Icons.folder_open),
+          label: t.actions.add_project.tooltip,
+          onTap: () {
+            _didClickAddProject(context, ref);
+          }),
+    ];
   }
 }

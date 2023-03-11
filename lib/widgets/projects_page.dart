@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../data/exceptions.dart';
 import '../data/tiny_vcc_data.dart';
@@ -12,6 +13,7 @@ import '../routes/project_route.dart';
 import '../routes/requirements_route.dart';
 import '../services/vcc_service.dart';
 import '../utils.dart';
+import '../utils/layout_util.dart';
 import '../utils/platform_feature.dart';
 
 class ProjectsPage extends ConsumerWidget {
@@ -134,7 +136,9 @@ class ProjectsPage extends ConsumerWidget {
     final t = ref.watch(translationProvider);
 
     return ListView.builder(
-      padding: const EdgeInsets.only(bottom: kFloatingActionButtonMargin + 64),
+      padding: getScreenSizeClass(context) == ScreenSizeClass.small
+          ? const EdgeInsets.only(bottom: kFloatingActionButtonMargin + 64)
+          : null,
       itemCount: settings.valueOrNull?.userProjects.length ?? 0,
       itemBuilder: (context, index) {
         final project = VccProject(settings.requireValue.userProjects[index]);
@@ -145,7 +149,15 @@ class ProjectsPage extends ConsumerWidget {
           },
           subtitle: Text(project.path),
           trailing: PopupMenuButton(
-            itemBuilder: (context) => [
+            itemBuilder: (context) => <PopupMenuEntry>[
+              PopupMenuItem(
+                onTap: () {
+                  final uri = Uri.file(project.path);
+                  launchUrl(uri);
+                },
+                child: Text(t.projects.labels.open_folder),
+              ),
+              const PopupMenuDivider(),
               PopupMenuItem(
                 onTap: () async {
                   await ref
