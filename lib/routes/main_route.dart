@@ -150,7 +150,11 @@ class MainRoute extends ConsumerWidget {
         labelType: NavigationRailLabelType.none,
         extended: size == ScreenSizeClass.large,
         leading: size == ScreenSizeClass.large
-            ? _buildExtendedNavRailFAB(context, ref)
+            ? Container(
+                width: 256,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Row(children: [_buildExtendedNavRailFAB(context, ref)]),
+              )
             : _buildNavRailFAB(context, ref),
         destinations: [
           NavigationRailDestination(
