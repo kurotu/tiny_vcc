@@ -146,8 +146,13 @@ class SettingsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final localeDevice = AppLocaleUtils.findDeviceLocale().build();
-    final localeEn = AppLocale.en.build();
-    final localeJa = AppLocale.ja.build();
+    final locales = () {
+      final list = AppLocale.values.map((e) => e.build()).toList();
+      list.sort((a, b) => a.$meta.locale.flutterLocale
+          .toLanguageTag()
+          .compareTo(b.$meta.locale.flutterLocale.toLanguageTag()));
+      return list;
+    }();
 
     ref.listen(vccSettingsProvider, (previous, next) {
       next.when(
@@ -235,17 +240,16 @@ class SettingsPage extends ConsumerWidget {
                   decoration:
                       InputDecoration(labelText: t.settings.labels.language),
                   value: tinyVccSettings.valueOrNull?.locale,
-                  items: TinyVccLocale.values
-                      .map((mode) => DropdownMenuItem(
-                            value: mode,
-                            child: Text({
-                              TinyVccLocale.auto:
-                                  '${t.settings.lang.auto} (${localeDevice.lang_name})',
-                              TinyVccLocale.en: localeEn.lang_name,
-                              TinyVccLocale.ja: localeJa.lang_name,
-                            }[mode]!),
-                          ))
-                      .toList(),
+                  items: [
+                    DropdownMenuItem(
+                      value: 'auto',
+                      child: Text(
+                          '${t.settings.lang.auto} (${localeDevice.lang_name})'),
+                    ),
+                    ...locales.map((l) => DropdownMenuItem(
+                        value: l.$meta.locale.flutterLocale.toLanguageTag(),
+                        child: Text(l.lang_name))),
+                  ],
                   onChanged: (value) async {
                     if (value != null) {
                       await ref

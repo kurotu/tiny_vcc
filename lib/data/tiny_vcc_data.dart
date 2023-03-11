@@ -14,14 +14,8 @@ class TinyVccSettings {
 
   TinyVccSettings.defaultValues()
       : themeMode = TinyVccThemeMode.system,
-        locale = TinyVccLocale.auto;
+        locale = 'auto';
 
   final TinyVccThemeMode themeMode;
-  final TinyVccLocale locale;
-}
-
-enum TinyVccLocale {
-  auto,
-  en,
-  ja,
+  final String locale;
 }

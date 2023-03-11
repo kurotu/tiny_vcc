@@ -45,10 +45,22 @@ final translationProvider = Provider((ref) {
       data: (data) => data.locale,
       error: (error, stackTrace) => settings.valueOrNull?.locale,
       loading: () => settings.valueOrNull?.locale);
-  if (locale == null || locale == TinyVccLocale.auto) {
+  if (locale == null || locale == 'auto') {
     return AppLocaleUtils.findDeviceLocale().build();
   } else {
-    return AppLocaleUtils.parseLocaleParts(languageCode: locale.name).build();
+    final split = locale.split('-'); // flutter's language tag
+    final String lang;
+    final String? country;
+    if (split.length > 1) {
+      lang = split[0];
+      country = split[1];
+    } else {
+      lang = locale;
+      country = null;
+    }
+    return AppLocaleUtils.parseLocaleParts(
+            languageCode: lang, countryCode: country)
+        .build();
   }
 });
 
