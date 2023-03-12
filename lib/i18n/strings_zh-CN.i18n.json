@@ -10,6 +10,7 @@
     }
   },
   "navigation": {
+    "new_project": "新建项目",
     "projects": "项目",
     "settings": "设置",
     "about": "关于 Tiny VCC"
@@ -30,6 +31,7 @@
   },
   "projects": {
     "labels": {
+      "open_folder": "打开文件夹",
       "remove_from_list": "从列表中移除",
       "move_to_recycle_bin": "移动到回收站",
       "move_to_trash": "移动到废纸篓"
@@ -60,7 +62,7 @@
     "labels": {
       "theme": "主题",
       "language": "语言",
-      "unity_editors":"Unity 编辑器",
+      "unity_editors": "Unity 编辑器",
       "backups": "备份",
       "user_packages": "用户包"
     },
@@ -84,7 +86,8 @@
     "errors": {
       "select_project_template": "请选择项目模板。",
       "enter_project_name": "请输入项目名称。",
-      "enter_location_path": "请输入位置路径。"
+      "enter_location_path": "请输入位置路径。",
+      "failed_to_create_project": "创建项目失败。"
     },
     "info": {
       "creating_project": "正在 $location 此路径创建 $template 项目 \"$name\"。",
@@ -152,6 +155,45 @@
       "progress_migration": {
         "title": "正在迁移 $name"
       }
+    }
+  },
+  "requirements": {
+    "title": "要求",
+    "labels": {
+      "dotnet6sdk": ".NET 6.0 SDK",
+      "vpm_cli": "VPM CLI",
+      "unity_hub": "Unity Hub",
+      "unity": "Unity",
+      "install": "安装",
+      "check_again": "再次检查"
+    },
+    "info": {
+      "downloading_dotnet": "正在下载 .NET 6.0 SDK 安装程序。",
+      "installing_dotnet": "正在安装 .NET 6.0 SDK。",
+      "installing_dotnet_with_brew": "正在使用 Homebrew 安装 .NET 6.0 SDK",
+      "see_terminal_to_continue": "请查看终端应用程序以继续安装。",
+      "installing_vpm": "正在安装 VPM CLI $version",
+      "downloading_unity_hub": "正在下载 Unity Hub 安装程序。",
+      "installing_unity_hub": "正在安装 Unity Hub。",
+      "installing_unity": "正在安装 Unity"
+    },
+    "description": {
+      "dotnet": "安装 .NET 6.0 SDK。您也可以从网页下载 SDK 安装程序。",
+      "dotnet_brew": "使用 Homebrew 安装 .NET 6.0 SDK。您也可以使用以下命令安装。",
+      "dotnet_linux": "使用包管理器安装 .NET 6.0 SDK。请参阅以下说明。",
+      "vpm": "安装 VPM CLI。您也可以使用以下命令安装。",
+      "unity_hub": "安装 Unity Hub。您也可以从网页下载安装程序。",
+      "unity_hub_linux": "安装 Unity Hub。请参阅以下说明。",
+      "unity": "使用 Unity Hub 安装 Unity。您也可以从归档文件安装，但应安装 VRChat 指定的确切版本。",
+      "unity_modules": "在手动安装中，您必须一起安装以下模块：",
+      "unity_modules_android": "Android Build Support（用来上传到 Quest）",
+      "unity_modules_mono": "Windows Build Support (mono)（用来从 macOS 或 Linux 上传到 PC）"
+    },
+    "errors": {
+      "failed_to_isntall_dotnet": ".NET SDK 安装失败",
+      "failed_to_isntall_vpm": "VPM CLI 安装失败",
+      "failed_to_isntall_unity_hub": "Unity Hub 安装失败",
+      "failed_to_isntall_unity": "Unity 安装失败"
     }
   }
 }
