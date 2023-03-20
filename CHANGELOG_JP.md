@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 追加
 
+- ダークテーマを追加。
 - 日本語表示を追加。
 - 簡体字中国語表示を追加。 (by [Sonic853](https://github.com/Sonic853))
 
