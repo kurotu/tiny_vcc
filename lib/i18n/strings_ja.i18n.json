@@ -87,7 +87,7 @@
       "select_project_template": "テンプレートを選択してください。",
       "enter_project_name": "プロジェクト名を入力してください。",
       "enter_location_path": "保存先を選択してください。",
-      "failed_to_create_project": "プロフジェクトの作成に失敗しました。"
+      "failed_to_create_project": "プロジェクトの作成に失敗しました。"
     },
     "info": {
       "creating_project": "$template プロジェクト \"$name\" を $location に作成しています。",
