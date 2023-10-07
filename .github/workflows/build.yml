@@ -90,6 +90,30 @@ jobs:
           name: linux
           path: build/linux/x64/release/bundle
 
+  test-unity-hub:
+    runs-on: macos-latest
+    steps:
+      - run: uname -a
+      - run: curl -L https://public-cdn.cloud.unity3d.com/hub/prod/UnityHubSetup.dmg -o UnityHubSetup.dmg
+      - run: hdiutil mount UnityHubSetup.dmg
+      - run: ls /Volumes
+      - run: cp -r /Volumes/Unity\ Hub\ */Unity\ Hub.app /Applications/
+      - run: hdiutil unmount /Volumes/Unity\ Hub\ *
+      - run: /Applications/Unity\ Hub.app/Contents/MacOS/Unity\ Hub -- --headless install --version 2019.4.31f1 -c bd5abf232a62
+      - run: /Applications/Unity\ Hub.app/Contents/MacOS/Unity\ Hub -- --headless editors --installed
+
+  test-unity-hub-m1:
+    runs-on: macos-latest-xlarge
+    steps:
+      - run: uname -a
+      - run: curl -L https://public-cdn.cloud.unity3d.com/hub/prod/UnityHubSetup.dmg -o UnityHubSetup.dmg
+      - run: hdiutil mount UnityHubSetup.dmg
+      - run: ls /Volumes
+      - run: cp -r /Volumes/Unity\ Hub\ */Unity\ Hub.app /Applications/
+      - run: hdiutil unmount /Volumes/Unity\ Hub\ *
+      - run: /Applications/Unity\ Hub.app/Contents/MacOS/Unity\ Hub -- --headless install --version 2019.4.31f1 -c bd5abf232a62 --architecture arm64
+      - run: /Applications/Unity\ Hub.app/Contents/MacOS/Unity\ Hub -- --headless editors --installed
+
   release:
     if: startsWith(github.ref, 'refs/tags/')
     needs: [build-msi, build-macos, build-linux]
