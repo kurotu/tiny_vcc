@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import '../data/exceptions.dart';
+import '../utils/system_info.dart';
 
 class UnityHubService {
   late String _unityHubExe;
@@ -35,6 +36,7 @@ class UnityHubService {
   Future<Process> installUnity(
     String version,
     String changeset,
+    Architecture arch,
     List<String>? modules,
   ) async {
     final args = [
@@ -46,6 +48,12 @@ class UnityHubService {
       '-c',
       changeset,
     ];
+
+    // https://forum.unity.com/threads/install-apple-silicon-arm64-using-hub-cli.1423695/#post-9120544
+    if (Platform.isMacOS && arch != Architecture.x64) {
+      args.addAll(['--architecture', 'arm64']);
+    }
+
     if (Platform.isLinux) {
       args.removeAt(0);
     }

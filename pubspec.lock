@@ -145,14 +145,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.2.5"
-  file_utils:
-    dependency: transitive
-    description:
-      name: file_utils
-      sha256: d1e64389a22649095c8405c9e177272caf05139255931c9ff30d53b5c9bcaa34
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.1"
   flutter:
     dependency: "direct main"
     description: flutter
@@ -542,10 +534,10 @@ packages:
     dependency: "direct main"
     description:
       name: system_info2
-      sha256: "90621f3ba586e1f268e38cc7951b172cd4d997e43dc1fbed12eb334c8a22a886"
+      sha256: "65206bbef475217008b5827374767550a5420ce70a04d2d7e94d1d2253f3efc9"
       url: "https://pub.dev"
     source: hosted
-    version: "2.0.4"
+    version: "4.0.0"
   term_glyph:
     dependency: transitive
     description:
@@ -691,5 +683,5 @@ packages:
     source: hosted
     version: "3.1.1"
 sdks:
-  dart: ">=2.18.5 <4.0.0"
+  dart: ">=2.19.0 <4.0.0"
   flutter: ">=3.0.0"

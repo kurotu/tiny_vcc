@@ -655,6 +655,7 @@ class RequirementsRoute extends ConsumerWidget {
       final process = await hub.installUnity(
         '2019.4.31f1',
         'bd5abf232a62',
+        SystemInfo.arch,
         modules,
       );
       process.stdout.transform(utf8.decoder).listen((event) {
