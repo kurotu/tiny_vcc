@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:tuple/tuple.dart';
+
 import '../data/exceptions.dart';
 import '../utils/system_info.dart';
 
@@ -33,7 +35,7 @@ class UnityHubService {
     return Map.fromEntries(entries);
   }
 
-  Future<Process> installUnity(
+  Future<Tuple2<Process, List<String>>> installUnity(
     String version,
     String changeset,
     Architecture arch,
@@ -62,7 +64,8 @@ class UnityHubService {
       args.addAll(modules);
     }
 
-    return Process.start(_unityHubExe, args);
+    final process = await Process.start(_unityHubExe, args);
+    return Tuple2<Process, List<String>>(process, [_unityHubExe, ...args]);
   }
 
   Uri getWindowsInstallerUri() {

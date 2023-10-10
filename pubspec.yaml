@@ -56,6 +56,7 @@ dependencies:
   slang: ^3.7.0
   slang_flutter: ^3.7.0
   flutter_speed_dial: ^6.2.0
+  tuple: ^2.0.2
 
 dev_dependencies:
   flutter_test:
