@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### 修正
 
 - [macOS] Apple Silicon で Unity のインストールができない問題を修正。
+- [Windows] AMD CPU の Windows 11 でアーキテクチャの検出ができない問題を修正。
 - Unity のパスを手動選択しても正しく保存されない問題を修正。
 - Unity のバージョンチェックを修正。
 

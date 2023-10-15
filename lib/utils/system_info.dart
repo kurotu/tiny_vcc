@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:system_info2/system_info2.dart';
 
 enum Architecture {
@@ -18,6 +20,10 @@ class SystemInfo {
       case ProcessorArchitecture.x86:
         return Architecture.x86;
       default:
+        // %PROCESSOR_ARCHITECTURE% may be AMD64 on Windows 11.
+        if (Platform.isWindows && SysInfo.rawKernelArchitecture == 'AMD64') {
+          return Architecture.x64;
+        }
         return Architecture.unknown;
     }
   }
