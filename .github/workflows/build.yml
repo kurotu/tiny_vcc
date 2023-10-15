@@ -105,6 +105,7 @@ jobs:
 
   test-unity-hub-m1:
     runs-on: macos-latest-xlarge
+    if: false
     steps:
       - run: uname -a
       - run: curl -L https://public-cdn.cloud.unity3d.com/hub/prod/UnityHubSetup.dmg -o UnityHubSetup.dmg
