@@ -10,9 +10,8 @@ enum Architecture {
 class SystemInfo {
   /// See https://sysinfo.onepub.dev/reference/sysinfo/kernelarchitecture.
   static Architecture get arch {
-    final core = SysInfo.cores[0];
-    switch (core.architecture) {
-      case ProcessorArchitecture.arm:
+    switch (SysInfo.kernelArchitecture) {
+      case ProcessorArchitecture.arm64:
         return Architecture.arm64;
       case ProcessorArchitecture.x86_64:
         return Architecture.x64;

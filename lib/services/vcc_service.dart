@@ -384,10 +384,13 @@ class VccService {
         if (editors.isEmpty) {
           return false;
         }
-        final editor = editors.values.last;
+        final editor = editors[requiredUnityVersion];
+        if (editor == null) {
+          return false;
+        }
         await setSettings(
           pathToUnityExe: editor,
-          unityEditors: [editor],
+          unityEditors: editors.values.toList(),
         );
       }
       return true;

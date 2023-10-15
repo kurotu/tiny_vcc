@@ -652,11 +652,14 @@ class RequirementsRoute extends ConsumerWidget {
       final hub = ref.read(unityHubServiceProvider);
       final modules =
           Platform.isWindows ? ['android'] : ['android', 'windows-mono'];
-      final process = await hub.installUnity(
-        '2019.4.31f1',
-        'bd5abf232a62',
+      final tuple = await hub.installUnity(
+        requiredUnityVersion,
+        requiredUnityChangeset,
+        SystemInfo.arch,
         modules,
       );
+      terminal.write("> ${tuple.item2.join(' ')}\r\n");
+      final process = tuple.item1;
       process.stdout.transform(utf8.decoder).listen((event) {
         // Enter 'n' for child-modules
         if (event.contains('(Y/n)')) {
