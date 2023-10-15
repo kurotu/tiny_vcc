@@ -61,13 +61,16 @@ class SettingsPage extends ConsumerWidget {
   Future<void> _didClickEditorFilePicker(
       BuildContext context, WidgetRef ref) async {
     try {
-      final path = await showFilePickerWindow(
+      var path = await showFilePickerWindow(
         dialogTitle: Platform.isWindows ? 'Select Unity.exe' : null,
         lockParentWindow: true,
         allowedExtensions: Platform.isWindows ? ['exe'] : null,
       );
       if (path == null) {
         return;
+      }
+      if (Platform.isMacOS && path.endsWith(".app")) {
+        path = p.join(path, 'Contents', 'MacOS', 'unity');
       }
       await ref.read(vccSettingsRepoProvider).setPreferredEditor(path);
       final _ = ref.refresh(vccSettingsProvider);

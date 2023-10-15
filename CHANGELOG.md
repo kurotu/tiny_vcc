@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - [macOS] Fix Unity installation not working on Apple Silicon.
+- Fix Unity path not properly saved even when manually selected.
 - Fix Unity version check
 
 ## [0.5.0] - 2023-10-01

@@ -25,6 +25,7 @@ class VccSettingsRepository {
   }
 
   Future<void> setPreferredEditor(String path) async {
+    _vcc.addUnityEditor(path);
     return _setSettings(pathToUnityExe: path);
   }
 
