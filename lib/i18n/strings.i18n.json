@@ -172,7 +172,7 @@
       "installing_dotnet": "Installing .NET 6.0 SDK.",
       "installing_dotnet_with_brew": "Installing .NET 6.0 SDK with Homebrew",
       "see_terminal_to_continue": "See Terminal app to continue installation.",
-      "installing_vpm": "Installing VPM CLI $version",
+      "installing_vpm": "Installing VPM CLI",
       "downloading_unity_hub": "Downloading Unity Hub installer.",
       "installing_unity_hub": "Installing Unity Hub.",
       "installing_unity": "Installing Unity"

@@ -172,7 +172,7 @@
       "installing_dotnet": "正在安装 .NET 6.0 SDK。",
       "installing_dotnet_with_brew": "正在使用 Homebrew 安装 .NET 6.0 SDK",
       "see_terminal_to_continue": "请查看终端应用程序以继续安装。",
-      "installing_vpm": "正在安装 VPM CLI $version",
+      "installing_vpm": "正在安装 VPM CLI",
       "downloading_unity_hub": "正在下载 Unity Hub 安装程序。",
       "installing_unity_hub": "正在安装 Unity Hub。",
       "installing_unity": "正在安装 Unity"

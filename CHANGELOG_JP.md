@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 削除
+- VPM CLI のインストール時のバージョン固定をしないように変更。
+
 ### 修正
 
 - [macOS] Apple Silicon で Unity のインストールができない問題を修正。

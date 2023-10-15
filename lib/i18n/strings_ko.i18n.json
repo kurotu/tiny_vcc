@@ -172,7 +172,7 @@
       "installing_dotnet": ".NET 6.0 SDK 설치중.",
       "installing_dotnet_with_brew": "홈브류를 사용하여 .NET 6.0 SDK 설치중.",
       "see_terminal_to_continue": "터미널 앱에서 설치를 계속하세요.",
-      "installing_vpm": "VPM CLI $version 설치중",
+      "installing_vpm": "VPM CLI 설치중",
       "downloading_unity_hub": "유니티 허브 다운로드중.",
       "installing_unity_hub": "유니티 허브 설치중.",
       "installing_unity": "유니티 설치중"

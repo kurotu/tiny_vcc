@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+- Remove version pinning of VPM CLI installation.
+
 ### Fixed
 
 - [macOS] Fix Unity installation not working on Apple Silicon.

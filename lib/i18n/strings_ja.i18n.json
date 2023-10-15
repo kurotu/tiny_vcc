@@ -172,7 +172,7 @@
       "installing_dotnet": ".NET 6.0 SDK をインストールしています。",
       "installing_dotnet_with_brew": ".NET 6.0 SDK を Homebrew でインストール中",
       "see_terminal_to_continue": "「ターミナル」アプリを確認してください。",
-      "installing_vpm": "VPM CLI $version をインストールしています。",
+      "installing_vpm": "VPM CLI をインストールしています。",
       "downloading_unity_hub": "Unity Hub インストーラーをダウンロードしています。",
       "installing_unity_hub": "Unity Hub をインストールしています。",
       "installing_unity": "Unity をインストール中"

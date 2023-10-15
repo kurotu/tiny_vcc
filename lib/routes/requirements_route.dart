@@ -158,7 +158,7 @@ class RequirementsRoute extends ConsumerWidget {
                         color: Colors.black12,
                         borderRadius: BorderRadius.circular(4)),
                     child: CopyableText(
-                        'dotnet tool install --global vrchat.vpm.cli --version ${requiredVpmVersion.toString()}'),
+                        'dotnet tool install --global vrchat.vpm.cli'),
                   ),
                   Link(
                     uri: _vpmCliDocsUri,
@@ -528,8 +528,7 @@ class RequirementsRoute extends ConsumerWidget {
     final dialog = showProgressDialog(
       context,
       Theme.of(context),
-      t.requirements.info
-          .installing_vpm(version: requiredVpmVersion.toString()),
+      t.requirements.info.installing_vpm,
     );
     try {
       final dotnet = ref.read(dotNetServiceProvider);
@@ -541,12 +540,10 @@ class RequirementsRoute extends ConsumerWidget {
           return true;
         }
         logger?.i('Updating VPM CLI.');
-        await dotnet.updateGlobalTool(
-            vpmPackageId, requiredVpmVersion.toString());
+        await dotnet.updateGlobalTool(vpmPackageId, null);
       } else {
         logger?.i('Installing VPM CLI.');
-        await dotnet.installGlobalTool(
-            vpmPackageId, requiredVpmVersion.toString());
+        await dotnet.installGlobalTool(vpmPackageId, null);
       }
       if (!vcc.isInstalled()) {
         return false;
