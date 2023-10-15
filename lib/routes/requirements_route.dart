@@ -653,8 +653,8 @@ class RequirementsRoute extends ConsumerWidget {
       final modules =
           Platform.isWindows ? ['android'] : ['android', 'windows-mono'];
       final tuple = await hub.installUnity(
-        '2019.4.31f1',
-        'bd5abf232a62',
+        requiredUnityVersion,
+        requiredUnityChangeset,
         SystemInfo.arch,
         modules,
       );
