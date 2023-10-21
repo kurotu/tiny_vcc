@@ -498,8 +498,8 @@ class VccService {
       File repoFile, RepositoryType repoType) async {
     final str = await repoFile.readAsString();
     final json = jsonDecode(str);
-    final packages =
-        (json['cache'] as Map<String, dynamic>).entries.expand((e) {
+    final repo = (json['cache'] ?? json['repo']['packages'])as Map<String, dynamic>;
+    final packages = repo.entries.expand((e) {
       return (e.value['versions'] as Map<String, dynamic>)
           .values
           .map((e) => VpmPackage(
