@@ -24,8 +24,9 @@ A clear and concise description of what you expected to happen.
 If applicable, add screenshots to help explain your problem.
 
 **Desktop (please complete the following information):**
- - OS: [e.g. Windows 10]
- - Version [e.g. 22H2]
+ - OS and Version [e.g. Windows 10 22H2]
+ - Tiny VCC Version
+ - VPM CLI Version (`vpm --version` in terminal)
 
 **Additional context**
 Add any other context about the problem here.
