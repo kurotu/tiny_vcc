@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 修正
 - パッケージリストが正しく表示されないことがある問題を修正。
+- リポジトリが最新の情報に更新されない問題を修正。
 
 ## [0.6.0] - 2023-10-18
 

@@ -71,10 +71,23 @@ final vpmTemplatesProvider = FutureProvider((ref) {
   return ref.read(vpmTemplatesRepoProvider).fetchTemplates();
 });
 
-final vpmPackagesRepoProvider =
-    Provider((ref) => VpmPackagesRepository(ref.read(vccServiceProvider)));
-final vpmPackagesProvider =
-    FutureProvider((ref) => ref.read(vpmPackagesRepoProvider).fetchPackages());
+final vpmRepoListProvider = FutureProvider((ref) {
+  final vcc = ref.read(vccServiceProvider);
+  try {
+    return vcc.listRepos();
+  } catch (e) {
+    logger?.e("Failed to list repos: $e");
+    return Future.value();
+  }
+});
+final vpmPackagesRepoProvider = Provider((ref) {
+  ref.watch(vpmRepoListProvider);
+  return VpmPackagesRepository(ref.read(vccServiceProvider));
+});
+final vpmPackagesProvider = FutureProvider((ref) {
+  ref.watch(vpmRepoListProvider);
+  return ref.read(vpmPackagesRepoProvider).fetchPackages();
+});
 
 final readyToUseProvider = FutureProvider.autoDispose((ref) async {
   final providers = [
