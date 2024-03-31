@@ -1,3 +1,7 @@
+> [!CAUTION]
+> アーカイブされたリポジトリです。このプロジェクトはメンテナンスされていません。
+> 代替として [vrc-get-gui](https://github.com/vrc-get/vrc-get) を検討してください。
+
 # Tiny VCC
 <p>
   <a href="https://github.com/kurotu/tiny_vcc/releases/latest">

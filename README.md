@@ -1,3 +1,7 @@
+> [!CAUTION]
+> Archived repository. This project is no longer maintained.
+> Consider using [vrc-get-gui](https://github.com/vrc-get/vrc-get) as an alternative.
+
 # Tiny VCC
 <p>
   <a href="https://github.com/kurotu/tiny_vcc/releases/latest">
